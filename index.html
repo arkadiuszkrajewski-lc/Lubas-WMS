@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>LUBAS WMS v2.0</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+  
+  <style>
+    :root {
+      --bg-dark: #0f172a;
+      --card-dark: #1e293b;
+      --accent-blue: #3b82f6;
+      --accent-danger: #ef4444;
+      --accent-success: #10b981;
+      --text-main: #f8fafc;
+    }
+    
+    body { 
+      background-color: var(--bg-dark); 
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .modern-card {
+      background: var(--card-dark);
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.05);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    }
+
+    .SkanerOkno { 
+      background: #000; 
+      border-radius: 16px; 
+      overflow: hidden; 
+      width: 100%; 
+      margin: 0 auto; 
+      display: none; 
+      aspect-ratio: 4/3;
+      border: 2px solid rgba(255,255,255,0.1);
+    }
+
+    .wielki-input { 
+      font-size: 1.1rem; 
+      padding: 14px; 
+      background-color: #0f172a !important; 
+      color: #fff !important;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+    }
+
+    .wielki-input:focus { 
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+    }
+
+    .skan-aktywny { 
+      border: 2px solid var(--accent-danger) !important; 
+      box-shadow: 0 0 15px rgba(239, 68, 68, 0.3) !important;
+    }
+
+    .btn-modern {
+      border-radius: 12px;
+      padding: 12px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .btn-group .btn-check:checked + .btn {
+      background-color: var(--accent-blue);
+      border-color: var(--accent-blue);
+      color: white;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    /* Blokada ekranu logowania */
+    #login-overlay {
+      position: fixed; top:0; left:0; width:100%; height:100%; 
+      background: var(--bg-dark); z-index: 9999;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="login-overlay">
+  <div class="text-center p-4 modern-card" style="max-width: 400px; width: 100%;">
+    <h3 class="fw-bold mb-2">LUBAS <span class="text-primary">WMS</span></h3>
+    <p class="text-muted small mb-4">Weryfikacja tożsamości pracownika</p>
+    <div class="mb-3 text-start">
+      <label class="form-label small text-secondary fw-bold">Wpisz swój e-mail firmowy:</label>
+      <input type="email" id="auth-email" class="form-control wielki-input" placeholder="imie.nazwisko@lubas.com">
+    </div>
+    <button onclick="weryfikujDomene()" class="btn btn-primary w-100 btn-modern fs-5">Zaloguj przez @lubas.com</button>
+    <div id="login-error" class="text-danger small mt-2 d-none">Błąd: Adres musi kończyć się na @lubas.com</div>
+  </div>
+</div>
+
+<div class="container py-3" style="max-width: 480px;">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-secondary fw-light" style="font-size:0.9rem;">v2.0</span></h4>
+    <span id="user-badge" class="badge bg-secondary p-2" style="font-size: 0.75rem;">---</span>
+  </div>
+
+  <div class="modern-card p-3 mb-3">
+    <div class="btn-group w-100 mb-3" role="group">
+      <input type="radio" class="btn-check" name="btnradio" id="btn-wydanie" checked onclick="ustawTryb('Wydanie')">
+      <label class="btn btn-outline-light py-2 fw-bold" for="btn-wydanie">🔴 WYDANIE</label>
+      <input type="radio" class="btn-check" name="btnradio" id="btn-przyjecie" onclick="ustawTryb('Przyjęcie')">
+      <label class="btn btn-outline-light py-2 fw-bold" for="btn-przyjecie">🟢 PRZYJĘCIE</label>
+    </div>
+
+    <label class="form-label fw-bold small text-secondary">WYBIERZ MAGAZYN DOCELOWY:</label>
+    <select id="magazyn-wybor" class="form-select wielki-input mb-1">
+      <option value="MAGAZYN POMOCNICZY BHP">📦 Magazyn Pomocniczy (BHP / Śrubki)</option>
+      <option value="MAGAZYN GŁÓWNY">🏭 Magazyn Główny Produkcji</option>
+      <option value="STANOWISKO WTRYSKAREK">⚙️ Magazyn Form (Wtryskarki)</option>
+    </select>
+  </div>
+
+  <div class="card modern-card p-3 shadow-sm border-0">
+    <div id="instrukcja-skanu" class="alert alert-warning text-center fw-bold small d-none" style="border-radius:10px;">Skieruj aparat na kod QR...</div>
+    
+    <div id="reader" class="SkanerOkno mb-3"></div>
+
+    <form id="wmsForm" onsubmit="wyslijDane(event)">
+      <input type="hidden" id="operacja" value="Wydanie">
+      <input type="hidden" id="aktywne-pole" value="">
+
+      <div class="mb-3">
+        <label class="form-label fw-bold small text-secondary">KOD TOWARU:</label>
+        <div class="input-group">
+          <input type="text" id="kod-towaru" class="form-control wielki-input text-uppercase" placeholder="Dotknij, aby skanować/wpisać..." onclick="aktywujSkanowanie('kod-towaru')">
+          <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('kod-towaru')">❌</button>
+        </div>
+      </div>
+
+      <div class="mb-3" id="sekcja-pracownik">
+        <label class="form-label fw-bold small text-secondary">PRACOWNIK (Imię i Nazwisko):</label>
+        <div class="input-group">
+          <input type="text" id="pracownik" class="form-control wielki-input" placeholder="Dotknij, aby skanować/wpisać..." onclick="aktywujSkanowanie('pracownik')">
+          <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('pracownik')">❌</button>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label fw-bold small text-secondary">ILOŚĆ SZTUK:</label>
+        <input type="number" id="ilosc" class="form-control wielki-input" value="1" min="1" required onfocus="schowajAparat()">
+      </div>
+
+      <button type="submit" id="btn-submit" class="btn btn-primary w-100 py-3 fw-bold fs-5 btn-modern">ZAPISZ OPERACJĘ (Enter)</button>
+    </form>
+    
+    <div id="status" class="alert alert-success mt-3 d-none text-center fw-bold" style="border-radius:10px;"></div>
+  </div>
+</div>
+
+<script>
+  // Link do Twojego skryptu chmurowym Google w Lubas:
+  const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbykKaTjGfb4H-S-AUUIIMr8g62hAE1V0YWYDhssCbAh26Y9r0u96xVySApf01PqO9sZ0Q/exec";
+
+  let html5Qrcode = null;
+  let blokadaSkanera = false; 
+  let zalogowanyUzytkownik = "";
+
+  function weryfikujDomene() {
+    const email = document.getElementById('auth-email').value.trim().toLowerCase();
+    const errorBox = document.getElementById('login-error');
+    
+    if (email.endsWith('@lubas.com')) {
+      zalogowanyUzytkownik = email;
+      document.getElementById('user-badge').innerText = email.split('@')[0];
+      document.getElementById('login-overlay').style.display = 'none';
+      
+      setTimeout(() => { aktywujSkanowanie('kod-towaru'); }, 500);
+    } else {
+      errorBox.classList.remove('d-none');
+    }
+  }
+
+  function wyczyscPole(id) {
+    document.getElementById(id).value = "";
+    document.getElementById(id).focus();
+  }
+
+  function aktywujSkanowanie(poleId) {
+    document.getElementById('aktywne-pole').value = poleId;
+    document.getElementById('kod-towaru').classList.remove('skan-aktywny');
+    document.getElementById('pracownik').classList.remove('skan-aktywny');
+    document.getElementById(poleId).classList.add('skan-aktywny');
+
+    document.getElementById('instrukcja-skanu').classList.remove('d-none');
+    document.getElementById('reader').style.display = 'block';
+
+    if(poleId === 'kod-towaru') {
+      document.getElementById('instrukcja-skanu').innerText = "📷 KROK 1: Zeskanuj kod kreskowy / QR produktu";
+      document.getElementById('instrukcja-skanu').className = "alert alert-warning text-center fw-bold small text-dark";
+    } else {
+      document.getElementById('instrukcja-skanu').innerText = "🪪 KROK 2: Zeskanuj identyfikator pracownika";
+      document.getElementById('instrukcja-skanu').className = "alert alert-danger text-center fw-bold small text-white bg-danger";
+    }
+
+    if (html5Qrcode && html5Qrcode.isScanning) return;
+
+    html5Qrcode = new Html5Qrcode("reader");
+    html5Qrcode.start(
+      { facingMode: "environment" },
+      { fps: 20, qrbox: { width: 250, height: 250 } },
+      (decodedText) => {
+        if (blokadaSkanera) return;
+        blokadaSkanera = true;
+
+        let celInput = document.getElementById('aktywne-pole').value;
+        document.getElementById(celInput).value = decodedText;
+        document.getElementById(celInput).classList.remove('skan-aktywny');
+        
+        wstrzymajAparat().then(() => {
+          setTimeout(() => { blokadaSkanera = false; }, 2000); 
+          
+          let trybOperacji = document.getElementById('operacja').value;
+          if (celInput === 'kod-towaru' && trybOperacji === 'Wydanie') {
+            aktywujSkanowanie('pracownik');
+          } else {
+            schowajAparat();
+            document.getElementById('ilosc').focus();
+            document.getElementById('ilosc').select();
+          }
+        });
+      },
+      (errorMessage) => { }
+    ).catch(err => { console.log("Błąd kamery:", err); });
+  }
+
+  function wstrzymajAparat() {
+    if (html5Qrcode && html5Qrcode.isScanning) return html5Qrcode.stop();
+    return Promise.resolve();
+  }
+
+  function schowajAparat() {
+    wstrzymajAparat().then(() => {
+      document.getElementById('reader').style.display = 'none';
+      document.getElementById('instrukcja-skanu').classList.add('d-none');
+      document.getElementById('kod-towaru').classList.remove('skan-aktywny');
+      document.getElementById('pracownik').classList.remove('skan-aktywny');
+    });
+  }
+
+  function ustawTryb(tryb) {
+    document.getElementById('operacja').value = tryb;
+    const sekcjaPracownik = document.getElementById('sekcja-pracownik');
+    if(tryb === 'Przyjęcie') {
+      sekcjaPracownik.style.display = 'none';
+      document.getElementById('pracownik').removeAttribute('required');
+    } else {
+      sekcjaPracownik.style.display = 'block';
+      document.getElementById('pracownik').setAttribute('required', 'true');
+    }
+    wstrzymajAparat().then(() => { aktywujSkanowanie('kod-towaru'); });
+  }
+
+  function wyslijDane(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btn-submit');
+    const statusBox = document.getElementById('status');
+    
+    btn.disabled = true;
+    btn.innerText = "Zapisywanie w chmurze...";
+
+    const paczkaDanych = {
+      typ: document.getElementById('operacja').value,
+      magazyn: document.getElementById('magazyn-wybor').value,
+      towar: document.getElementById('kod-towaru').value.trim(),
+      pracownik: document.getElementById('pracownik').value.trim(),
+      ilosc: document.getElementById('ilosc').value,
+      operator: zalogowanyUzytkownik
+    };
+
+    // FORMATOWANIE PARAMETRÓW FORMULARZA OMIJAJĄCE PROBLEMY Z CORS GOOGLE
+    const formBody = Object.keys(paczkaDanych)
+      .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(paczkaDanych[key]))
+      .join('&');
+
+    fetch(GOOGLE_SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: formBody
+    })
+    .then(() => {
+      btn.disabled = false;
+      btn.innerText = "ZAPISZ OPERACJĘ (Enter)";
+      statusBox.innerText = "🚀 ZAPISANO W BAZIE GOOGLE!";
+      statusBox.className = "alert alert-success mt-3 text-center fw-bold bg-success text-white border-0";
+      statusBox.classList.remove('d-none');
+      
+      document.getElementById('kod-towaru').value = "";
+      document.getElementById('pracownik').value = "";
+      document.getElementById('ilosc').value = '1';
+      
+      setTimeout(() => { 
+        statusBox.classList.add('d-none'); 
+        wstrzymajAparat().then(() => { aktywujSkanowanie('kod-towaru'); });
+      }, 1500);
+    })
+    .catch(err => {
+      alert("Błąd połączenia z bazą danych.");
+      btn.disabled = false;
+    });
+  }
+</script>
+</body>
+</html>
