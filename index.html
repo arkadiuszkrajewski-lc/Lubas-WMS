@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>LUBAS WMS v3.7</title>
+  <title>LUBAS WMS v3.8</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
@@ -65,7 +65,7 @@
 
 <div class="container py-3" style="max-width: 480px;">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-secondary fw-light" style="font-size:0.9rem;">v3.7</span></h4>
+    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-secondary fw-light" style="font-size:0.9rem;">v3.8</span></h4>
     <div class="d-flex align-items-center gap-2">
       <span id="user-badge" class="badge bg-success p-2" style="font-size: 0.75rem;">---</span>
       <button onclick="wylogujOperatora()" class="btn btn-sm btn-outline-secondary py-0 px-1" style="font-size: 0.65rem;">Zmień</button>
@@ -97,11 +97,19 @@
         </div>
       </div>
 
-      <div class="form-group-custom">
-        <label class="form-label fw-bold small text-secondary mb-2">2. ADRES PÓŁKI:</label>
+      <div class="form-group-custom" id="sekcja-z-lokalizacji">
+        <label class="form-label fw-bold small text-secondary mb-2">2. PÓŁKA ŹRÓDŁOWA (Z Lokalizacji):</label>
         <div class="input-group">
-          <input type="text" id="polka" class="form-control wielki-input text-uppercase" placeholder="Zeskanuj / wpisz adres półki..." onclick="aktywujSkanowanie('polka')" required>
-          <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('polka')">❌</button>
+          <input type="text" id="Z_Lokalizacji" class="form-control wielki-input text-uppercase" placeholder="Zeskanuj adres półki źródłowej..." onclick="aktywujSkanowanie('Z_Lokalizacji')">
+          <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('Z_Lokalizacji')">❌</button>
+        </div>
+      </div>
+
+      <div class="form-group-custom" id="sekcja-do-lokalizacji">
+        <label class="form-label fw-bold small text-secondary mb-2">2. PÓŁKA DOCELOWA (Do Lokalizacji):</label>
+        <div class="input-group">
+          <input type="text" id="Do_Lokalizacji" class="form-control wielki-input text-uppercase" placeholder="Zeskanuj adres półki docelowej..." onclick="aktywujSkanowanie('Do_Lokalizacji')">
+          <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('Do_Lokalizacji')">❌</button>
         </div>
       </div>
 
@@ -138,7 +146,7 @@
       zalogowanyUzytkownik = zapamietanyEmail;
       document.getElementById('user-badge').innerText = zapamietanaNazwa;
       document.getElementById('login-overlay').style.display = 'none';
-      setTimeout(() => { aktywujSkanowanie('kod-towaru'); }, 600);
+      ustawTryb('Wydanie');
     }
   };
 
@@ -192,16 +200,16 @@
       btn.innerText = "Zaloguj do systemu";
       
       if (odpowiedz.startsWith("DOZWOLONY")) {
-        const nazwaPracownika = !odpowiedz.split('|')[1];
+        const nazwaPracownika = odpowiedz.split('|')[1];
         localStorage.setItem('wms_user_email', email);
-        localStorage.setItem('wms_user_name', odpowiedz.split('|')[1]);
+        localStorage.setItem('wms_user_name', nazwaPracownika);
         zalogowanyUzytkownik = email;
         
-        document.getElementById('user-badge').innerText = odpowiedz.split('|')[1];
+        document.getElementById('user-badge').innerText = nazwaPracownika;
         document.getElementById('login-overlay').style.display = 'none';
         
         if (loginQrcode && loginQrcode.isScanning) loginQrcode.stop();
-        setTimeout(() => { aktywujSkanowanie('kod-towaru'); }, 500);
+        ustawTryb('Wydanie');
       } else {
         alert("❌ Błąd: Niepoprawny e-mail lub hasło!");
       }
@@ -227,7 +235,8 @@
   function aktywujSkanowanie(poleId) {
     document.getElementById('aktywne-pole').value = poleId;
     document.getElementById('kod-towaru').classList.remove('skan-aktywny');
-    document.getElementById('polka').classList.remove('skan-aktywny');
+    document.getElementById('Z_Lokalizacji').classList.remove('skan-aktywny');
+    document.getElementById('Do_Lokalizacji').classList.remove('skan-aktywny');
     document.getElementById('pracownik').classList.remove('skan-aktywny');
     document.getElementById(poleId).classList.add('skan-aktywny');
     
@@ -237,7 +246,7 @@
     if(poleId === 'kod-towaru') {
       document.getElementById('instrukcja-skanu').innerText = "📷 KROK 1: Zeskanuj kod kreskowy PRODUKTU";
       document.getElementById('instrukcja-skanu').className = "alert alert-warning text-center fw-bold small text-dark";
-    } else if(poleId === 'polka') {
+    } else if(poleId === 'Z_Lokalizacji' || poleId === 'Do_Lokalizacji') {
       document.getElementById('instrukcja-skanu').innerText = "📍 KROK 2: Zeskanuj kod QR ADRESU PÓŁKI";
       document.getElementById('instrukcja-skanu').className = "alert alert-info text-center fw-bold small text-dark";
     } else {
@@ -262,8 +271,12 @@
           let trybOperacji = document.getElementById('operacja').value;
           
           if (celInput === 'kod-towaru') {
-            aktywujSkanowanie('polka');
-          } else if (celInput === 'polka' && trybOperacji === 'Wydanie') {
+            if(trybOperacji === 'Wydanie') {
+              aktywujSkanowanie('Z_Lokalizacji');
+            } else {
+              aktywujSkanowanie('Do_Lokalizacji');
+            }
+          } else if (celInput === 'Z_Lokalizacji' && trybOperacji === 'Wydanie') {
             aktywujSkanowanie('pracownik');
           } else {
             schowajAparat();
@@ -277,16 +290,25 @@
   }
 
   function wstrzymajAparat() { if (html5Qrcode && html5Qrcode.isScanning) return html5Qrcode.stop(); return Promise.resolve(); }
-  function schowajAparat() { wstrzymajAparat().then(() => { document.getElementById('reader').style.display = 'none'; document.getElementById('instrukcja-skanu').classList.add('d-none'); document.getElementById('kod-towaru').classList.remove('skan-aktywny'); document.getElementById('polka').classList.remove('skan-aktywny'); document.getElementById('pracownik').classList.remove('skan-aktywny'); }); }
+  function schowajAparat() { wstrzymajAparat().then(() => { document.getElementById('reader').style.display = 'none'; document.getElementById('instrukcja-skanu').classList.add('d-none'); document.getElementById('kod-towaru').classList.remove('skan-aktywny'); document.getElementById('Z_Lokalizacji').classList.remove('skan-aktywny'); document.getElementById('Do_Lokalizacji').classList.remove('skan-aktywny'); document.getElementById('pracownik').classList.remove('skan-aktywny'); }); }
 
   function ustawTryb(tryb) {
     document.getElementById('operacja').value = tryb;
-    const sekcjaPracownik = document.getElementById('sekcja-pracownik');
     if(tryb === 'Przyjęcie') {
-      sekcjaPracownik.style.display = 'none';
+      document.getElementById('sekcja-z-lokalizacji').style.display = 'none';
+      document.getElementById('sekcja-do-lokalizacji').style.display = 'block';
+      document.getElementById('sekcja-pracownik').style.display = 'none';
+      
+      document.getElementById('Z_Lokalizacji').value = "DOSTAWCA";
+      document.getElementById('Do_Lokalizacji').value = "";
       document.getElementById('pracownik').removeAttribute('required');
     } else {
-      sekcjaPracownik.style.display = 'block';
+      document.getElementById('sekcja-z-lokalizacji').style.display = 'block';
+      document.getElementById('sekcja-do-lokalizacji').style.display = 'none';
+      document.getElementById('sekcja-pracownik').style.display = 'block';
+      
+      document.getElementById('Z_Lokalizacji').value = "";
+      document.getElementById('Do_Lokalizacji').value = "PRODUKCJA";
       document.getElementById('pracownik').setAttribute('required', 'true');
     }
     wstrzymajAparat().then(() => { aktywujSkanowanie('kod-towaru'); });
@@ -299,17 +321,15 @@
     btn.disabled = true;
     btn.innerText = "Zapisywanie w chmurze...";
 
-    const polkaValue = document.getElementById('polka').value.trim();
-
-    // CZYSTE PARAMETRY BEZ DUBLOWANIA NAZW
     const paczkaDanych = {
       akcja: "zapis_ruchu",
+      operator: zalogowanyUzytkownik,
       typ: document.getElementById('operacja').value,
-      polka: polkaValue,
       towar: document.getElementById('kod-towaru').value.trim(),
+      Z_Lokalizacji: document.getElementById('Z_Lokalizacji').value.trim(),
+      Do_Lokalizacji: document.getElementById('Do_Lokalizacji').value.trim(),
       pracownik: document.getElementById('pracownik').value.trim(),
-      ilosc: document.getElementById('ilosc').value,
-      operator: zalogowanyUzytkownik
+      ilosc: document.getElementById('ilosc').value
     };
 
     const formBody = Object.keys(paczkaDanych).map(key => encodeURIComponent(key) + '=' + encodeURIComponent(paczkaDanych[key])).join('&');
@@ -327,11 +347,10 @@
       statusBox.classList.remove('d-none');
       
       document.getElementById('kod-towaru').value = "";
-      document.getElementById('polka').value = "";
       document.getElementById('pracownik').value = "";
       document.getElementById('ilosc').value = '1';
       
-      setTimeout(() => { statusBox.classList.add('d-none'); wstrzymajAparat().then(() => { aktywujSkanowanie('kod-towaru'); }); }, 1500);
+      setTimeout(() => { statusBox.classList.add('d-none'); ustawTryb(document.getElementById('operacja').value); }, 1500);
     })
     .catch(err => { alert("Błąd połączenia z bazą danych."); btn.disabled = false; });
   }
