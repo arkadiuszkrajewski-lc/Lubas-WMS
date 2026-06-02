@@ -1,359 +1,283 @@
 <!DOCTYPE html>
-<html>
+<html lang="pl">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>LUBAS WMS v3.8</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.min.css" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
-  
-  <style>
-    :root {
-      --bg-dark: #0f172a;
-      --card-dark: #1e293b;
-      --accent-blue: #3b82f6;
-      --accent-danger: #ef4444;
-      --accent-success: #10b981;
-      --text-main: #f8fafc;
-    }
-    body { background-color: var(--bg-dark); color: var(--text-main); font-family: 'Inter', sans-serif; -webkit-user-select: none; user-select: none; }
-    .modern-card { background: var(--card-dark); border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 10px 30px rgba(0,0,0,0.25); margin-bottom: 25px; }
-    .SkanerOkno { background: #000; border-radius: 16px; overflow: hidden; width: 100%; margin: 0 auto; display: none; aspect-ratio: 4/3; border: 2px solid rgba(255,255,255,0.1); margin-bottom: 25px; }
-    .wielki-input { font-size: 1.1rem; padding: 14px; background-color: #0f172a !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; }
-    .wielki-input:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25); }
-    .skan-aktywny { border: 2px solid var(--accent-danger) !important; box-shadow: 0 0 15px rgba(239, 68, 68, 0.3) !important; }
-    .btn-modern { border-radius: 12px; padding: 14px; font-weight: 600; transition: all 0.2s; }
-    .btn-group .btn-check:checked + .btn { background-color: var(--accent-blue); border-color: var(--accent-blue); color: white; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
-    #login-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg-dark); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-    .login-scanner-box { background: #000; border-radius: 12px; overflow: hidden; width: 100%; max-width: 280px; display: none; aspect-ratio: 1/1; margin-bottom: 25px; border: 2px solid var(--accent-blue); }
-    
-    .form-group-custom { margin-bottom: 24px; }
-    .label-custom { font-size: 0.9rem; letter-spacing: 0.5px; margin-bottom: 10px; display: block; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WMS Lubas - Terminal Mobilny</title>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+        body { -webkit-tap-highlight-color: transparent; background-color: #f8fafc; }
+        .scanner-container video { object-fit: cover !important; border-radius: 0.75rem; }
+    </style>
 </head>
-<body>
+<body class="font-sans text-gray-800">
 
-<div id="login-overlay">
-  <div class="text-center p-4 modern-card" style="max-width: 420px; width: 100%;">
-    <h3 class="fw-bold mb-2">LUBAS <span class="text-primary">WMS</span></h3>
-    <p class="text-muted small mb-4">Zaloguj się swoimi danymi z bazy</p>
-    
-    <div id="login-reader" class="login-scanner-box mx-auto"></div>
+    <div id="ekranLogowania" class="min-h-screen flex flex-col justify-center items-center p-4">
+        <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-sm border border-gray-100">
+            <div class="text-center mb-6">
+                <h1 class="text-2xl font-black text-gray-900 tracking-tight">WMS LUBAS</h1>
+                <p class="text-sm text-gray-500 mt-1">Zaloguj się kontem lub kartą QR</p>
+            </div>
+            
+            <div id="loginScanner" class="hidden mb-4 overflow-hidden rounded-xl border-2 border-dashed border-gray-300">
+                <div id="login-reader" class="w-full"></div>
+            </div>
 
-    <div class="text-start">
-      <div class="form-group-custom">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <label class="label-custom text-secondary fw-bold m-0">Email:</label>
-          <button id="btn-toggle-login-scan" onclick="odpalSkanerLogowania()" class="btn btn-sm btn-outline-info py-1 px-2" style="font-size:0.75rem;">📷 Skanuj kartę</button>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Email</label>
+                    <input type="email" id="loginEmail" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Hasło PIN</label>
+                    <input type="password" id="loginPassword" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                </div>
+                <button onclick="autoryzujManualnie()" class="w-full bg-blue-600 text-white font-bold py-3.5 rounded-xl shadow-lg hover:bg-blue-700 transition active:scale-95">
+                    Zaloguj się
+                </button>
+                <div class="relative flex py-2 items-center">
+                    <div class="flex-grow border-t border-gray-200"></div>
+                    <span class="flex-shrink mx-4 text-gray-400 text-xs font-bold uppercase">LUB</span>
+                    <div class="flex-grow border-t border-gray-200"></div>
+                </div>
+                <button onclick="przelaczSkanerLogowania()" id="btnKartaLogowania" class="w-full bg-gray-900 text-white font-bold py-3 rounded-xl shadow-md hover:bg-black transition active:scale-95">
+                    📷 Zeskanuj kartę pracownika
+                </button>
+            </div>
         </div>
-        <input type="email" id="auth-email" class="form-control wielki-input text-lowercase" placeholder="Email">
-      </div>
-      
-      <div class="form-group-custom">
-        <label class="label-custom text-secondary fw-bold mb-2">Hasło:</label>
-        <div class="input-group">
-          <input type="password" id="auth-password" class="form-control wielki-input" placeholder="Hasło">
-          <button class="btn btn-outline-secondary px-3" type="button" onclick="przelaczWidokHasla()" style="border-top-right-radius: 10px; border-bottom-right-radius: 10px; border-color: rgba(255,255,255,0.1); background: #0f172a; color: #94a3b8;">👁️</button>
-        </div>
-      </div>
     </div>
-    
-    <button id="btn-login-submit" onclick="autoryzujZBazą()" class="btn btn-primary w-100 btn-modern fs-5 mt-4">Zaloguj do systemu</button>
-  </div>
-</div>
 
-<div class="container py-3" style="max-width: 480px;">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-secondary fw-light" style="font-size:0.9rem;">v3.8</span></h4>
-    <div class="d-flex align-items-center gap-2">
-      <span id="user-badge" class="badge bg-success p-2" style="font-size: 0.75rem;">---</span>
-      <button onclick="wylogujOperatora()" class="btn btn-sm btn-outline-secondary py-0 px-1" style="font-size: 0.65rem;">Zmień</button>
+    <div id="panelWMS" class="hidden min-h-screen flex flex-col pb-6">
+        <header class="bg-white border-b border-gray-100 px-4 py-3.5 flex justify-between items-center shadow-sm">
+            <div>
+                <span class="text-xs font-bold text-gray-400 block uppercase tracking-wider">Zalogowany jako:</span>
+                <span id="txtNazwaOperatora" class="font-extrabold text-gray-900 text-base">---</span>
+            </div>
+            <button onclick="wyloguj()" class="text-xs bg-red-50 text-red-600 font-bold px-3 py-2 rounded-xl hover:bg-red-100 transition">
+                Wyloguj
+            </button>
+        </header>
+
+        <main class="flex-grow p-4 max-w-md mx-auto w-full space-y-4">
+            <div class="grid grid-cols-2 gap-3">
+                <button id="btnTypWydanie" onclick="ustawTypOperacji('Wydanie')" class="py-4 rounded-2xl font-black text-lg shadow-md transition active:scale-95 bg-red-500 text-white border-2 border-red-500">
+                    🔴 WYDANIE
+                </button>
+                <button id="btnTypPrzyjecie" onclick="ustawTypOperacji('Przyjęcie')" class="py-4 rounded-2xl font-black text-lg shadow-md transition active:scale-95 bg-white text-gray-700 border-2 border-gray-200">
+                    🟢 PRZYJĘCIE
+                </button>
+            </div>
+
+            <div class="bg-white p-3 rounded-2xl shadow-md border border-gray-100 relative">
+                <div class="flex justify-between items-center mb-2">
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-gray-400">Podgląd Kamery Skonfigurowany na Kwadrat</h2>
+                    <span id="stanKamery" class="text-xs text-green-500 font-bold">● Gotowa</span>
+                </div>
+                <div class="scanner-container bg-black rounded-xl overflow-hidden aspect-square">
+                    <div id="wms-reader" class="w-full h-full"></div>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl shadow-md border border-gray-100 space-y-3.5">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Z Lokalizacji</label>
+                    <input type="text" id="inpZ_Lokalizacji" class="w-full bg-gray-50 px-4 py-3 rounded-xl border border-gray-200 font-mono text-lg uppercase font-bold focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Do Lokalizacji</label>
+                    <input type="text" id="inpDo_Lokalizacji" class="w-full bg-gray-50 px-4 py-3 rounded-xl border border-gray-200 font-mono text-lg uppercase font-bold focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Skonwertowany Kod Towaru</label>
+                    <input type="text" id="inpTowar" class="w-full bg-gray-100 px-4 py-3 rounded-xl border border-gray-200 text-xl font-black text-blue-700 tracking-wide uppercase focus:outline-none" readonly>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Ilość (szt)</label>
+                        <input type="number" id="inpIlosc" value="1" min="1" class="w-full bg-gray-50 px-4 py-3 rounded-xl border border-gray-200 text-xl font-bold text-center focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Pracownik / Pobierający</label>
+                        <input type="text" id="inpPracownik" placeholder="MAGAZYN" class="w-full bg-gray-50 px-4 py-3 rounded-xl border border-gray-200 text-base font-bold focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="wyslijPaczkeDoWMS()" id="btnZapiszOperacje" class="w-full bg-gray-900 text-white font-black text-xl py-4 rounded-2xl shadow-xl hover:bg-black transition active:scale-95">
+                💾 ZAPISZ OPERACJĘ
+            </button>
+        </main>
     </div>
-  </div>
 
-  <div class="modern-card p-3">
-    <div class="btn-group w-100 m-0" role="group">
-      <input type="radio" class="btn-check" name="btnradio" id="btn-wydanie" checked onclick="ustawTryb('Wydanie')">
-      <label class="btn btn-outline-light py-2 fw-bold" for="btn-wydanie">🔴 WYDANIE</label>
-      <input type="radio" class="btn-check" name="btnradio" id="btn-przyjecie" onclick="ustawTryb('Przyjęcie')">
-      <label class="btn btn-outline-light py-2 fw-bold" for="btn-przyjecie">🟢 PRZYJĘCIE</label>
-    </div>
-  </div>
+    <script>
+        // !!! ADRES URUCHOMIONEGO WDROŻENIA GOOGLE APPS SCRIPT !!!
+        const APPS_SCRIPT_URL = "TUTAJ_WKLEJ_SWÓJ_URL_Z_APPS_SCRIPT";
 
-  <div class="card modern-card p-3 shadow-sm border-0">
-    <div id="instrukcja-skanu" class="alert alert-warning text-center fw-bold small d-none" style="border-radius:10px;">Skieruj aparat na kod QR...</div>
-    <div id="reader" class="SkanerOkno"></div>
+        let aktualnyOperator = "";
+        let wybranyTypOperacji = "Wydanie"; // Domyślnie czerwone Wydanie
+        let html5Qrcode = null;
+        let loginQrcode = null;
 
-    <form id="wmsForm" onsubmit="wyslijDane(event)">
-      <input type="hidden" id="operacja" value="Wydanie">
-      <input type="hidden" id="aktywne-pole" value="">
+        // Inteligentna funkcja wymuszająca IDEALNY KWADRAT ramki na smartfonach
+        const wyliczRozmiarRamkiKwadratowej = (viewfinderWidth, viewfinderHeight) => {
+            let mniejszaKrawedz = Math.min(viewfinderWidth, viewfinderHeight);
+            let rozmiarBoxa = Math.floor(mniejszaKrawedz * 0.75); // Ramka zajmie 75% szerokości ekranu
+            if(rozmiarBoxa < 180) rozmiarBoxa = 180;
+            if(rozmiarBoxa > 320) rozmiarBoxa = 320;
+            return { width: rozmiarBoxa, height: rozmiarBoxa }; // Równe wartości dają wysoki kwadrat na telefonie!
+        };
 
-      <div class="form-group-custom">
-        <label class="form-label fw-bold small text-secondary mb-2">1. KOD TOWARU:</label>
-        <div class="input-group">
-          <input type="text" id="kod-towaru" class="form-control wielki-input text-uppercase" placeholder="Zeskanuj / wpisz produkt..." onclick="aktywujSkanowanie('kod-towaru')" required>
-          <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('kod-towaru')">❌</button>
-        </div>
-      </div>
-
-      <div class="form-group-custom" id="sekcja-z-lokalizacji">
-        <label class="form-label fw-bold small text-secondary mb-2">2. PÓŁKA ŹRÓDŁOWA (Z Lokalizacji):</label>
-        <div class="input-group">
-          <input type="text" id="Z_Lokalizacji" class="form-control wielki-input text-uppercase" placeholder="Zeskanuj adres półki źródłowej..." onclick="aktywujSkanowanie('Z_Lokalizacji')">
-          <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('Z_Lokalizacji')">❌</button>
-        </div>
-      </div>
-
-      <div class="form-group-custom" id="sekcja-do-lokalizacji">
-        <label class="form-label fw-bold small text-secondary mb-2">2. PÓŁKA DOCELOWA (Do Lokalizacji):</label>
-        <div class="input-group">
-          <input type="text" id="Do_Lokalizacji" class="form-control wielki-input text-uppercase" placeholder="Zeskanuj adres półki docelowej..." onclick="aktywujSkanowanie('Do_Lokalizacji')">
-          <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('Do_Lokalizacji')">❌</button>
-        </div>
-      </div>
-
-      <div class="form-group-custom" id="sekcja-pracownik">
-        <label class="form-label fw-bold small text-secondary mb-2">3. PRACOWNIK (Imię i Nazwisko):</label>
-        <div class="input-group">
-          <input type="text" id="pracownik" class="form-control wielki-input" placeholder="Zeskanuj / wpisz pracownika..." onclick="aktywujSkanowanie('pracownik')">
-          <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('pracownik')">❌</button>
-        </div>
-      </div>
-
-      <div class="form-group-custom">
-        <label class="form-label fw-bold small text-secondary mb-2">4. ILOŚĆ SZTUK:</label>
-        <input type="number" id="ilosc" class="form-control wielki-input" value="1" min="1" required onfocus="schowajAparat()">
-      </div>
-
-      <button type="submit" id="btn-submit" class="btn btn-primary w-100 py-3 fw-bold fs-5 btn-modern mt-2">ZAPISZ OPERACJĘ (Enter)</button>
-    </form>
-    <div id="status" class="alert alert-success mt-3 d-none text-center fw-bold" style="border-radius:10px;"></div>
-  </div>
-</div>
-
-<script>
-  const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbykKaTjGfb4H-S-AUUIIMr8g62hAE1V0YWYDhssCbAh26Y9r0u96xVySApf01PqO9sZ0Q/exec";
-  let html5Qrcode = null;
-  let loginQrcode = null;
-  let blokadaSkanera = false; 
-  let zalogowanyUzytkownik = "";
-
-  window.onload = function() {
-    const zapamietanyEmail = localStorage.getItem('wms_user_email');
-    const zapamietanaNazwa = localStorage.getItem('wms_user_name');
-    if (zapamietanyEmail && zapamietanaNazwa) {
-      zalogowanyUzytkownik = zapamietanyEmail;
-      document.getElementById('user-badge').innerText = zapamietanaNazwa;
-      document.getElementById('login-overlay').style.display = 'none';
-      ustawTryb('Wydanie');
-    }
-  };
-
-  function przelaczWidokHasla() {
-    const passInput = document.getElementById('auth-password');
-    passInput.type = passInput.type === "password" ? "text" : "password";
-  }
-
-  function odpalSkanerLogowania() {
-    const box = document.getElementById('login-reader');
-    box.style.display = 'block';
-    if (loginQrcode && loginQrcode.isScanning) return;
-    
-    loginQrcode = new Html5Qrcode("login-reader");
-    loginQrcode.start(
-      { facingMode: "environment" },
-      { fps: 15, qrbox: { width: 200, height: 200 } },
-      (decodedText) => {
-        document.getElementById('auth-email').value = decodedText.trim().toLowerCase();
-        if (loginQrcode) {
-          loginQrcode.stop().then(() => {
-            box.style.display = 'none';
-            document.getElementById('auth-password').focus();
-          });
-        }
-      },
-      (err) => {}
-    ).catch(err => { alert("Błąd kamery logowania: " + err); });
-  }
-
-  function autoryzujZBazą() {
-    const email = document.getElementById('auth-email').value.trim().toLowerCase();
-    const haslo = document.getElementById('auth-password').value.trim();
-    const btn = document.getElementById('btn-login-submit');
-    
-    if (email.length < 3 || haslo.length === 0) { alert("Wpisz e-mail oraz hasło."); return; }
-    
-    btn.disabled = true;
-    btn.innerText = "Weryfikacja danych...";
-
-    const bodyForm = "akcja=weryfikuj_user&email=" + encodeURIComponent(email) + "&haslo=" + encodeURIComponent(haslo);
-
-    fetch(GOOGLE_SCRIPT_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: bodyForm
-    })
-    .then(res => res.text())
-    .then(odpowiedz => {
-      btn.disabled = false;
-      btn.innerText = "Zaloguj do systemu";
-      
-      if (odpowiedz.startsWith("DOZWOLONY")) {
-        const nazwaPracownika = odpowiedz.split('|')[1];
-        localStorage.setItem('wms_user_email', email);
-        localStorage.setItem('wms_user_name', nazwaPracownika);
-        zalogowanyUzytkownik = email;
-        
-        document.getElementById('user-badge').innerText = nazwaPracownika;
-        document.getElementById('login-overlay').style.display = 'none';
-        
-        if (loginQrcode && loginQrcode.isScanning) loginQrcode.stop();
-        ustawTryb('Wydanie');
-      } else {
-        alert("❌ Błąd: Niepoprawny e-mail lub hasło!");
-      }
-    })
-    .catch(err => {
-      alert("Błąd połączenia z serwerem weryfikacji.");
-      btn.disabled = false;
-    });
-  }
-
-  function wylogujOperatora() {
-    localStorage.removeItem('wms_user_email');
-    localStorage.removeItem('wms_user_name');
-    zalogowanyUzytkownik = "";
-    document.getElementById('login-overlay').style.display = 'flex';
-    document.getElementById('auth-email').value = "";
-    document.getElementById('auth-password').value = "";
-    schowajAparat();
-  }
-
-  function wyczyscPole(id) { document.getElementById(id).value = ""; document.getElementById(id).focus(); }
-
-  function aktywujSkanowanie(poleId) {
-    document.getElementById('aktywne-pole').value = poleId;
-    document.getElementById('kod-towaru').classList.remove('skan-aktywny');
-    document.getElementById('Z_Lokalizacji').classList.remove('skan-aktywny');
-    document.getElementById('Do_Lokalizacji').classList.remove('skan-aktywny');
-    document.getElementById('pracownik').classList.remove('skan-aktywny');
-    document.getElementById(poleId).classList.add('skan-aktywny');
-    
-    document.getElementById('instrukcja-skanu').classList.remove('d-none');
-    document.getElementById('reader').style.display = 'block';
-
-    if(poleId === 'kod-towaru') {
-      document.getElementById('instrukcja-skanu').innerText = "📷 KROK 1: Zeskanuj kod kreskowy PRODUKTU";
-      document.getElementById('instrukcja-skanu').className = "alert alert-warning text-center fw-bold small text-dark";
-    } else if(poleId === 'Z_Lokalizacji' || poleId === 'Do_Lokalizacji') {
-      document.getElementById('instrukcja-skanu').innerText = "📍 KROK 2: Zeskanuj kod QR ADRESU PÓŁKI";
-      document.getElementById('instrukcja-skanu').className = "alert alert-info text-center fw-bold small text-dark";
-    } else {
-      document.getElementById('instrukcja-skanu').innerText = "🪪 KROK 3: Zeskanuj identyfikator PRACOWNIKA";
-      document.getElementById('instrukcja-skanu').className = "alert alert-danger text-center fw-bold small text-white bg-danger";
-    }
-
-    if (html5Qrcode && html5Qrcode.isScanning) return;
-    html5Qrcode = new Html5Qrcode("reader");
-    html5Qrcode.start(
-      { facingMode: "environment" },
-      { fps: 20, qrbox: { width: 250, height: 250 } },
-      (decodedText) => {
-        if (blokadaSkanera) return;
-        blokadaSkanera = true;
-        let celInput = document.getElementById('aktywne-pole').value;
-        document.getElementById(celInput).value = decodedText;
-        document.getElementById(celInput).classList.remove('skan-aktywny');
-        
-        wstrzymajAparat().then(() => {
-          setTimeout(() => { blokadaSkanera = false; }, 1500); 
-          let trybOperacji = document.getElementById('operacja').value;
-          
-          if (celInput === 'kod-towaru') {
-            if(trybOperacji === 'Wydanie') {
-              aktywujSkanowanie('Z_Lokalizacji');
+        function ustawTypOperacji(typ) {
+            wybranyTypOperacji = typ;
+            const btnW = document.getElementById('btnTypWydanie');
+            const btnP = document.getElementById('btnTypPrzyjecie');
+            
+            if(typ === "Wydanie") {
+                btnW.className = "py-4 rounded-2xl font-black text-lg shadow-md transition active:scale-95 bg-red-500 text-white border-2 border-red-500";
+                btnP.className = "py-4 rounded-2xl font-black text-lg shadow-md transition active:scale-95 bg-white text-gray-700 border-2 border-gray-200";
             } else {
-              aktywujSkanowanie('Do_Lokalizacji');
+                btnW.className = "py-4 rounded-2xl font-black text-lg shadow-md transition active:scale-95 bg-white text-gray-700 border-2 border-gray-200";
+                btnP.className = "py-4 rounded-2xl font-black text-lg shadow-md transition active:scale-95 bg-green-500 text-white border-2 border-green-500";
             }
-          } else if (celInput === 'Z_Lokalizacji' && trybOperacji === 'Wydanie') {
-            aktywujSkanowanie('pracownik');
-          } else {
-            schowajAparat();
-            document.getElementById('ilosc').focus();
-            document.getElementById('ilosc').select();
-          }
-        });
-      },
-      (errorMessage) => { }
-    ).catch(err => { console.log("Błąd kamery:", err); });
-  }
+        }
 
-  function wstrzymajAparat() { if (html5Qrcode && html5Qrcode.isScanning) return html5Qrcode.stop(); return Promise.resolve(); }
-  function schowajAparat() { wstrzymajAparat().then(() => { document.getElementById('reader').style.display = 'none'; document.getElementById('instrukcja-skanu').classList.add('d-none'); document.getElementById('kod-towaru').classList.remove('skan-aktywny'); document.getElementById('Z_Lokalizacji').classList.remove('skan-aktywny'); document.getElementById('Do_Lokalizacji').classList.remove('skan-aktywny'); document.getElementById('pracownik').classList.remove('skan-aktywny'); }); }
+        function autoryzujManualnie() {
+            let email = document.getElementById('loginEmail').value;
+            let pin = document.getElementById('loginPassword').value;
+            if(!email || !pin) { alert("Wpisz dane logowania!"); return; }
+            procesWeryfikacjiWAppScript(email, pin);
+        }
 
-  function ustawTryb(tryb) {
-    document.getElementById('operacja').value = tryb;
-    if(tryb === 'Przyjęcie') {
-      document.getElementById('sekcja-z-lokalizacji').style.display = 'none';
-      document.getElementById('sekcja-do-lokalizacji').style.display = 'block';
-      document.getElementById('sekcja-pracownik').style.display = 'none';
-      
-      document.getElementById('Z_Lokalizacji').value = "DOSTAWCA";
-      document.getElementById('Do_Lokalizacji').value = "";
-      document.getElementById('pracownik').removeAttribute('required');
-    } else {
-      document.getElementById('sekcja-z-lokalizacji').style.display = 'block';
-      document.getElementById('sekcja-do-lokalizacji').style.display = 'none';
-      document.getElementById('sekcja-pracownik').style.display = 'block';
-      
-      document.getElementById('Z_Lokalizacji').value = "";
-      document.getElementById('Do_Lokalizacji').value = "PRODUKCJA";
-      document.getElementById('pracownik').setAttribute('required', 'true');
-    }
-    wstrzymajAparat().then(() => { aktywujSkanowanie('kod-towaru'); });
-  }
+        function przelaczSkanerLogowania() {
+            let container = document.getElementById('loginScanner');
+            if(container.classList.contains('hidden')) {
+                container.classList.remove('hidden');
+                loginQrcode = new Html5Qrcode("login-reader");
+                loginQrcode.start(
+                    { facingMode: "environment" },
+                    { fps: 20, qrbox: wyliczRozmiarRamkiKwadratowej },
+                    (text) => {
+                        try {
+                            let daneKarty = JSON.parse(text);
+                            if(daneKarty.email && daneKarty.haslo) {
+                                loginQrcode.stop().then(() => { container.classList.add('hidden'); });
+                                procesWeryfikacjiWAppScript(daneKarty.email, daneKarty.haslo);
+                            }
+                        } catch(e) {
+                            // Jeśli zeskanowano czysty tekst karty zamiast JSON-a
+                            if(text.includes("@")) {
+                                loginQrcode.stop().then(() => { container.classList.add('hidden'); });
+                                alert("Karta odczytana. Weryfikacja bazy danych...");
+                            }
+                        }
+                    }
+                ).catch(err => alert("Błąd kamery: " + err));
+            } else {
+                if(loginQrcode) { loginQrcode.stop().then(() => { container.classList.add('hidden'); }); }
+            }
+        }
 
-  function wyslijDane(e) {
-    e.preventDefault();
-    const btn = document.getElementById('btn-submit');
-    const statusBox = document.getElementById('status');
-    btn.disabled = true;
-    btn.innerText = "Zapisywanie w chmurze...";
+        function procesWeryfikacjiWAppScript(mail, pass) {
+            let url = `${APPS_SCRIPT_URL}?akcja=weryfikuj_user&email=${encodeURIComponent(mail)}&haslo=${encodeURIComponent(pass)}`;
+            fetch(url, { method: 'POST' })
+            .then(r => r.text())
+            .then(odpowiedz => {
+                if(odpowiedz.startsWith("DOZWOLONY")) {
+                    aktualnyOperator = odpowiedz.split("|")[1];
+                    document.getElementById('txtNazwaOperatora').innerText = aktualnyOperator;
+                    document.getElementById('ekranLogowania').classList.add('hidden');
+                    document.getElementById('panelWMS').classList.remove('hidden');
+                    uruchomGlowySkanerMagazynowy();
+                } else {
+                    alert("Odmowa dostępu! Błędny login lub hasło PIN.");
+                }
+            }).catch(e => alert("Błąd serwera logowania: " + e));
+        }
 
-    const paczkaDanych = {
-      akcja: "zapis_ruchu",
-      operator: zalogowanyUzytkownik,
-      typ: document.getElementById('operacja').value,
-      towar: document.getElementById('kod-towaru').value.trim(),
-      Z_Lokalizacji: document.getElementById('Z_Lokalizacji').value.trim(),
-      Do_Lokalizacji: document.getElementById('Do_Lokalizacji').value.trim(),
-      pracownik: document.getElementById('pracownik').value.trim(),
-      ilosc: document.getElementById('ilosc').value
-    };
+        function uruchomGlowySkanerMagazynowy() {
+            html5Qrcode = new Html5Qrcode("wms-reader");
+            html5Qrcode.start(
+                { facingMode: "environment" },
+                { fps: 25, qrbox: wyliczRozmiarRamkiKwadratowej },
+                (kodSkanu) => { parseIdentyfikatorSkanu(kodSkanu); }
+            ).catch(err => document.getElementById('stanKamery').innerText = "Błąd: Brak aparatu");
+        }
 
-    const formBody = Object.keys(paczkaDanych).map(key => encodeURIComponent(key) + '=' + encodeURIComponent(paczkaDanych[key])).join('&');
+        function parseIdentyfikatorSkanu(tekst) {
+            tekst = tekst.trim();
+            // 1. Wykrywanie lokalizacji magazynowych (Rozpoczynają się od prefiksu LOK-)
+            if(tekst.toUpperCase().startsWith("LOK-")) {
+                let czystaLok = tekst.toUpperCase();
+                if(!document.getElementById('inpZ_Lokalizacji').value) {
+                    document.getElementById('inpZ_Lokalizacji').value = czystaLok;
+                } else {
+                    document.getElementById('inpDo_Lokalizacji').value = czystaLok;
+                }
+                vibrateDevice(80);
+                return;
+            }
+            // 2. Wykrywanie identyfikatorów pracowników (Rozpoczynają się od prefiksu BHP- lub PRAC-)
+            if(tekst.toUpperCase().startsWith("BHP-") || tekst.toUpperCase().startsWith("PRAC-")) {
+                document.getElementById('inpPracownik').value = tekst;
+                vibrateDevice(80);
+                return;
+            }
+            // 3. W każdym innym wypadku skan traktowany jest jako kod kreskowy / QR towaru
+            document.getElementById('inpTowar').value = tekst.toUpperCase();
+            vibrateDevice(150);
+        }
 
-    fetch(GOOGLE_SCRIPT_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: formBody
-    })
-    .then(() => {
-      btn.disabled = false;
-      btn.innerText = "ZAPISZ OPERACJĘ (Enter)";
-      statusBox.innerText = "🚀 ZAPISANO W BAZIE GOOGLE!";
-      statusBox.className = "alert alert-success mt-3 text-center fw-bold bg-success text-white border-0";
-      statusBox.classList.remove('d-none');
-      
-      document.getElementById('kod-towaru').value = "";
-      document.getElementById('pracownik').value = "";
-      document.getElementById('ilosc').value = '1';
-      
-      setTimeout(() => { statusBox.classList.add('d-none'); ustawTryb(document.getElementById('operacja').value); }, 1500);
-    })
-    .catch(err => { alert("Błąd połączenia z bazą danych."); btn.disabled = false; });
-  }
-</script>
+        function wyslijPaczkeDoWMS() {
+            let towar = document.getElementById('inpTowar').value;
+            let ilosc = document.getElementById('inpIlosc').value;
+            let zLok = document.getElementById('inpZ_Lokalizacji').value;
+            let doLok = document.getElementById('inpDo_Lokalizacji').value;
+            let pracownik = document.getElementById('inpPracownik').value;
+
+            if(!towar || !ilosc) { alert("Musisz zeskanować towar i podać ilość!"); return; }
+
+            document.getElementById('btnZapiszOperacje').disabled = true;
+            document.getElementById('btnZapiszOperacje').innerText = "WYSYŁANIE DO BIGQUERY...";
+
+            let url = `${APPS_SCRIPT_URL}?akcja=zapis_ruchu`
+                + `&operator=${encodeURIComponent(aktualnyOperator)}`
+                + `&typ=${encodeURIComponent(wybranyTypOperacji)}`
+                + `&towar=${encodeURIComponent(towar)}`
+                + `&ilosc=${encodeURIComponent(ilosc)}`
+                + `&Z_Lokalizacji=${encodeURIComponent(zLok)}`
+                + `&Do_Lokalizacji=${encodeURIComponent(doLok)}`
+                + `&pracownik=${encodeURIComponent(pracownik)}`;
+
+            fetch(url, { method: 'POST' })
+            .then(r => r.text())
+            .then(res => {
+                if(res.trim() === "Sukces") {
+                    alert("Ruch zapisany pomyślnie w BigQuery i odświeżony w arkuszu!");
+                    // Czyszczenie formularza pod kolejny ruch
+                    document.getElementById('inpTowar').value = "";
+                    document.getElementById('inpIlosc').value = "1";
+                    document.getElementById('inpZ_Lokalizacji').value = "";
+                    document.getElementById('inpDo_Lokalizacji').value = "";
+                    document.getElementById('inpPracownik').value = "";
+                } else {
+                    alert("Błąd zapisu: " + res);
+                }
+            })
+            .catch(e => alert("Błąd połączenia z bazą chmurową: " + e))
+            .finally(() => {
+                document.getElementById('btnZapiszOperacje').disabled = false;
+                document.getElementById('btnZapiszOperacje').innerText = "💾 ZAPISZ OPERACJĘ";
+            });
+        }
+
+        function vibrateDevice(ms) {
+            if (navigator.vibrate) { navigator.vibrate(ms); }
+        }
+
+        function wyloguj() {
+            if(html5Qrcode) { html5Qrcode.stop().then(() => { location.reload(); }); } else { location.reload(); }
+        }
+    </script>
 </body>
 </html>
