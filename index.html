@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>LUBAS WMS v4.5</title>
+  <title>LUBAS WMS v4.6</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
@@ -19,26 +19,7 @@
     }
     body { background-color: var(--bg-dark); color: var(--text-main); font-family: 'Inter', sans-serif; -webkit-user-select: none; user-select: none; }
     .modern-card { background: var(--card-dark); border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 10px 30px rgba(0,0,0,0.25); margin-bottom: 25px; }
-    
-    /* Pudełko skanera z wymuszonym pozycjonowaniem względnym dla naszej ramki */
-    .SkanerOkno { position: relative; background: #000; border-radius: 16px; overflow: hidden; width: 100%; margin: 0 auto; display: none; aspect-ratio: 1/1; border: 2px solid rgba(255,255,255,0.1); margin-bottom: 25px; }
-    
-    /* SIŁOWA, SZTYWNA RAMKA NA SRODKU EKRANU */
-    .wlasna-ramka {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 250px;
-      height: 250px;
-      border: 4px solid #ffffff;
-      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5); /* Przyciemnienie obrazu wokół kwadratu */
-      border-radius: 12px;
-      z-index: 999;
-      pointer-events: none; /* Kliknięcia przechodzą przez ramkę do aparatu */
-      display: none;
-    }
-
+    .SkanerOkno { background: #000; border-radius: 16px; overflow: hidden; width: 100%; margin: 0 auto; display: none; aspect-ratio: 4/3; border: 2px solid rgba(255,255,255,0.1); margin-bottom: 25px; }
     .wielki-input { font-size: 1.1rem; padding: 14px; background-color: #0f172a !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; }
     .wielki-input:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25); }
     .skan-aktywny { border: 2px solid var(--accent-danger) !important; box-shadow: 0 0 15px rgba(239, 68, 68, 0.3) !important; }
@@ -84,7 +65,7 @@
 
 <div class="container py-3" style="max-width: 480px;">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-secondary fw-light" style="font-size:0.9rem;">v4.5</span></h4>
+    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-secondary fw-light" style="font-size:0.9rem;">v4.6</span></h4>
     <div class="d-flex align-items-center gap-2">
       <span id="user-badge" class="badge bg-success p-2" style="font-size: 0.75rem;">---</span>
       <button onclick="wylogujOperatora()" class="btn btn-sm btn-outline-secondary py-0 px-1" style="font-size: 0.65rem;">Zmień</button>
@@ -102,10 +83,7 @@
 
   <div class="card modern-card p-3 shadow-sm border-0">
     <div id="instrukcja-skanu" class="alert alert-warning text-center fw-bold small d-none" style="border-radius:10px;">Skieruj aparat na kod QR...</div>
-    
-    <div id="reader" class="SkanerOkno">
-      <div id="celownikKwadratowy" class="wlasna-ramka"></div>
-    </div>
+    <div id="reader" class="SkanerOkno"></div>
 
     <form id="wmsForm" onsubmit="wyslijDane(event)">
       <input type="hidden" id="operacja" value="Wydanie">
@@ -160,7 +138,7 @@
       zalogowanyUzytkownik = zapamietanyEmail;
       document.getElementById('user-badge').innerText = zapamietanaNazwa;
       document.getElementById('login-overlay').style.display = 'none';
-      setTimeout(() => { aktywujSkanowanie('kod-towaru'); }, 600);
+      setTimeout(() => { odpalGlowySkanerJednorazowo(); }, 600);
     }
   };
 
@@ -177,7 +155,7 @@
     loginQrcode = new Html5Qrcode("login-reader");
     loginQrcode.start(
       { facingMode: "environment" },
-      { fps: 20 }, // Wyłączona fabryczna ramka
+      { fps: 20 },
       (decodedText) => {
         document.getElementById('auth-email').value = decodedText.trim().toLowerCase();
         if (loginQrcode) {
@@ -223,7 +201,7 @@
         document.getElementById('login-overlay').style.display = 'none';
         
         if (loginQrcode && loginQrcode.isScanning) loginQrcode.stop();
-        setTimeout(() => { aktywujSkanowanie('kod-towaru'); }, 500);
+        setTimeout(() => { odpalGlowySkanerJednorazowo(); }, 500);
       } else {
         alert("❌ Błąd: Niepoprawny e-mail lub hasło!");
       }
@@ -246,6 +224,50 @@
 
   function wyczyscPole(id) { document.getElementById(id).value = ""; document.getElementById(id).focus(); }
 
+  // FUNKCJA URUCHAMIAJĄCA APARAT TYLKO RAZ - BEZ WYŁĄCZANIA GO W TRAKCIE
+  function odpalGlowySkanerJednorazowo() {
+    document.getElementById('reader').style.display = 'block';
+    if (html5Qrcode && html5Qrcode.isScanning) return;
+    
+    html5Qrcode = new Html5Qrcode("reader");
+    html5Qrcode.start(
+      { facingMode: "environment" },
+      { fps: 25 },
+      (decodedText) => {
+        if (blokadaSkanera) return;
+        
+        let celInput = document.getElementById('aktywne-pole').value;
+        if (!celInput) return; // Jeśli żadne pole nie jest aktywne, zignoruj skan
+
+        blokadaSkanera = true;
+        document.getElementById(celInput).value = decodedText;
+        
+        // Efekt dźwiękowy/wibracja (jeśli obsługiwana)
+        if (navigator.vibrate) navigator.vibrate(100);
+
+        let trybOperacji = document.getElementById('operacja').value;
+        
+        // Zamiast wyłączać aparat, po prostu płynnie przerzucamy celownik na następny krok
+        setTimeout(() => {
+          blokadaSkanera = false;
+          if (celInput === 'kod-towaru') {
+            aktywujSkanowanie('polka');
+          } else if (celInput === 'polka' && trybOperacji === 'Wydanie') {
+            aktywujSkanowanie('pracownik');
+          } else {
+            schowajAparatObrazu(); // Chowamy tylko widok, gdy formularz jest gotowy do zapisu
+            document.getElementById('ilosc').focus();
+            document.getElementById('ilosc').select();
+          }
+        }, 1200); // 1.2 sekundy przerwy przed kolejnym skanem, żeby nie zeskanować dwa razy tego samego kodu
+      },
+      (errorMessage) => { }
+    ).catch(err => { console.log("Błąd kamery:", err); });
+
+    // Na start aktywujemy domyślnie pierwsze pole
+    aktywujSkanowanie('kod-towaru');
+  }
+
   function aktywujSkanowanie(poleId) {
     document.getElementById('aktywne-pole').value = poleId;
     document.getElementById('kod-towaru').classList.remove('skan-aktywny');
@@ -255,7 +277,6 @@
     
     document.getElementById('instrukcja-skanu').classList.remove('d-none');
     document.getElementById('reader').style.display = 'block';
-    document.getElementById('celownikKwadratowy').style.display = 'block'; // Włączenie naszej sztucznej ramki
 
     if(poleId === 'kod-towaru') {
       document.getElementById('instrukcja-skanu').innerText = "📷 KROK 1: Zeskanuj kod kreskowy PRODUKTU";
@@ -267,40 +288,21 @@
       document.getElementById('instrukcja-skanu').innerText = "🪪 KROK 3: Zeskanuj identyfikator PRACOWNIKA";
       document.getElementById('instrukcja-skanu').className = "alert alert-danger text-center fw-bold small text-white bg-danger";
     }
-
-    if (html5Qrcode && html5Qrcode.isScanning) return;
-    html5Qrcode = new Html5Qrcode("reader");
-    html5Qrcode.start(
-      { facingMode: "environment" },
-      { fps: 25 }, // Całkowicie usunięty fabryczny qrbox, żeby nie psuł widoku
-      (decodedText) => {
-        if (blokadaSkanera) return;
-        blokadaSkanera = true;
-        let celInput = document.getElementById('aktywne-pole').value;
-        document.getElementById(celInput).value = decodedText;
-        document.getElementById(celInput).classList.remove('skan-aktywny');
-        
-        wstrzymajAparat().then(() => {
-          setTimeout(() => { blokadaSkanera = false; }, 1500); 
-          let trybOperacji = document.getElementById('operacja').value;
-          
-          if (celInput === 'kod-towaru') {
-            aktywujSkanowanie('polka');
-          } else if (celInput === 'polka' && trybOperacji === 'Wydanie') {
-            aktywujSkanowanie('pracownik');
-          } else {
-            schowajAparat();
-            document.getElementById('ilosc').focus();
-            document.getElementById('ilosc').select();
-          }
-        });
-      },
-      (errorMessage) => { }
-    ).catch(err => { console.log("Błąd kamery:", err); });
   }
 
   function wstrzymajAparat() { if (html5Qrcode && html5Qrcode.isScanning) return html5Qrcode.stop(); return Promise.resolve(); }
-  function schowajAparat() { wstrzymajAparat().then(() => { document.getElementById('reader').style.display = 'none'; document.getElementById('celownikKwadratowy').style.display = 'none'; document.getElementById('instrukcja-skanu').classList.add('d-none'); document.getElementById('kod-towaru').classList.remove('skan-aktywny'); document.getElementById('polka').classList.remove('skan-aktywny'); document.getElementById('pracownik').classList.remove('skan-aktywny'); }); }
+  
+  // Funkcja, która tylko chowa okienko dla oka, ale fizycznie nie resetuje połączenia wideo
+  function schowajAparatObrazu() {
+    document.getElementById('reader').style.display = 'none';
+    document.getElementById('instrukcja-skanu').classList.add('d-none');
+    document.getElementById('kod-towaru').classList.remove('skan-aktywny');
+    document.getElementById('polka').classList.remove('skan-aktywny');
+    document.getElementById('pracownik').classList.remove('skan-aktywny');
+  }
+
+  // Pełne wyłączenie (np. przy wylogowaniu lub ukryciu formularza)
+  function schowajAparat() { wstrzymajAparat().then(() => { schowajAparatObrazu(); }); }
 
   function ustawTryb(tryb) {
     document.getElementById('operacja').value = tryb;
@@ -312,7 +314,7 @@
       sekcjaPracownik.style.display = 'block';
       document.getElementById('pracownik').setAttribute('required', 'true');
     }
-    wstrzymajAparat().then(() => { aktywujSkanowanie('kod-towaru'); });
+    aktywujSkanowanie('kod-towaru');
   }
 
   function wyslijDane(e) {
@@ -358,7 +360,12 @@
       document.getElementById('pracownik').value = "";
       document.getElementById('ilosc').value = '1';
       
-      setTimeout(() => { statusBox.classList.add('d-none'); wstrzymajAparat().then(() => { aktywujSkanowanie('kod-towaru'); }); }, 1500);
+      setTimeout(() => { 
+        statusBox.classList.add('d-none'); 
+        // Po zapisie od razu ustawiamy ostrość na KROK 1 i otwieramy widok kamery, która cały czas działa w tle
+        document.getElementById('reader').style.display = 'block';
+        aktywujSkanowanie('kod-towaru');
+      }, 1500);
     })
     .catch(err => { alert("Błąd połączenia z bazą danych."); btn.disabled = false; });
   }
