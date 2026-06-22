@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>LUBAS WMS v5.4 (Zebra-Final-Profile)</title>
+  <title>LUBAS WMS v5.5 (Zebra-Discovery-Fix)</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
@@ -12,7 +12,7 @@
     var ZebraBrowserPrint = function() {
       function e(e, t) { var n = new XMLHttpRequest; return "withCredentials" in n ? n.open(e, t, !0) : "undefined" != typeof XDomainRequest ? (n = new XDomainRequest, n.open(e, t)) : n = null, n }
       function t(t, n, o, r) { var i = e(t, n); return i ? (i.onload = function() { if (200 === i.status) o(i.responseText); else { var e = i.responseText; try { e = JSON.parse(i.responseText) } catch (t) {} r(e) } }, i.onerror = function() { r(i.responseText) }, i) : void r("CORS not supported") }
-      var n = {}, o = "https://localhost:9101/"; return n.sendThroughPrintService = function(e, n, i, s) { var a = t("POST", o + "write", i, s); a && a.send(JSON.stringify({ device: n, data: e })) }, n
+      var n = {}, o = "https://localhost:9101/"; return n.getLocalDevices = function(e, n, o) { var r = t("GET", "https://localhost:9101/available", function(t) { try { var o = JSON.parse(t); e(o) } catch (r) { n(r) } }, n); r && r.send() }, n.getDefaultDevice = function(e, o, r) { var i = t("GET", "https://localhost:9101/default", function(t) { try { var r = JSON.parse(t); o(r) } catch (i) { r(i) } }, r); i && i.send() }, n.sendThroughPrintService = function(e, n, i, s) { var a = t("POST", o + "write", i, s); a && a.send(JSON.stringify({ device: n, data: e })) }, n
     }();
   </script>
   
@@ -73,7 +73,7 @@
 
 <div class="container py-3" style="max-width: 480px;">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.4 (Zebra-Final-Profile)</span></h4>
+    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.5 (Zebra-Discovery-Fix)</span></h4>
     <div class="d-flex align-items-center gap-2">
       <span id="user-badge" class="badge bg-success p-2" style="font-size: 0.75rem;">---</span>
       <button onclick="wylogujOperatora()" class="btn btn-sm btn-outline-secondary py-0 px-1" style="font-size: 0.65rem;">Zmień</button>
@@ -152,27 +152,41 @@
     }
   };
 
+  // Automatyczne, bezpieczne przeszukanie listy aktywnych urządzeń i wysłanie kodu
   function wywołajOficjalnyWydruk(zplKod) {
-    // Profil sformatowany identycznie jak dane zwracane przez fabryczny sterownik lokalny
-    let ostatecznyFormatZebra = {
-      name: "ZDesigner ZD230-203dpi ZPL", // Nazwa musi odpowiadać zarejestrowanej usłudze Windows
-      uid: "ZDesigner ZD230-203dpi ZPL",
-      connection: "usb",
-      deviceType: "printer",
-      provider: "ZDesigner ZD230-203dpi ZPL",
-      manufacturer: "Zebra",
-      version: 0,
-      active: true
-    };
-
     if (typeof ZebraBrowserPrint !== 'undefined') {
-      ZebraBrowserPrint.sendThroughPrintService(zplKod, ostatecznyFormatZebra, function(odpowiedz) {
-        console.log("Dane wysłane do serwisu.");
-      }, function(blad) {
-        alert("Zebra Browser Print zgłasza: " + JSON.stringify(blad));
+      ZebraBrowserPrint.getLocalDevices(function(listaUrzadzen) {
+        
+        // Szukamy fizycznej drukarki na liście
+        let znalezioneUrzadzenie = null;
+        if (listaUrzadzen && listaUrzadzen.printer && listaUrzadzen.printer.length > 0) {
+          znalezioneUrzadzenie = listaUrzadzen.printer[0]; 
+        }
+
+        if (znalezioneUrzadzenie) {
+          // Sukces: przekazujemy oryginalny obiekt systemowy z pełnym cyfrowym tokenem UID
+          ZebraBrowserPrint.sendThroughPrintService(zplKod, znalezioneUrzadzenie, function(success) {
+            console.log("Wydruk zrealizowany pomyślnie.");
+          }, function(errorSend) {
+            alert("Błąd wysyłki ZPL: " + JSON.stringify(errorSend));
+          });
+        } else {
+          // Jeśli lista lokalna była pusta, uderzamy w domyślny profil systemowy
+          ZebraBrowserPrint.getDefaultDevice("printer", function(domyslne) {
+            if(domyslne && domyslne.name) {
+              ZebraBrowserPrint.sendThroughPrintService(zplKod, domyslne, function() {}, function(e) { alert(JSON.stringify(e)); });
+            } else {
+              alert("Nie wykryto żadnej drukarki Zebra podłączonej do portu USB.");
+            }
+          }, function(err) {
+            alert("Błąd połączenia: Brak uprawnień do urządzeń w oknie Browser Print.");
+          });
+        }
+      }, function(errorDiscovery) {
+        alert("Wewnętrzny błąd usługi skanowania portów: " + JSON.stringify(errorDiscovery));
       });
     } else {
-      alert("Błąd: Brak biblioteki Zebra.");
+      alert("Błąd: Biblioteka sterownika nie jest gotowa.");
     }
   }
 
