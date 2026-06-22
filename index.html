@@ -8,6 +8,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
   
+  <!-- Oficjalna biblioteka Zebra Browser Print do komunikacji po USB -->
   <script type="text/javascript" src="https://arkadiuszkrajewski-lc.github.io/Lubas-WMS/BrowserPrint-3.0.216.min.js"></script>
   
   <style>
@@ -122,6 +123,7 @@
 
       <button type="submit" id="btn-submit" class="btn btn-primary w-100 py-3 fw-bold fs-5 btn-modern mt-2">ZAPISZ OPERACJĘ (Enter)</button>
       
+      <!-- Przycisk szybkiego testu drukowania USB bezpośrednio z aplikacji -->
       <button type="button" onclick="drukujTestEtykietyUSB()" class="btn btn-outline-info w-100 py-2 fw-bold btn-modern mt-3">🖨️ DRUKUJ ETYKIETĘ TESTOWĄ (USB)</button>
     </form>
     <div id="status" class="alert alert-success mt-3 d-none text-center fw-bold" style="border-radius:10px;"></div>
@@ -134,7 +136,7 @@
   let loginQrcode = null;
   let blokadaSkanera = false; 
   let zalogowanyUzytkownik = "";
-  let selected_device = null; // Przechowuje wykrytą drukarkę Zebra USB
+  let selected_device = null;
 
   window.onload = function() {
     const zapamietanyEmail = localStorage.getItem('wms_user_email');
@@ -146,37 +148,30 @@
       setTimeout(() => { aktywujSkanowanie('kod-towaru'); }, 600);
     }
     
-    // DODANO: Inicjalizacja połączenia Browser Print z drukarką USB przy starcie aplikacji
+    // Inicjalizacja stałego połączenia z Twoją drukarką USB
     if (typeof ZebraBrowserPrint !== 'undefined') {
       setupZebraUSB();
     }
   };
 
-  // DODANO: Funkcja wykrywająca drukarkę po kablu USB
+  // Funkcja przypisująca Twoją drukarkę na sztywno po numerze seryjnym USB
   function setupZebraUSB() {
-    ZebraBrowserPrint.getDefaultDevice("printer", function(device) {
-      if (device != null) {
-        selected_device = device;
-        console.log("Wykryto i podpięto drukarkę USB: " + device.name);
-      } else {
-        console.log("Nie wykryto drukarki przez USB. Sprawdź działanie serwisu Zebra Browser Print.");
+    selected_device = {
+      name: "d5j261304878",
+      deviceType: "printer",
+      connection: "usb",
+      send: function(data, successCallback, errorCallback) {
+        ZebraBrowserPrint.sendThroughPrintService(data, "d5j261304878", successCallback, errorCallback);
       }
-    }, function(error) {
-      console.error("Błąd usługi Browser Print: " + error);
-    });
+    };
+    console.log("Wymuszono połączenie z drukarką USB: d5j261304878");
   }
 
-  // DODANO: Wywołanie wydruku testowego ZPL z poziomu interfejsu
+  // Wywołanie wydruku testowego ZPL dla etykiety 50x30 mm
   function drukujTestEtykietyUSB() {
-    if (!selected_device) {
-      alert("❌ Drukarka USB nie została połączona! Upewnij się, że program Zebra Browser Print jest uruchomiony na komputerze.");
-      return;
-    }
-    
     let kod = document.getElementById('kod-towaru').value.trim() || "TEST-123";
-    let lokalizacja = document.getElementById('polka').value.trim() || "REGAŁ-A-01";
+    let lokalizacja = document.getElementById('polka').value.trim() || "REGAL-A-01";
     
-    // Budujemy surowy kod ZPL dla etykiety 50x30 mm
     let zpl = "^XA^CI28^BY2,3,40" +
               "^FO30,25^A0N,20,20^FD* LUBAS WMS *^FS" +
               "^FO240,45^BQN,2,4^FDQA," + kod + "^FS" +
@@ -185,11 +180,15 @@
               "^FO30,170^A0N,22,20^FDLokalizacja:^FS" +
               "^FO30,200^A0N,24,22^FD" + lokalizacja + "^FS^XZ";
               
-    selected_device.send(zpl, function(success) {
-      console.log("Wydruk wysłany pomyślnie.");
-    }, function(error) {
-      alert("Błąd podczas wysyłania komendy do drukarki: " + error);
-    });
+    if (selected_device) {
+      selected_device.send(zpl, function(success) {
+        console.log("Wydruk wysłany pomyślnie.");
+      }, function(error) {
+        alert("Błąd podczas wysyłania komendy do drukarki: " + error);
+      });
+    } else {
+      alert("Urządzenie drukujące nie jest gotowe.");
+    }
   }
 
   function przelaczWidokHasla() {
@@ -380,7 +379,7 @@
       statusBox.className = "alert alert-success mt-3 text-center fw-bold bg-success text-white border-0";
       statusBox.classList.remove('d-none');
       
-      // DODANO: Automatyczne wywołanie druku etykiety przez USB, jeśli robimy PRZYJĘCIE towaru
+      // Automatyczny druk etykiety przez USB tylko przy PRZYJĘCIU towaru
       if (tryb === 'Przyjęcie') {
         drukujTestEtykietyUSB();
       }
