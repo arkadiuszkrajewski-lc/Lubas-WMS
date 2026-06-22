@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>LUBAS WMS v5.5 (Zebra-Discovery-Fix)</title>
+  <title>LUBAS WMS v5.6 (Print-Station)</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
@@ -23,6 +23,7 @@
       --accent-blue: #3b82f6;
       --accent-danger: #ef4444;
       --accent-success: #10b981;
+      --accent-purple: #a855f7;
       --text-main: #f8fafc;
     }
     body { background-color: var(--bg-dark); color: var(--text-main); font-family: 'Inter', sans-serif; -webkit-user-select: none; user-select: none; }
@@ -36,8 +37,10 @@
     #login-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg-dark); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
     .login-scanner-box { background: #000; border-radius: 12px; overflow: hidden; width: 100%; max-width: 280px; display: none; aspect-ratio: 1/1; margin-bottom: 25px; border: 2px solid var(--accent-blue); }
     
-    .form-group-custom { margin-bottom: 24px; }
+    .form-group-custom { margin-bottom: 20px; }
     .label-custom { font-size: 0.9rem; letter-spacing: 0.5px; margin-bottom: 10px; display: block; }
+    .nav-tabs .nav-link { color: #94a3b8; border: none; font-weight: 600; padding: 10px 15px; }
+    .nav-tabs .nav-link.active { background-color: rgba(255,255,255,0.05) !important; color: #fff !important; border-bottom: 3px solid var(--accent-blue) !important; border-radius: 8px 8px 0 0; }
   </style>
 </head>
 <body>
@@ -73,7 +76,7 @@
 
 <div class="container py-3" style="max-width: 480px;">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.5 (Zebra-Discovery-Fix)</span></h4>
+    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.6 (Print-Station)</span></h4>
     <div class="d-flex align-items-center gap-2">
       <span id="user-badge" class="badge bg-success p-2" style="font-size: 0.75rem;">---</span>
       <button onclick="wylogujOperatora()" class="btn btn-sm btn-outline-secondary py-0 px-1" style="font-size: 0.65rem;">Zmień</button>
@@ -81,15 +84,13 @@
   </div>
 
   <div class="modern-card p-3">
-    <div class="btn-group w-100 m-0" role="group">
+    <div class="btn-group w-100 mb-3" role="group">
       <input type="radio" class="btn-check" name="btnradio" id="btn-wydanie" checked onclick="ustawTryb('Wydanie')">
       <label class="btn btn-outline-light py-2 fw-bold" for="btn-wydanie">🔴 WYDANIE</label>
       <input type="radio" class="btn-check" name="btnradio" id="btn-przyjecie" onclick="ustawTryb('Przyjęcie')">
       <label class="btn btn-outline-light py-2 fw-bold" for="btn-przyjecie">🟢 PRZYJĘCIE</label>
     </div>
-  </div>
 
-  <div class="card modern-card p-3 shadow-sm border-0">
     <div id="instrukcja-skanu" class="alert alert-warning text-center fw-bold small d-none" style="border-radius:10px;">Skieruj aparat na kod QR...</div>
     <div id="reader" class="SkanerOkno"></div>
 
@@ -98,7 +99,7 @@
       <input type="hidden" id="aktywne-pole" value="">
 
       <div class="form-group-custom">
-        <label class="form-label fw-bold small text-secondary mb-2">1. KOD TOWARU:</label>
+        <label class="form-label fw-bold small text-secondary mb-1">1. KOD TOWARU:</label>
         <div class="input-group">
           <input type="text" id="kod-towaru" class="form-control wielki-input text-uppercase" placeholder="Zeskanuj / wpisz produkt..." onclick="aktywujSkanowanie('kod-towaru')" required>
           <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('kod-towaru')">❌</button>
@@ -106,15 +107,15 @@
       </div>
 
       <div class="form-group-custom">
-        <label class="form-label fw-bold small text-secondary mb-2">2. ADRES PÓŁKI:</label>
+        <label class="form-label fw-bold small text-secondary mb-1">2. ADRES PÓŁKI:</label>
         <div class="input-group">
-          <input type="text" id="polka" class="form-control wielki-input text-uppercase" placeholder="Zeskanuj / wpisz adres półki..." onclick="aktywujSkanowanie('polka')" required>
+          <input type="text" id="polka" class="form-control wielki-input text-uppercase" placeholder="np. 01-02-03-A-04..." onclick="aktywujSkanowanie('polka')" required>
           <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('polka')">❌</button>
         </div>
       </div>
 
       <div class="form-group-custom" id="sekcja-pracownik">
-        <label class="form-label fw-bold small text-secondary mb-2">3. PRACOWNIK (Imię i Nazwisko):</label>
+        <label class="form-label fw-bold small text-secondary mb-1">3. PRACOWNIK (Imię i Nazwisko):</label>
         <div class="input-group">
           <input type="text" id="pracownik" class="form-control wielki-input" placeholder="Zeskanuj / wpisz pracownika..." onclick="aktywujSkanowanie('pracownik')">
           <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('pracownik')">❌</button>
@@ -122,18 +123,63 @@
       </div>
 
       <div class="form-group-custom">
-        <label class="form-label fw-bold small text-secondary mb-2">4. ILOŚĆ SZTUK:</label>
+        <label class="form-label fw-bold small text-secondary mb-1">4. ILOŚĆ SZTUK:</label>
         <input type="number" id="ilosc" class="form-control wielki-input" value="1" min="1" required onfocus="schowajAparat()">
       </div>
 
-      <button type="submit" id="btn-submit" class="btn btn-primary w-100 py-3 fw-bold fs-5 btn-modern mt-2">ZAPISZ OPERACJĘ (Enter)</button>
-      
-      <button type="button" onclick="drukujTestEtykietyUSB()" class="btn btn-outline-info w-100 py-2 fw-bold btn-modern mt-3">🖨️ DRUKUJ ETYKIETĘ TESTOWĄ (USB)</button>
+      <button type="submit" id="btn-submit" class="btn btn-primary w-100 py-3 fw-bold fs-5 btn-modern mt-1">ZAPISZ OPERACJĘ (Enter)</button>
     </form>
     <div id="status" class="alert alert-success mt-3 d-none text-center fw-bold" style="border-radius:10px;"></div>
   </div>
+
+  <div class="modern-card p-3" style="border: 1px solid rgba(59, 130, 246, 0.2);">
+    <h5 class="fw-bold text-info mb-3 d-flex align-items-center gap-2">🖨️ Centrala Druku Etykiet</h5>
+    
+    <ul class="nav nav-tabs border-0 mb-3" id="printTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="tab-towar" data-bs-toggle="tab" data-bs-target="#panel-towar" type="button" role="tab">📦 Towar</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-lokalizacja" data-bs-toggle="tab" data-bs-target="#panel-lokalizacja" type="button" role="tab">📍 Półka</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-user" data-bs-toggle="tab" data-bs-target="#panel-user" type="button" role="tab">🪪 Pracownik</button>
+      </li>
+    </ul>
+    
+    <div class="tab-content" id="printTabsContent">
+      <div class="tab-pane fade show active" id="panel-towar" role="tabpanel">
+        <div class="mb-2">
+          <label class="small text-secondary fw-bold mb-1">KOD TOWARU:</label>
+          <input type="text" id="p-towar-kod" class="form-control wielki-input text-uppercase" placeholder="np. LUB-4421">
+        </div>
+        <div class="mb-3">
+          <label class="small text-secondary fw-bold mb-1">NAZWA TOWARU (Do druku):</label>
+          <input type="text" id="p-towar-nazwa" class="form-control wielki-input" placeholder="np. Podkładka poliuretanowa fi 80">
+        </div>
+        <button type="button" onclick="drukujEtykieteTowarowa()" class="btn btn-info w-100 py-2 fw-bold btn-modern">Drukuj Etykietę Towaru</button>
+      </div>
+      
+      <div class="tab-pane fade" id="panel-lokalizacja" role="tabpanel">
+        <div class="mb-3">
+          <label class="small text-secondary fw-bold mb-1">ADRES PÓŁKI (Format: 01-02-03-A-04):</label>
+          <input type="text" id="p-lok-adres" class="form-control wielki-input text-uppercase" placeholder="01-02-03-A-04">
+        </div>
+        <button type="button" onclick="drukujEtykieteLokalizacyjna()" class="btn btn-purple w-100 py-2 fw-bold btn-modern text-white" style="background-color: var(--accent-purple);">Drukuj Etykietę Adresową</button>
+      </div>
+      
+      <div class="tab-pane fade" id="panel-user" role="tabpanel">
+        <div class="mb-3">
+          <label class="small text-secondary fw-bold mb-1">IMIĘ I NAZWISKO PRACOWNIKA:</label>
+          <input type="text" id="p-user-nazwa" class="form-control wielki-input" placeholder="np. Jan Kowalski">
+        </div>
+        <button type="button" onclick="drukujEtykietePracownika()" class="btn btn-success w-100 py-2 fw-bold btn-modern">Drukuj Identyfikator</button>
+      </div>
+    </div>
+  </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
   const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbykKaTjGfb4H-S-AUUIIMr8g62hAE1V0YWYDhssCbAh26Y9r0u96xVySApf01PqO9sZ0Q/exec";
   let html5Qrcode = null;
@@ -152,57 +198,81 @@
     }
   };
 
-  // Automatyczne, bezpieczne przeszukanie listy aktywnych urządzeń i wysłanie kodu
-  function wywołajOficjalnyWydruk(zplKod) {
+  // Serwis komunikacji z API programu Zebra Browser Print przez Discovery portów
+  function wyslijDoZebry(zplKod) {
     if (typeof ZebraBrowserPrint !== 'undefined') {
-      ZebraBrowserPrint.getLocalDevices(function(listaUrzadzen) {
+      ZebraBrowserPrint.getLocalDevices(function(lista) {
+        let urzadzenie = null;
+        if (lista && lista.printer && lista.printer.length > 0) urzadzenie = lista.printer[0];
         
-        // Szukamy fizycznej drukarki na liście
-        let znalezioneUrzadzenie = null;
-        if (listaUrzadzen && listaUrzadzen.printer && listaUrzadzen.printer.length > 0) {
-          znalezioneUrzadzenie = listaUrzadzen.printer[0]; 
-        }
-
-        if (znalezioneUrzadzenie) {
-          // Sukces: przekazujemy oryginalny obiekt systemowy z pełnym cyfrowym tokenem UID
-          ZebraBrowserPrint.sendThroughPrintService(zplKod, znalezioneUrzadzenie, function(success) {
-            console.log("Wydruk zrealizowany pomyślnie.");
-          }, function(errorSend) {
-            alert("Błąd wysyłki ZPL: " + JSON.stringify(errorSend));
-          });
+        if (urzadzenie) {
+          ZebraBrowserPrint.sendThroughPrintService(zplKod, urzadzenie, function() {
+            console.log("ZPL wysłany na port USB.");
+          }, function(e) { alert("Błąd portu USB: " + JSON.stringify(e)); });
         } else {
-          // Jeśli lista lokalna była pusta, uderzamy w domyślny profil systemowy
           ZebraBrowserPrint.getDefaultDevice("printer", function(domyslne) {
             if(domyslne && domyslne.name) {
               ZebraBrowserPrint.sendThroughPrintService(zplKod, domyslne, function() {}, function(e) { alert(JSON.stringify(e)); });
-            } else {
-              alert("Nie wykryto żadnej drukarki Zebra podłączonej do portu USB.");
-            }
-          }, function(err) {
-            alert("Błąd połączenia: Brak uprawnień do urządzeń w oknie Browser Print.");
-          });
+            } else { alert("Nie znaleziono drukarki. Sprawdź czy program przy zegarku jest włączony."); }
+          }, function(err) { alert("Błąd autoryzacji: Brak uprawnień."); });
         }
-      }, function(errorDiscovery) {
-        alert("Wewnętrzny błąd usługi skanowania portów: " + JSON.stringify(errorDiscovery));
-      });
-    } else {
-      alert("Błąd: Biblioteka sterownika nie jest gotowa.");
-    }
+      }, function(err) { alert("Błąd usługi skanowania: " + JSON.stringify(err)); });
+    } else { alert("Błąd: Sterownik Zebra nie jest załadowany."); }
   }
 
-  function drukujTestEtykietyUSB() {
-    let kod = document.getElementById('kod-towaru').value.trim() || "TEST-123";
-    let lokalizacja = document.getElementById('polka').value.trim() || "REGAL-A-01";
+  // 1. GENEROWANIE ETYKIETY TOWAROWEJ (QR po lewej, tekst po prawej)
+  function drukujEtykieteTowarowa() {
+    let kod = document.getElementById('p-towar-kod').value.trim().toUpperCase();
+    let nazwa = document.getElementById('p-towar-nazwa').value.trim();
     
-    let zpl = "^XA^CI28^BY2,3,40" +
-              "^FO30,25^A0N,20,20^FD* LUBAS WMS *^FS" +
-              "^FO240,45^BQN,2,4^FDQA," + kod + "^FS" +
-              "^FO30,70^A0N,28,26^FDTowar:^FS" +
-              "^FO30,105^A0N,32,30^FD" + kod + "^FS" +
-              "^FO30,170^A0N,22,20^FDLokalizacja:^FS" +
-              "^FO30,200^A0N,24,22^FD" + lokalizacja + "^FS^XZ";
-              
-    wywołajOficjalnyWydruk(zpl);
+    if(!kod) { alert("Wpisz kod towaru!"); return; }
+    
+    // Obcinanie nazwy do 28 znaków, żeby nie wyszła poza etykietę foliową
+    if(nazwa.length > 28) nazwa = nazwa.substring(0, 25) + "...";
+
+    let zpl = "^XA^CI28" +
+              "^FO30,45^BQN,2,5^FDQA," + kod + "^FS" + // Kod QR po lewej stronie
+              "^FO210,40^A0N,22,20^FDKOD TOWARU:^FS" +
+              "^FO210,65^A0N,36,34^FD" + kod + "^FS" + // Duży kod po prawej
+              "^FO210,120^A0N,20,18^FDNAZWA:^FS" +
+              "^FO210,145^A0N,24,22^FD" + nazwa + "^FS" + // Nazwa pod kodem
+              "^XZ";
+    wyslijDoZebry(zpl);
+  }
+
+  // 2. GENEROWANIE ETYKIETY LOKALIZACYJNEJ (Parsowanie schematu 01-02-03-A-04)
+  function drukujEtykieteLokalizacyjna() {
+    let adres = document.getElementById('p-lok-adres').value.trim().toUpperCase();
+    if(!adres) { alert("Wpisz adres półki!"); return; }
+
+    let czesci = adres.split('-');
+    let mag = czesci[0] || "--";
+    let rzad = czesci[1] || "--";
+    let regal = czesci[2] || "--";
+    let poziom = czesci[3] || "--";
+    let poz = czesci[4] || "--";
+
+    // Kod kreskowy Code 128 dla sprawnego skanowania aparatem
+    let zpl = "^XA^CI28" +
+              "^FO50,25^BY2,3,50^BCN,60,Y,N,N^FD" + adres + "^FS" + // Kod kreskowy u góry
+              "^FO40,110^GB320,1,1^FS" + // Linia odcinająca
+              "^FO40,125^A0N,18,16^FDMAG:" + mag + " | RZAD:" + rzad + " | REGAL:" + regal + "^FS" +
+              "^FO40,155^A0N,18,16^FDPOZIOM (Pietro): " + poziom + " | POZYCJA: " + poz + "^FS" +
+              "^XZ";
+    wyslijDoZebry(zpl);
+  }
+
+  // 3. GENEROWANIE ETYKIETY PRACWNIKA (Karta logowania)
+  function drukujEtykietePracownika() {
+    let dane = document.getElementById('p-user-nazwa').value.trim();
+    if(!dane) { alert("Wpisz imię i nazwisko pracownika!"); return; }
+
+    let zpl = "^XA^CI28" +
+              "^FO40,30^A0N,24,22^FDID PRACOWNIKA WMS^FS" +
+              "^FO40,65^A0N,32,30^FD" + dane + "^FS" + // Imię i nazwisko czytelne dla oka
+              "^FO40,110^BY2,3,45^BCN,45,Y,N,N^FD" + dane + "^FS" + // Kod kreskowy do szybkiego logowania
+              "^XZ";
+    wyslijDoZebry(zpl);
   }
 
   function przelaczWidokHasla() {
@@ -392,13 +462,6 @@
       statusBox.innerText = "🚀 ZAPISANO W BAZIE GOOGLE!";
       statusBox.className = "alert alert-success mt-3 text-center fw-bold bg-success text-white border-0";
       statusBox.classList.remove('d-none');
-      
-      if (tryb === 'Przyjęcie') {
-        let kod = document.getElementById('kod-towaru').value.trim() || "TEST-123";
-        let lokalizacja = document.getElementById('polka').value.trim() || "REGAL-A-01";
-        let automatycznyZpl = "^XA^CI28^BY2,3,40^FO30,25^A0N,20,20^FD* LUBAS WMS *^FS^FO240,45^BQN,2,4^FDQA," + kod + "^FS^FO30,70^A0N,28,26^FDTowar:^FS^FO30,105^A0N,32,30^FD" + kod + "^FS^FO30,170^A0N,22,20^FDLokalizacja:^FS^FO30,200^A0N,24,22^FD" + lokalizacja + "^FS^XZ";
-        wywołajOficjalnyWydruk(automatycznyZpl);
-      }
       
       document.getElementById('kod-towaru').value = "";
       document.getElementById('polka').value = "";
