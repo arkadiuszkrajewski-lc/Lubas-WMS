@@ -3,13 +3,17 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>LUBAS WMS v4.8 (USB-FIX)</title>
+  <title>LUBAS WMS v5.0 (Zebra-Auto-Device)</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
   
   <script type="text/javascript">
-    var BrowserPrint = function () { function e(e, t) { var n = new XMLHttpRequest; return "withCredentials" in n ? n.open(e, t, !0) : "undefined" != typeof XDomainRequest ? (n = new XDomainRequest, n.open(e, t)) : n = null, n } function t(t, n, o, r) { var i = e(t, n); return i ? (i.onload = function () { if (200 === i.status) o(i.responseText); else if (404 === i.status) r(i.responseText); else { var e = i.responseText; try { e = JSON.parse(i.responseText) } catch (t) { } r(e) } }, i.onerror = function () { r(i.responseText) }, i) : void r("CORS not supported") } var n = {}, o = "https://localhost:9101/"; return n.sendThroughPrintService = function (e, n, i, s) { var a = t("POST", o + "write", i, s); a && a.send(JSON.stringify({ device: { name: n, uid: n, connection: "usb", deviceType: "printer", version: 0, active: !0 }, data: e })) }, n }();
+    var ZebraBrowserPrint = function() {
+      function e(e, t) { var n = new XMLHttpRequest; return "withCredentials" in n ? n.open(e, t, !0) : "undefined" != typeof XDomainRequest ? (n = new XDomainRequest, n.open(e, t)) : n = null, n }
+      function t(t, n, o, r) { var i = e(t, n); return i ? (i.onload = function() { if (200 === i.status) o(i.responseText); else { var e = i.responseText; try { e = JSON.parse(i.responseText) } catch (t) {} r(e) } }, i.onerror = function() { r(i.responseText) }, i) : void r("CORS not supported") }
+      var n = {}, o = "https://localhost:9101/"; return n.getLocalDevices = function(e, n, o) { var r = t("GET", "https://localhost:9101/available", function(t) { try { var o = JSON.parse(t); e(o) } catch (r) { n(r) } }, n); r && r.send() }, n.getDefaultDevice = function(e, o, r) { var i = t("GET", "https://localhost:9101/default", function(t) { try { var r = JSON.parse(t); o(r) } catch (i) { r(i) } }, r); i && i.send() }, n.sendThroughPrintService = function(e, n, i, s) { var a = t("POST", o + "write", i, s); a && a.send(JSON.stringify({ device: n, data: e })) }, n
+    }();
   </script>
   
   <style>
@@ -69,7 +73,7 @@
 
 <div class="container py-3" style="max-width: 480px;">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v4.8 (USB-FIX)</span></h4>
+    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.0 (Zebra-Auto-Device)</span></h4>
     <div class="d-flex align-items-center gap-2">
       <span id="user-badge" class="badge bg-success p-2" style="font-size: 0.75rem;">---</span>
       <button onclick="wylogujOperatora()" class="btn btn-sm btn-outline-secondary py-0 px-1" style="font-size: 0.65rem;">Zmień</button>
@@ -136,6 +140,7 @@
   let loginQrcode = null;
   let blokadaSkanera = false; 
   let zalogowanyUzytkownik = "";
+  let lokalne_urzadzenie_zebra = null;
 
   window.onload = function() {
     const zapamietanyEmail = localStorage.getItem('wms_user_email');
@@ -146,17 +151,38 @@
       document.getElementById('login-overlay').style.display = 'none';
       setTimeout(() => { aktywujSkanowanie('kod-towaru'); }, 600);
     }
+    
+    // Automatycznie zaciągamy kompletny obiekt drukarki domyślnej (w tym provider) z aplikacji Browser Print
+    pobierzUrzadzenieDomyślne();
   };
 
-  function drumujPrzezSerwis(zplKod) {
-    if (typeof BrowserPrint !== 'undefined') {
-      BrowserPrint.sendThroughPrintService(zplKod, "d5j261304878", function(success) {
-        console.log("Wydruk OK");
-      }, function(err) {
-        alert("Błąd połączenia USB z Browser Print. Sprawdź czy program jest włączony.");
+  function pobierzUrzadzenieDomyślne() {
+    if (typeof ZebraBrowserPrint !== 'undefined') {
+      ZebraBrowserPrint.getDefaultDevice("printer", function(device) {
+        lokalne_urzadzenie_zebra = device;
+        console.log("Pomyślnie załadowano pełny profil drukarki:", device.name);
+      }, function(error) {
+        console.log("Nie udało się pobrać profilu, powtórka za 2 sekundy...");
+        setTimeout(pobierzUrzadzenieDomyślne, 2000);
+      });
+    }
+  }
+
+  function wywołajOficjalnyWydruk(zplKod) {
+    if (lokalne_urzadzenie_zebra) {
+      ZebraBrowserPrint.sendThroughPrintService(zplKod, lokalne_urzadzenie_zebra, function(odpowiedz) {
+        console.log("Wydruk wysłany poprawnie.");
+      }, function(blad) {
+        alert("Zebra Browser Print odrzucił żądanie: " + JSON.stringify(blad));
       });
     } else {
-      alert("Błąd krytyczny: Skrypt wewnętrzny nie zainicjalizował się.");
+      // Awaryjna próba pobrania profilu w locie, jeśli nie załadował się na starcie
+      ZebraBrowserPrint.getDefaultDevice("printer", function(device) {
+        lokalne_urzadzenie_zebra = device;
+        ZebraBrowserPrint.sendThroughPrintService(zplKod, lokalne_urzadzenie_zebra, function() {}, function(e) { alert(JSON.stringify(e)); });
+      }, function(err) {
+        alert("Drukarka nie jest gotowa. Upewnij się, że w programie Zebra kliknąłeś 'Change' i wybrałeś urządzenie.");
+      });
     }
   }
 
@@ -172,7 +198,7 @@
               "^FO30,170^A0N,22,20^FDLokalizacja:^FS" +
               "^FO30,200^A0N,24,22^FD" + lokalizacja + "^FS^XZ";
               
-    drumujPrzezSerwis(zpl);
+    wywołajOficjalnyWydruk(zpl);
   }
 
   function przelaczWidokHasla() {
@@ -367,7 +393,7 @@
         let kod = document.getElementById('kod-towaru').value.trim() || "TEST-123";
         let lokalizacja = document.getElementById('polka').value.trim() || "REGAL-A-01";
         let automatycznyZpl = "^XA^CI28^BY2,3,40^FO30,25^A0N,20,20^FD* LUBAS WMS *^FS^FO240,45^BQN,2,4^FDQA," + kod + "^FS^FO30,70^A0N,28,26^FDTowar:^FS^FO30,105^A0N,32,30^FD" + kod + "^FS^FO30,170^A0N,22,20^FDLokalizacja:^FS^FO30,200^A0N,24,22^FD" + lokalizacja + "^FS^XZ";
-         drumujPrzezSerwis(automatycznyZpl);
+        wywołajOficjalnyWydruk(automatycznyZpl);
       }
       
       document.getElementById('kod-towaru').value = "";
