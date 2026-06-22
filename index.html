@@ -123,7 +123,7 @@
 
       <button type="submit" id="btn-submit" class="btn btn-primary w-100 py-3 fw-bold fs-5 btn-modern mt-2">ZAPISZ OPERACJĘ (Enter)</button>
       
-      <!-- Przycisk szybkiego testu drukowania USB bezpośrednio z aplikacji -->
+      <!-- Przycisk szybkiego bezpośredniego drukowania po kablu USB -->
       <button type="button" onclick="drukujTestEtykietyUSB()" class="btn btn-outline-info w-100 py-2 fw-bold btn-modern mt-3">🖨️ DRUKUJ ETYKIETĘ TESTOWĄ (USB)</button>
     </form>
     <div id="status" class="alert alert-success mt-3 d-none text-center fw-bold" style="border-radius:10px;"></div>
@@ -148,13 +148,13 @@
       setTimeout(() => { aktywujSkanowanie('kod-towaru'); }, 600);
     }
     
-    // Inicjalizacja stałego połączenia z Twoją drukarką USB
+    // Inicjalizacja bezpośredniego pomostu USB przy starcie strony
     if (typeof ZebraBrowserPrint !== 'undefined') {
       setupZebraUSB();
     }
   };
 
-  // Funkcja przypisująca Twoją drukarkę na sztywno po numerze seryjnym USB
+  // Bezpośrednia rejestracja Twojej konkretnej drukarki omijająca błędy wyszukiwania hosta
   function setupZebraUSB() {
     selected_device = {
       name: "d5j261304878",
@@ -164,14 +164,15 @@
         ZebraBrowserPrint.sendThroughPrintService(data, "d5j261304878", successCallback, errorCallback);
       }
     };
-    console.log("Wymuszono połączenie z drukarką USB: d5j261304878");
+    console.log("Połączenie wymuszone na sztywno dla portu USB.");
   }
 
-  // Wywołanie wydruku testowego ZPL dla etykiety 50x30 mm
+  // Funkcja wysyłająca kod ZPL bezpośrednio do kolejki portu bez zbędnej weryfikacji statusu
   function drukujTestEtykietyUSB() {
     let kod = document.getElementById('kod-towaru').value.trim() || "TEST-123";
     let lokalizacja = document.getElementById('polka').value.trim() || "REGAL-A-01";
     
+    // Generowanie kodu ZPL zoptymalizowanego pod etykiety foliowe 50x30mm
     let zpl = "^XA^CI28^BY2,3,40" +
               "^FO30,25^A0N,20,20^FD* LUBAS WMS *^FS" +
               "^FO240,45^BQN,2,4^FDQA," + kod + "^FS" +
@@ -180,14 +181,14 @@
               "^FO30,170^A0N,22,20^FDLokalizacja:^FS" +
               "^FO30,200^A0N,24,22^FD" + lokalizacja + "^FS^XZ";
               
-    if (selected_device) {
-      selected_device.send(zpl, function(success) {
-        console.log("Wydruk wysłany pomyślnie.");
+    if (typeof ZebraBrowserPrint !== 'undefined') {
+      ZebraBrowserPrint.sendThroughPrintService(zpl, "d5j261304878", function(success) {
+        console.log("Dane ZPL wysłane bezpośrednio przez serwis wydruku.");
       }, function(error) {
-        alert("Błąd podczas wysyłania komendy do drukarki: " + error);
+        alert("Błąd transmisji USB. Jeśli okno programu Browser Print pytało o zgodę, upewnij się, że wybrano 'Yes'.");
       });
     } else {
-      alert("Urządzenie drukujące nie jest gotowe.");
+      alert("Sterownik ZebraBrowserPrint nie jest dostępny na tej stronie.");
     }
   }
 
@@ -379,7 +380,7 @@
       statusBox.className = "alert alert-success mt-3 text-center fw-bold bg-success text-white border-0";
       statusBox.classList.remove('d-none');
       
-      // Automatyczny druk etykiety przez USB tylko przy PRZYJĘCIU towaru
+      // Automatyczny bezwarunkowy druk etykiety przez port USB przy "Przyjęciu" towaru
       if (tryb === 'Przyjęcie') {
         drukujTestEtykietyUSB();
       }
