@@ -3,13 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>LUBAS WMS v4.7</title>
+  <title>LUBAS WMS v4.8</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
   
-  <!-- Oficjalna biblioteka Zebra Browser Print do komunikacji po USB -->
- <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/jseban/Zebra-Browser-Print-Wrapper@master/BrowserPrint-3.0.216.min.js"></script>
+  <script type="text/javascript">
+    var BrowserPrint = function () { function e(e, t) { var n = new XMLHttpRequest; return "withCredentials" in n ? n.open(e, t, !0) : "undefined" != typeof XDomainRequest ? (n = new XDomainRequest, n.open(e, t)) : n = null, n } function t(t, n, o, r) { var i = e(t, n); return i ? (i.onload = function () { if (200 === i.status) o(i.responseText); else if (404 === i.status) r(i.responseText); else { var e = i.responseText; try { e = JSON.parse(i.responseText) } catch (t) { } r(e) } }, i.onerror = function () { r(i.responseText) }, i) : void r("CORS not supported") } var n = {}, o = "https://localhost:9101/"; return n.sendThroughPrintService = function (e, n, i, s) { var a = t("POST", o + "write", i, s); a && a.send(JSON.stringify({ device: { name: n, uid: n, connection: "usb", deviceType: "printer", version: 0, active: !0 }, data: e })) }, n }();
+  </script>
   
   <style>
     :root {
@@ -123,7 +124,6 @@
 
       <button type="submit" id="btn-submit" class="btn btn-primary w-100 py-3 fw-bold fs-5 btn-modern mt-2">ZAPISZ OPERACJĘ (Enter)</button>
       
-      <!-- Przycisk szybkiego bezpośredniego drukowania po kablu USB -->
       <button type="button" onclick="drukujTestEtykietyUSB()" class="btn btn-outline-info w-100 py-2 fw-bold btn-modern mt-3">🖨️ DRUKUJ ETYKIETĘ TESTOWĄ (USB)</button>
     </form>
     <div id="status" class="alert alert-success mt-3 d-none text-center fw-bold" style="border-radius:10px;"></div>
@@ -136,7 +136,6 @@
   let loginQrcode = null;
   let blokadaSkanera = false; 
   let zalogowanyUzytkownik = "";
-  let selected_device = null;
 
   window.onload = function() {
     const zapamietanyEmail = localStorage.getItem('wms_user_email');
@@ -147,32 +146,24 @@
       document.getElementById('login-overlay').style.display = 'none';
       setTimeout(() => { aktywujSkanowanie('kod-towaru'); }, 600);
     }
-    
-    // Inicjalizacja bezpośredniego pomostu USB przy starcie strony
-    if (typeof ZebraBrowserPrint !== 'undefined') {
-      setupZebraUSB();
-    }
   };
 
-  // Bezpośrednia rejestracja Twojej konkretnej drukarki omijająca błędy wyszukiwania hosta
-  function setupZebraUSB() {
-    selected_device = {
-      name: "d5j261304878",
-      deviceType: "printer",
-      connection: "usb",
-      send: function(data, successCallback, errorCallback) {
-        ZebraBrowserPrint.sendThroughPrintService(data, "d5j261304878", successCallback, errorCallback);
-      }
-    };
-    console.log("Połączenie wymuszone na sztywno dla portu USB.");
+  function drumujPrzezSerwis(zplKod) {
+    if (typeof BrowserPrint !== 'undefined') {
+      BrowserPrint.sendThroughPrintService(zplKod, "d5j261304878", function(success) {
+        console.log("Wydruk OK");
+      }, function(err) {
+        alert("Błąd połączenia USB z Browser Print. Sprawdź czy program jest włączony.");
+      });
+    } else {
+      alert("Błąd krytyczny: Skrypt wewnętrzny nie zainicjalizował się.");
+    }
   }
 
-  // Funkcja wysyłająca kod ZPL bezpośrednio do kolejki portu bez zbędnej weryfikacji statusu
   function drukujTestEtykietyUSB() {
     let kod = document.getElementById('kod-towaru').value.trim() || "TEST-123";
     let lokalizacja = document.getElementById('polka').value.trim() || "REGAL-A-01";
     
-    // Generowanie kodu ZPL zoptymalizowanego pod etykiety foliowe 50x30mm
     let zpl = "^XA^CI28^BY2,3,40" +
               "^FO30,25^A0N,20,20^FD* LUBAS WMS *^FS" +
               "^FO240,45^BQN,2,4^FDQA," + kod + "^FS" +
@@ -181,15 +172,7 @@
               "^FO30,170^A0N,22,20^FDLokalizacja:^FS" +
               "^FO30,200^A0N,24,22^FD" + lokalizacja + "^FS^XZ";
               
-    if (typeof ZebraBrowserPrint !== 'undefined') {
-      ZebraBrowserPrint.sendThroughPrintService(zpl, "d5j261304878", function(success) {
-        console.log("Dane ZPL wysłane bezpośrednio przez serwis wydruku.");
-      }, function(error) {
-        alert("Błąd transmisji USB. Jeśli okno programu Browser Print pytało o zgodę, upewnij się, że wybrano 'Yes'.");
-      });
-    } else {
-      alert("Sterownik ZebraBrowserPrint nie jest dostępny na tej stronie.");
-    }
+    drumujPrzezSerwis(zpl);
   }
 
   function przelaczWidokHasla() {
@@ -242,7 +225,7 @@
       btn.innerText = "Zaloguj do systemu";
       
       if (odpowiedz.startsWith("DOZWOLONY")) {
-        const nazwaPracownika = odpowiedz.split('|')[1];
+        const nazwaPracownika = presidential = odpowiedz.split('|')[1];
         localStorage.setItem('wms_user_email', email);
         localStorage.setItem('wms_user_name', nazwaPracownika);
         zalogowanyUzytkownik = email;
@@ -380,9 +363,11 @@
       statusBox.className = "alert alert-success mt-3 text-center fw-bold bg-success text-white border-0";
       statusBox.classList.remove('d-none');
       
-      // Automatyczny bezwarunkowy druk etykiety przez port USB przy "Przyjęciu" towaru
       if (tryb === 'Przyjęcie') {
-        drukujTestEtykietyUSB();
+        let kod = document.getElementById('kod-towaru').value.trim() || "TEST-123";
+        let lokalizacja = document.getElementById('polka').value.trim() || "REGAL-A-01";
+        let automatycznyZpl = "^XA^CI28^BY2,3,40^FO30,25^A0N,20,20^FD* LUBAS WMS *^FS^FO240,45^BQN,2,4^FDQA," + kod + "^FS^FO30,70^A0N,28,26^FDTowar:^FS^FO30,105^A0N,32,30^FD" + kod + "^FS^FO30,170^A0N,22,20^FDLokalizacja:^FS^FO30,200^A0N,24,22^FD" + lokalizacja + "^FS^XZ";
+         drumujPrzezSerwis(automatycznyZpl);
       }
       
       document.getElementById('kod-towaru').value = "";
