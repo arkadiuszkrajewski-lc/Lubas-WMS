@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>LUBAS WMS v5.10 (Three-Main-Tabs)</title>
+  <title>LUBAS WMS v5.9 (Three-Main-Tabs)</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
@@ -186,9 +186,7 @@
 </div>
 
 <script>
-  // PAMIĘTAJ O PODMIANIE TEGO URL NA ADRES URL SWOJEGO NOWEGO WDROŻENIA (DEPLOYMENT)
   const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbykKaTjGfb4H-S-AUUIIMr8g62hAE1V0YWYDhssCbAh26Y9r0u96xVySApf01PqO9sZ0Q/exec";
-  
   let html5Qrcode = null;
   let loginQrcode = null;
   let blokadaSkanera = false; 
@@ -338,17 +336,12 @@
     btn.disabled = true;
     btn.innerText = "Weryfikacja danych...";
 
-    // Logowanie zintegrowane z formatem JSON
-    const bodyForm = {
-      akcja: "weryfikuj_user",
-      email: email,
-      haslo: haslo
-    };
+    const bodyForm = "akcja=weryfikuj_user&email=" + encodeURIComponent(email) + "&haslo=" + encodeURIComponent(haslo);
 
     fetch(GOOGLE_SCRIPT_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(bodyForm)
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: bodyForm
     })
     .then(res => res.text())
     .then(odpowiedz => {
@@ -481,40 +474,28 @@
       operator: zalogowanyUzytkownik
     };
 
-    // Przesyłanie danych w czystym strukturyzowanym formacie JSON
+    const formBody = Object.keys(paczkaDanych).map(key => encodeURIComponent(key) + '=' + encodeURIComponent(paczkaDanych[key])).join('&');
+
     fetch(GOOGLE_SCRIPT_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(paczkaDanych)
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: formBody
     })
-    .then(res => res.json())
-    .then(data => {
+    .then(() => {
       btn.disabled = false;
       btn.innerText = "ZAPISZ OPERACJĘ (Enter)";
+      statusBox.innerText = "🚀 ZAPISANO W BAZIE GOOGLE!";
+      statusBox.className = "alert alert-success mt-3 text-center fw-bold bg-success text-white border-0";
+      statusBox.classList.remove('d-none');
       
-      if(data.status === "SUCCESS") {
-        statusBox.innerText = "🚀 ZAPISANO W BAZIE GOOGLE!";
-        statusBox.className = "alert alert-success mt-3 text-center fw-bold bg-success text-white border-0";
-        statusBox.classList.remove('d-none');
-        
-        document.getElementById('kod-towaru').value = "";
-        document.getElementById('polka').value = "";
-        document.getElementById('pracownik').value = "";
-        document.getElementById('ilosc').value = '1';
-        
-        setTimeout(() => { 
-          statusBox.classList.add('d-none'); 
-          wstrzymajAparat().then(() => { aktywujSkanowanie('kod-towaru'); }); 
-        }, 1500);
-      } else {
-        alert("Błąd chmury: " + data.message);
-      }
+      document.getElementById('kod-towaru').value = "";
+      document.getElementById('polka').value = "";
+      document.getElementById('pracownik').value = "";
+      document.getElementById('ilosc').value = '1';
+      
+      setTimeout(() => { statusBox.classList.add('d-none'); wstrzymajAparat().then(() => { aktywujSkanowanie('kod-towaru'); }); }, 1500);
     })
-    .catch(err => { 
-      alert("Błąd połączenia z bazą danych."); 
-      btn.disabled = false; 
-      btn.innerText = "ZAPISZ OPERACJĘ (Enter)";
-    });
+    .catch(err => { alert("Błąd połączenia z bazą danych."); btn.disabled = false; });
   }
 </script>
 </body>
