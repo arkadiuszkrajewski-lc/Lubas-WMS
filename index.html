@@ -34,7 +34,21 @@
     .skan-aktywny { border: 2px solid var(--accent-danger) !important; box-shadow: 0 0 15px rgba(239, 68, 68, 0.3) !important; }
     .btn-modern { border-radius: 12px; padding: 14px; font-weight: 600; transition: all 0.2s; }
     
-    /* Stylizacja głównego menu trzech zakładek */
+    /* Naprawa nachodzenia elementów w nagłówku */
+    .wms-naglowek-kontener {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      flex-wrap: nowrap !important;
+    }
+    .wms-operator-sekcja {
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 6px !important;
+      white-space: nowrap !important;
+    }
+    
+    /* Regulacja głównego menu trzech zakładek */
     .glowny-przelacznik .btn-check:checked + .btn-outline-light { background-color: var(--accent-blue); border-color: var(--accent-blue); color: white; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
     .glowny-przelacznik .btn { font-size: 0.85rem; letter-spacing: 0.5px; padding: 12px 5px; font-weight: 800; border-color: rgba(255,255,255,0.15); color: #94a3b8; }
     
@@ -80,9 +94,9 @@
 </div>
 
 <div class="container py-3" style="max-width: 480px;">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.9</span></h4>
-    <div class="d-flex align-items-center gap-2">
+  <div class="wms-naglowek-kontener mb-3">
+    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info" style="font-size:0.9rem;">v5.9</span></h4>
+    <div class="wms-operator-sekcja">
       <span id="user-badge" class="badge bg-success p-2" style="font-size: 0.75rem;">---</span>
       <button onclick="wylogujOperatora()" class="btn btn-sm btn-outline-secondary py-0 px-1" style="font-size: 0.65rem;">Zmień</button>
     </div>
@@ -91,7 +105,7 @@
   <div class="modern-card p-2 mb-4">
     <div class="btn-group w-100 m-0 glowny-przelacznik" role="group">
       <input type="radio" class="btn-check" name="main-nav" id="tab-wydanie" checked onclick="przelaczGlownyModul('Wydanie')">
-      <label class="btn btn-outline-light" for="tab-wydanie">🔴 WYDANIE</label>
+      <label class="btn btn-outline-light" for="tab-wydanie">GDNIE 🔴 WYDANIE</label>
       
       <input type="radio" class="btn-check" name="main-nav" id="tab-przyjecie" onclick="przelaczGlownyModul('Przyjęcie')">
       <label class="btn btn-outline-light" for="tab-przyjecie">🟢 PRZYJĘCIE</label>
@@ -105,22 +119,22 @@
   <div id="reader" class="SkanerOkno"></div>
 
   <div id="sekcja-operacji" class="card modern-card p-3 shadow-sm border-0">
-    <form id="wmsForm" onsubmit="wyslijDane(event)">
+    <form id="wmsForm" onsubmit="walidujIWyslijFormularz(event)">
       <input type="hidden" id="operacja" value="Wydanie">
       <input type="hidden" id="aktywne-pole" value="">
 
       <div class="form-group-custom">
-        <label class="form-label fw-bold small text-secondary mb-1">1. KOD TOWARU:</label>
+        <label class="form-label fw-bold small text-secondary mb-1">1. KOD TOWARU (Dokładnie 5 cyfr):</label>
         <div class="input-group">
-          <input type="text" id="kod-towaru" class="form-control wielki-input text-uppercase" placeholder="Zeskanuj produkt (QR)..." onclick="aktywujSkanowanie('kod-towaru')" required>
+          <input type="text" id="kod-towaru" class="form-control wielki-input text-uppercase" placeholder="Zeskanuj produkt (5 cyfr)..." onclick="aktywujSkanowanie('kod-towaru')" required>
           <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('kod-towaru')">❌</button>
         </div>
       </div>
 
       <div class="form-group-custom">
-        <label class="form-label fw-bold small text-secondary mb-1">2. ADRES PÓŁKI:</label>
+        <label class="form-label fw-bold small text-secondary mb-1">2. ADRES PÓŁKI (00-00-00-X-00):</label>
         <div class="input-group">
-          <input type="text" id="polka" class="form-control wielki-input text-uppercase" placeholder="Zeskanuj adres półki (QR)..." onclick="aktywujSkanowanie('polka')" required>
+          <input type="text" id="polka" class="form-control wielki-input text-uppercase" placeholder="Format: 01-02-03-A-04..." onclick="aktywujSkanowanie('polka')" required>
           <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('polka')">❌</button>
         </div>
       </div>
@@ -128,7 +142,7 @@
       <div class="form-group-custom" id="sekcja-pracownik">
         <label class="form-label fw-bold small text-secondary mb-1">3. PRACOWNIK (Imię i Nazwisko):</label>
         <div class="input-group">
-          <input type="text" id="pracownik" class="form-control wielki-input" placeholder="Zeskanuj identyfikator (QR)..." onclick="aktywujSkanowanie('pracownik')">
+          <input type="text" id="pracownik" class="form-control wielki-input" placeholder="Wpisz lub zeskanuj Imię Nazwisko..." onclick="aktywujSkanowanie('pracownik')">
           <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('pracownik')">❌</button>
         </div>
       </div>
@@ -157,8 +171,8 @@
 
     <div id="sub-panel-towar">
       <div class="mb-2">
-        <label class="small text-secondary fw-bold mb-1">KOD TOWARU:</label>
-        <input type="text" id="p-towar-kod" class="form-control wielki-input text-uppercase" placeholder="np. LUB-4421">
+        <label class="small text-secondary fw-bold mb-1">KOD TOWARU (5 cyfr):</label>
+        <input type="text" id="p-towar-kod" class="form-control wielki-input text-uppercase" placeholder="np. 01234">
       </div>
       <div class="mb-3">
         <label class="small text-secondary fw-bold mb-1">NAZWA TOWARU:</label>
@@ -169,7 +183,7 @@
     
     <div id="sub-panel-lokalizacja" style="display: none;">
       <div class="mb-3">
-        <label class="small text-secondary fw-bold mb-1">ADRES PÓŁKI (Schemat: 01-02-03-A-04):</label>
+        <label class="small text-secondary fw-bold mb-1">ADRES PÓŁKI (Schemat: 00-00-00-X-00):</label>
         <input type="text" id="p-lok-adres" class="form-control wielki-input text-uppercase" placeholder="01-02-03-A-04">
       </div>
       <button type="button" onclick="drukujEtykieteLokalizacyjna()" class="btn btn-purple w-100 py-3 fw-bold btn-modern text-white" style="background-color: var(--accent-purple);">Drukuj Etykietę Adresową (QR)</button>
@@ -203,10 +217,8 @@
     }
   };
 
-  // STEROWANIE WIDOCZNOŚCIĄ TRZECH GŁÓWNYCH MODUŁÓW NA GÓRZE
   function przelaczGlownyModul(modul) {
     schowajAparat();
-    
     const sekcjaOperacji = document.getElementById('sekcja-operacji');
     const sekcjaDruku = document.getElementById('sekcja-druku');
     
@@ -220,7 +232,6 @@
     }
   }
 
-  // STEROWANIE MINI PODPANELAMI WEWNĄTRZ WYDRUKÓW
   function przelaczPodpanelDruku(typ) {
     document.getElementById('sub-panel-towar').style.display = (typ === 'towar') ? 'block' : 'none';
     document.getElementById('sub-panel-lokalizacja').style.display = (typ === 'lokalizacja') ? 'block' : 'none';
@@ -250,6 +261,9 @@
 
   function drukujEtykieteTowarowa() {
     let kod = document.getElementById('p-towar-kod').value.trim().toUpperCase();
+    let obedienceTowar = /^\d{5}$/;
+    if(!obedienceTowar.test(kod)) { alert("Kod towaru musi składać się dokładnie z 5 cyfr!"); return; }
+    
     let nazwa = document.getElementById('p-towar-nazwa').value.trim();
     if(!kod) { alert("Wpisz kod towaru!"); return; }
     if(nazwa.length > 26) nazwa = nazwa.substring(0, 23) + "...";
@@ -266,7 +280,8 @@
 
   function drukujEtykieteLokalizacyjna() {
     let adres = document.getElementById('p-lok-adres').value.trim().toUpperCase();
-    if(!adres) { alert("Wpisz adres półki!"); return; }
+    let obedienceLokalizacja = /^\d{2}-\d{2}-\d{2}-[A-Za-z]-\d{2}$/;
+    if(!obedienceLokalizacja.test(adres)) { alert("Błędny format lokalizacji! Wymagany wzór: 00-00-00-X-00"); return; }
 
     let czesci = adres.split('-');
     let m = czesci[0] || "--";
@@ -288,7 +303,8 @@
 
   function drukujEtykietePracownika() {
     let dane = document.getElementById('p-user-nazwa').value.trim();
-    if(!dane) { alert("Wpisz dane pracownika!"); return; }
+    let obediencePracownik = /^[A-ZĘÓĄŚŁŻŹĆŃ][a-zęóąśłżźćń]+\s[A-ZĘÓĄŚŁŻŹĆŃ][a-zęóąśłżźćń]+$/;
+    if(!obediencePracownik.test(dane)) { alert("Pracownik musi mieć podane Imię i Nazwisko z wielkich liter!"); return; }
 
     let zpl = "^XA^CI28" +
               "^FO30,45^BQN,2,5^FDQA," + dane + "^FS" +
@@ -446,19 +462,85 @@
       sekcjaPracownik.style.display = 'block';
       document.getElementById('pracownik').setAttribute('required', 'true');
     }
-    // Automatycznie odpalamy kamerę na pierwsze pole po przełączeniu karty operacji
     setTimeout(() => { aktywujSkanowanie('kod-towaru'); }, 100);
   }
 
-  function wyslijDane(e) {
+  // GŁÓWNA WALIDACJA I BLOKADA MINUSÓW Z BAZY GOOGLE / BIGQUERY
+  function walidujIWyslijFormularz(e) {
     e.preventDefault();
+    
+    const tryb = document.getElementById('operacja').value;
+    const kodTowaru = document.getElementById('kod-towaru').value.trim();
+    const polkaValue = document.getElementById('polka').value.trim().toUpperCase();
+    const pracownikValue = document.getElementById('pracownik').value.trim();
+    const iloscValue = parseInt(document.getElementById('ilosc').value);
+
+    // 1. Walidacja formatu kodu towaru (dokładnie 5 cyfr)
+    let regexTowar = /^\d{5}$/;
+    if (!regexTowar.test(kodTowaru)) {
+      alert("❌ BŁĄD WALIDACJI:\nKod towaru musi składać się dokładnie z 5 cyfr (np. 01234)!");
+      return;
+    }
+
+    // 2. Walidacja formatu lokalizacji (00-00-00-X-00)
+    let regexLokalizacja = /^\d{2}-\d{2}-\d{2}-[A-Za-z]-\d{2}$/;
+    if (!regexLokalizacja.test(polkaValue)) {
+      alert("❌ BŁĄD WALIDACJI:\nNiepoprawny format adresu półki!\nWymagany wzór: 00-00-00-X-00 (np. 12-34-56-A-78)");
+      return;
+    }
+
+    // 3. Walidacja pracownika (Imię i Nazwisko z wielkich liter) - tylko dla Wydania
+    if (tryb === "Wydanie") {
+      let regexPracownik = /^[A-ZĘÓĄŚŁŻŹĆŃ][a-zęóąśłżźćń]+\s[A-ZĘÓĄŚŁŻŹĆŃ][a-zęóąśłżźćń]+$/;
+      if (!regexPracownik.test(pracownikValue)) {
+        alert("❌ BŁĄD WALIDACJI:\nW polu pracownika wymagane jest Imię i Nazwisko (np. Arkadiusz Krajewski)!");
+        return;
+      }
+    }
+
+    const btn = document.getElementById('btn-submit');
+    btn.disabled = true;
+    btn.innerText = "Sprawdzanie stanu magazynu...";
+
+    // 4. Weryfikacja stanu w bazie przed wykonaniem operacji Wydania
+    if (tryb === "Wydanie") {
+      const formSprawdz = "akcja=pobierz_stan&kod_towaru=" + encodeURIComponent(kodTowaru);
+      
+      fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: formSprawdz
+      })
+      .then(res => res.json())
+      .then(wynik => {
+        if (wynik.status === "SUCCESS") {
+          let dostepnaIlosc = wynik.stan;
+          if (dostepnaIlosc < iloscValue) {
+            alert("❌ BLOKADA WYDANIA NA MINUS:\nBrak wystarczającej ilości towaru na magazynie!\n\nChcesz wydać: " + iloscValue + " szt.\nAktualnie na stanie: " + dostepnaIlosc + " szt.");
+            btn.disabled = false;
+            btn.innerText = "ZAPISZ OPERACJĘ (Enter)";
+          } else {
+            // Stan pozwala na bezpieczną transakcję -> uruchamiamy procedurę zapisu
+            wykonajZapisDoChmury(tryb, polkaValue, kodTowaru, pracownikValue, iloscValue);
+          }
+        } else {
+          alert("Błąd sprawdzania stanu z bazy danych.");
+          btn.disabled = false;
+          btn.innerText = "ZAPISZ OPERACJĘ (Enter)";
+        }
+      })
+      .catch(err => { alert("Błąd połączenia podczas weryfikacji ilości."); btn.disabled = false; btn.innerText = "ZAPISZ OPERACJĘ (Enter)"; });
+    } else {
+      // Dla Przyjęcia nie sprawdzamy stanu, przechodzimy do natychmiastowego zapisu
+      wykonajZapisDoChmury(tryb, polkaValue, kodTowaru, pracownikValue, iloscValue);
+    }
+  }
+
+  // SEKCJA WYKONAWCZA ZAPISU DO BAZY
+  function wykonajZapisDoChmury(tryb, polkaValue, kodTowaru, pracownikValue, iloscValue) {
     const btn = document.getElementById('btn-submit');
     const statusBox = document.getElementById('status');
-    btn.disabled = true;
     btn.innerText = "Zapisywanie w chmurze...";
-
-    let tryb = document.getElementById('operacja').value;
-    let polkaValue = document.getElementById('polka').value.trim();
 
     let zLok = (tryb === "Wydanie") ? polkaValue : "DOSTAWCA";
     let doLok = (tryb === "Przyjęcie") ? polkaValue : "PRODUKCJA";
@@ -468,9 +550,9 @@
       typ: tryb,
       Z_Lokalizacji: zLok,
       Do_Lokalizacji: doLok,
-      towar: document.getElementById('kod-towaru').value.trim(),
-      pracownik: document.getElementById('pracownik').value.trim(),
-      ilosc: document.getElementById('ilosc').value,
+      towar: kodTowaru,
+      pracownik: pracownikValue,
+      ilosc: iloscValue,
       operator: zalogowanyUzytkownik
     };
 
@@ -495,7 +577,7 @@
       
       setTimeout(() => { statusBox.classList.add('d-none'); wstrzymajAparat().then(() => { aktywujSkanowanie('kod-towaru'); }); }, 1500);
     })
-    .catch(err => { alert("Błąd połączenia z bazą danych."); btn.disabled = false; });
+    .catch(err => { alert("Błąd połączenia z bazą danych."); btn.disabled = false; btn.innerText = "ZAPISZ OPERACJĘ (Enter)"; });
   }
 </script>
 </body>
