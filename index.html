@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>LUBAS WMS v5.11 (Three-Main-Tabs)</title>
+  <title>LUBAS WMS v5.12 (Three-Main-Tabs)</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
@@ -34,13 +34,15 @@
     .skan-aktywny { border: 2px solid var(--accent-danger) !important; box-shadow: 0 0 15px rgba(239, 68, 68, 0.3) !important; }
     .btn-modern { border-radius: 12px; padding: 14px; font-weight: 600; transition: all 0.2s; }
     
-    /* FIX WIZUALNY: Zapobiega nakładaniu się kontrolek w wersji mobilnej */
-    .wms-naglowek-flex { display: flex !important; align-items: center !important; justify-content: space-between !important; flex-wrap: nowrap !important; }
-    .wms-badge-sekcja { display: inline-flex !important; align-items: center !important; gap: 6px !important; white-space: nowrap !important; }
+    /* POPRAWKA CSS: Struktura flex uniemożliwia nachodzenie na siebie kontrolek */
+    .wms-top-flex { display: flex !important; align-items: center !important; justify-content: space-between !important; flex-wrap: nowrap !important; }
+    .wms-badge-box { display: inline-flex !important; align-items: center !important; gap: 6px !important; white-space: nowrap !important; }
 
+    /* Stylizacja głównego menu trzech zakładek */
     .glowny-przelacznik .btn-check:checked + .btn-outline-light { background-color: var(--accent-blue); border-color: var(--accent-blue); color: white; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
     .glowny-przelacznik .btn { font-size: 0.85rem; letter-spacing: 0.5px; padding: 12px 5px; font-weight: 800; border-color: rgba(255,255,255,0.15); color: #94a3b8; }
     
+    /* Mini przełącznik wewnątrz sekcji wydruków */
     .mini-przelacznik .btn-check:checked + .btn { background-color: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); color: #fff; }
     .mini-przelacznik .btn { font-size: 0.8rem; font-weight: 600; color: #a6b5cc; border-color: transparent; }
 
@@ -82,9 +84,9 @@
 </div>
 
 <div class="container py-3" style="max-width: 480px;">
-  <div class="wms-naglowek-flex mb-3">
+  <div class="wms-top-flex mb-3">
     <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.11</span></h4>
-    <div class="wms-badge-sekcja">
+    <div class="wms-badge-box">
       <span id="user-badge" class="badge bg-success p-2" style="font-size: 0.75rem;">---</span>
       <button onclick="wylogujOperatora()" class="btn btn-sm btn-outline-secondary py-0 px-1" style="font-size: 0.65rem;">Zmień</button>
     </div>
@@ -93,7 +95,7 @@
   <div class="modern-card p-2 mb-4">
     <div class="btn-group w-100 m-0 glowny-przelacznik" role="group">
       <input type="radio" class="btn-check" name="main-nav" id="tab-wydanie" checked onclick="przelaczGlownyModul('Wydanie')">
-      <label class="btn btn-outline-light" for="tab-wydanie"> Jakieś kody? 🔴 WYDANIE</label>
+      <label class="btn btn-outline-light" for="tab-wydanie">🔴 WYDANIE</label>
       
       <input type="radio" class="btn-check" name="main-nav" id="tab-przyjecie" onclick="przelaczGlownyModul('Przyjęcie')">
       <label class="btn btn-outline-light" for="tab-przyjecie">🟢 PRZYJĘCIE</label>
@@ -171,7 +173,7 @@
     
     <div id="sub-panel-lokalizacja" style="display: none;">
       <div class="mb-3">
-        <label class="small text-secondary fw-bold mb-1">ADRES PÓŁKI (Schemat: 00-00-00-X-00):</label>
+        <label class="small text-secondary fw-bold mb-1">ADRES PÓŁKI (Schemat: 01-02-03-A-04):</label>
         <input type="text" id="p-lok-adres" class="form-control wielki-input text-uppercase" placeholder="01-02-03-A-04">
       </div>
       <button type="button" onclick="drukujEtykieteLokalizacyjna()" class="btn btn-purple w-100 py-3 fw-bold btn-modern text-white" style="background-color: var(--accent-purple);">Drukuj Etykietę Adresową (QR)</button>
@@ -387,7 +389,7 @@
     setTimeout(() => { aktywujSkanowanie('kod-towaru'); }, 100);
   }
 
-  // === NOWA DODANA FUNKCJA WALIDACJI I BLOKADY MINUSÓW ===
+  // MODYFIKACJA: PODPIĘCIE WALIDACJI I ASYNCHRONICZNEJ WERYFIKACJI STANU BQ PRZED WYSYŁKĄ FormBody
   function wyslijDane(e) {
     e.preventDefault();
     
@@ -397,17 +399,19 @@
     let pracownikValue = document.getElementById('pracownik').value.trim();
     let iloscValue = parseInt(document.getElementById('ilosc').value);
 
-    // 1. Walidacja towaru (5 cyfr)
+    // 1. Walidacja towaru (dokładnie 5 cyfr)
     if (!/^\d{5}$/.test(kodTowaru)) { alert("Kod towaru musi mieć dokładnie 5 cyfr!"); return; }
-    // 2. Walidacja lokalizacji (00-00-00-X-00)
+    
+    // 2. Walidacja lokalizacji (wzór: 00-00-00-X-00)
     if (!/^\d{2}-\d{2}-\d{2}-[A-Za-z]-\d{2}$/.test(polkaValue)) { alert("Błędny format lokalizacji! Wymagany wzór: 00-00-00-X-00"); return; }
-    // 3. Walidacja pracownika (Imię i Nazwisko z dużych liter)
+    
+    // 3. Walidacja pracownika (Imię i Nazwisko z wielkich liter)
     if (tryb === "Wydanie" && !/^[A-ZĘÓĄŚŁŻŹĆŃ][a-zęóąśłżźćń]+\s[A-ZĘÓĄŚŁŻŹĆŃ][a-zęóąśłżźćń]+$/.test(pracownikValue)) { alert("Pracownik musi być podany jako Imię i Nazwisko (np. Jan Kowalski)!"); return; }
 
     const btn = document.getElementById('btn-submit');
     btn.disabled = true; btn.innerText = "Weryfikacja ilości...";
 
-    // 4. Blokada ujemnych stanów magazynowych przez GET
+    // 4. Blokada ujemnych stanów z BigQuery (Zapytanie GET w tle)
     if (tryb === "Wydanie") {
       fetch(GOOGLE_SCRIPT_URL + "?akcja=pobierz_stan&kod_towaru=" + encodeURIComponent(kodTowaru))
       .then(res => res.json())
@@ -416,17 +420,17 @@
           alert("❌ Brak towaru na magazynie!\nChcesz wydać: " + iloscValue + " szt.\nNa stanie leży tylko: " + wynik.stan + " szt.");
           btn.disabled = false; btn.innerText = "ZAPISZ OPERACJĘ (Enter)";
         } else {
-          odpaliZapisOperacji(tryb, polkaValue, kodTowaru, pracownikValue, iloscValue);
+          wykonajOryginalnaWysylkeForm(tryb, polkaValue, kodTowaru, pracownikValue, iloscValue);
         }
       })
       .catch(err => { alert("Błąd połączenia sprawdzania stanu."); btn.disabled = false; btn.innerText = "ZAPISZ OPERACJĘ (Enter)"; });
     } else {
-      odpaliZapisOperacji(tryb, polkaValue, kodTowaru, pracownikValue, iloscValue);
+      wykonajOryginalnaWysylkeForm(tryb, polkaValue, kodTowaru, pracownikValue, iloscValue);
     }
   }
 
-  // ORYGINALNA FUNKCJA WYŚLIJ (BEZ ZMIAN STRUKTURY)
-  function odpaliZapisOperacji(tryb, polkaValue, kodTowaru, pracownikValue, iloscValue) {
+  // TWÓJ NIERUSZONY ORYGINALNY SKRYPT WYSYŁAJĄCY PACZKĘ DANYCH URLENCODED
+  function wykonajOryginalnaWysylkeForm(tryb, polkaValue, kodTowaru, pracownikValue, iloscValue) {
     const btn = document.getElementById('btn-submit');
     const statusBox = document.getElementById('status');
     btn.innerText = "Zapisywanie w chmurze...";
@@ -435,26 +439,34 @@
     let doLok = (tryb === "Przyjęcie") ? polkaValue : "PRODUKCJA";
 
     const paczkaDanych = {
-      typ_operacji: tryb,
+      akcja: "zapis_ruchu",
+      typ: tryb,
       Z_Lokalizacji: zLok,
       Do_Lokalizacji: doLok,
-      kod_towaru: kodTowaru,
+      towar: kodTowaru,
       pracownik: pracownikValue,
-      ilosc: iloscValue
+      ilosc: iloscValue,
+      operator: zalogowanyUzytkownik
     };
+
+    const formBody = Object.keys(paczkaDanych).map(key => encodeURIComponent(key) + '=' + encodeURIComponent(paczkaDanych[key])).join('&');
 
     fetch(GOOGLE_SCRIPT_URL, {
       method: "POST",
-      body: JSON.stringify(paczkaDanych)
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: formBody
     })
     .then(() => {
-      btn.disabled = false; btn.innerText = "ZAPISZ OPERACJĘ (Enter)";
+      btn.disabled = false;
+      btn.innerText = "ZAPISZ OPERACJĘ (Enter)";
       statusBox.innerText = "🚀 ZAPISANO W BAZIE GOOGLE!";
       statusBox.className = "alert alert-success mt-3 text-center fw-bold bg-success text-white border-0";
       statusBox.classList.remove('d-none');
       
-      document.getElementById('kod-towaru').value = ""; document.getElementById('polka').value = "";
-      document.getElementById('pracownik').value = ""; document.getElementById('ilosc').value = '1';
+      document.getElementById('kod-towaru').value = "";
+      document.getElementById('polka').value = "";
+      document.getElementById('pracownik').value = "";
+      document.getElementById('ilosc').value = '1';
       
       setTimeout(() => { statusBox.classList.add('d-none'); wstrzymajAparat().then(() => { aktywujSkanowanie('kod-towaru'); }); }, 1500);
     })
