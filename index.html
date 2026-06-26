@@ -34,7 +34,7 @@
     .skan-aktywny { border: 2px solid var(--accent-danger) !important; box-shadow: 0 0 15px rgba(239, 68, 68, 0.3) !important; }
     .btn-modern { border-radius: 12px; padding: 14px; font-weight: 600; transition: all 0.2s; }
     
-    /* POPRAWKA v5.10: Elastyczna struktura nagłówka eliminująca nachodzenie elementów */
+    /* Elastyczny nagłówek eliminujący rozjeżdżanie boksu i nazwiska */
     .wms-naglowek-kontener {
       display: flex !important;
       align-items: center !important;
@@ -198,7 +198,6 @@
 </div>
 
 <script>
-  // ZMIENIONO NA v5.10: Ścieżka URL do Google Apps Script WebApp
   const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbykKaTjGfb4H-S-AUUIIMr8g62hAE1V0YWYDhssCbAh26Y9r0u96xVySApf01PqO9sZ0Q/exec";
   let html5Qrcode = null;
   let loginQrcode = null;
@@ -464,7 +463,6 @@
     setTimeout(() => { aktywujSkanowanie('kod-towaru'); }, 100);
   }
 
-  // GŁÓWNA STRATEGIA WALIDACJI v5.10 (Blokada stanów ujemnych przez metodę GET)
   function walidujIWyslijFormularz(e) {
     e.preventDefault();
     
@@ -474,21 +472,18 @@
     const pracownikValue = document.getElementById('pracownik').value.trim();
     const iloscValue = parseInt(document.getElementById('ilosc').value);
 
-    // 1. Walidacja formatu kodu towaru (dokładnie 5 cyfr)
     let regexTowar = /^\d{5}$/;
     if (!regexTowar.test(kodTowaru)) {
       alert("❌ BŁĄD WALIDACJI:\nKod towaru musi składać się dokładnie z 5 cyfr (np. 01234)!");
       return;
     }
 
-    // 2. Walidacja formatu lokalizacji (dokładnie 00-00-00-X-00)
     let regexLokalizacja = /^\d{2}-\d{2}-\d{2}-[A-Za-z]-\d{2}$/;
     if (!regexLokalizacja.test(polkaValue)) {
       alert("❌ BŁĄD WALIDACJI:\nNiepoprawny format adresu półki!\nWymagany wzór: 00-00-00-X-00 (np. 12-34-56-A-78)");
       return;
     }
 
-    // 3. Walidacja pracownika (Imię i Nazwisko z wielkich liter) - wymagane tylko przy Wydaniu
     if (tryb === "Wydanie") {
       let regexPracownik = /^[A-ZĘÓĄŚŁŻŹĆŃ][a-zęóąśłżźćń]+\s[A-ZĘÓĄŚŁŻŹĆŃ][a-zęóąśłżźćń]+$/;
       if (!regexPracownik.test(pracownikValue)) {
@@ -501,13 +496,10 @@
     btn.disabled = true;
     btn.innerText = "Sprawdzanie stanu magazynu...";
 
-    // 4. POPRAWKA v5.10: Zmiana na bezpieczną ścieżkę GET eliminującą błędy CORS chmury
     if (tryb === "Wydanie") {
       const urlZParametrami = GOOGLE_SCRIPT_URL + "?akcja=pobierz_stan&kod_towaru=" + encodeURIComponent(kodTowaru);
       
-      fetch(urlZParametrami, {
-        method: "GET"
-      })
+      fetch(urlZParametrami, { method: "GET" })
       .then(res => res.json())
       .then(wynik => {
         if (wynik.status === "SUCCESS") {
@@ -520,7 +512,7 @@
             wykonajZapisDoChmury(tryb, polkaValue, kodTowaru, pracownikValue, iloscValue);
           }
         } else {
-          alert("Błąd sprawdzania ilości na magazynie.");
+          alert("Błąd sprawdzania stanu z bazy danych.");
           btn.disabled = false;
           btn.innerText = "ZAPISZ OPERACJĘ (Enter)";
         }
@@ -557,21 +549,32 @@
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: formBody
     })
-    .then(() => {
-      btn.disabled = false;
-      btn.innerText = "ZAPISZ OPERACJĘ (Enter)";
-      statusBox.innerText = "🚀 ZAPISANO W BAZIE GOOGLE!";
-      statusBox.className = "alert alert-success mt-3 text-center fw-bold bg-success text-white border-0";
-      statusBox.classList.remove('d-none');
-      
-      document.getElementById('kod-towaru').value = "";
-      document.getElementById('polka').value = "";
-      document.getElementById('pracownik').value = "";
-      document.getElementById('ilosc').value = '1';
-      
-      setTimeout(() => { statusBox.classList.add('d-none'); wstrzymajAparat().then(() => { aktywujSkanowanie('kod-towaru'); }); }, 1500);
+    .then(res => res.json())
+    .then(odpowiedzSerwera => {
+      if (odpowiedzSerwera.status === "SUCCESS") {
+        btn.disabled = false;
+        btn.innerText = "ZAPISZ OPERACJĘ (Enter)";
+        statusBox.innerText = "🚀 ZAPISANO W BAZIE GOOGLE!";
+        statusBox.className = "alert alert-success mt-3 text-center fw-bold bg-success text-white border-0";
+        statusBox.classList.remove('d-none');
+        
+        document.getElementById('kod-towaru').value = "";
+        document.getElementById('polka').value = "";
+        document.getElementById('pracownik').value = "";
+        document.getElementById('ilosc').value = '1';
+        
+        setTimeout(() => { statusBox.classList.add('d-none'); wstrzymajAparat().then(() => { aktywujSkanowanie('kod-towaru'); }); }, 1500);
+      } else {
+        alert("❌ BŁĄD SERWERA BQ:\n" + odpowiedzSerwera.message);
+        btn.disabled = false;
+        btn.innerText = "ZAPISZ OPERACJĘ (Enter)";
+      }
     })
-    .catch(err => { alert("Błąd połączenia z bazą danych."); btn.disabled = false; btn.innerText = "ZAPISZ OPERACJĘ (Enter)"; });
+    .catch(err => { 
+      alert("❌ BŁĄD TRANSMISJI:\nSkrypt nie mógł zinterpretować odpowiedzi serwera."); 
+      btn.disabled = false; 
+      btn.innerText = "ZAPISZ OPERACJĘ (Enter)"; 
+    });
   }
 </script>
 </body>
