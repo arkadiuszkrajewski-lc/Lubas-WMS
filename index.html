@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>LUBAS WMS v6.0 (Three-Main-Tabs)</title>
+  <title>LUBAS WMS v5.10 (Pancerne Walidacje)</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
@@ -34,7 +34,7 @@
     .skan-aktywny { border: 2px solid var(--accent-danger) !important; box-shadow: 0 0 15px rgba(239, 68, 68, 0.3) !important; }
     .btn-modern { border-radius: 12px; padding: 14px; font-weight: 600; transition: all 0.2s; }
     
-    /* Naprawa nachodzenia elementów w nagłówku */
+    /* POPRAWKA v5.10: Elastyczna struktura nagłówka eliminująca nachodzenie elementów */
     .wms-naglowek-kontener {
       display: flex !important;
       align-items: center !important;
@@ -48,11 +48,9 @@
       white-space: nowrap !important;
     }
     
-    /* Regulacja głównego menu trzech zakładek */
     .glowny-przelacznik .btn-check:checked + .btn-outline-light { background-color: var(--accent-blue); border-color: var(--accent-blue); color: white; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
     .glowny-przelacznik .btn { font-size: 0.85rem; letter-spacing: 0.5px; padding: 12px 5px; font-weight: 800; border-color: rgba(255,255,255,0.15); color: #94a3b8; }
     
-    /* Mini przełącznik wewnątrz sekcji wydruków */
     .mini-przelacznik .btn-check:checked + .btn { background-color: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); color: #fff; }
     .mini-przelacznik .btn { font-size: 0.8rem; font-weight: 600; color: #a6b5cc; border-color: transparent; }
 
@@ -95,7 +93,7 @@
 
 <div class="container py-3" style="max-width: 480px;">
   <div class="wms-naglowek-kontener mb-3">
-    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info" style="font-size:0.9rem;">v5.9</span></h4>
+    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info" style="font-size:0.9rem;">v5.10</span></h4>
     <div class="wms-operator-sekcja">
       <span id="user-badge" class="badge bg-success p-2" style="font-size: 0.75rem;">---</span>
       <button onclick="wylogujOperatora()" class="btn btn-sm btn-outline-secondary py-0 px-1" style="font-size: 0.65rem;">Zmień</button>
@@ -105,7 +103,7 @@
   <div class="modern-card p-2 mb-4">
     <div class="btn-group w-100 m-0 glowny-przelacznik" role="group">
       <input type="radio" class="btn-check" name="main-nav" id="tab-wydanie" checked onclick="przelaczGlownyModul('Wydanie')">
-      <label class="btn btn-outline-light" for="tab-wydanie">GDNIE 🔴 WYDANIE</label>
+      <label class="btn btn-outline-light" for="tab-wydanie">🔴 WYDANIE</label>
       
       <input type="radio" class="btn-check" name="main-nav" id="tab-przyjecie" onclick="przelaczGlownyModul('Przyjęcie')">
       <label class="btn btn-outline-light" for="tab-przyjecie">🟢 PRZYJĘCIE</label>
@@ -124,7 +122,7 @@
       <input type="hidden" id="aktywne-pole" value="">
 
       <div class="form-group-custom">
-        <label class="form-label fw-bold small text-secondary mb-1">1. KOD TOWARU (Dokładnie 5 cyfr):</label>
+        <label class="form-label fw-bold small text-secondary mb-1">1. KOD TOWARU (5 cyfr):</label>
         <div class="input-group">
           <input type="text" id="kod-towaru" class="form-control wielki-input text-uppercase" placeholder="Zeskanuj produkt (5 cyfr)..." onclick="aktywujSkanowanie('kod-towaru')" required>
           <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('kod-towaru')">❌</button>
@@ -183,7 +181,7 @@
     
     <div id="sub-panel-lokalizacja" style="display: none;">
       <div class="mb-3">
-        <label class="small text-secondary fw-bold mb-1">ADRES PÓŁKI (Schemat: 00-00-00-X-00):</label>
+        <label class="small text-secondary fw-bold mb-1">ADRES PÓŁKI (00-00-00-X-00):</label>
         <input type="text" id="p-lok-adres" class="form-control wielki-input text-uppercase" placeholder="01-02-03-A-04">
       </div>
       <button type="button" onclick="drukujEtykieteLokalizacyjna()" class="btn btn-purple w-100 py-3 fw-bold btn-modern text-white" style="background-color: var(--accent-purple);">Drukuj Etykietę Adresową (QR)</button>
@@ -200,6 +198,7 @@
 </div>
 
 <script>
+  // ZMIENIONO NA v5.10: Ścieżka URL do Google Apps Script WebApp
   const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbykKaTjGfb4H-S-AUUIIMr8g62hAE1V0YWYDhssCbAh26Y9r0u96xVySApf01PqO9sZ0Q/exec";
   let html5Qrcode = null;
   let loginQrcode = null;
@@ -465,7 +464,7 @@
     setTimeout(() => { aktywujSkanowanie('kod-towaru'); }, 100);
   }
 
-  // GŁÓWNA WALIDACJA I BLOKADA MINUSÓW Z BAZY GOOGLE / BIGQUERY
+  // GŁÓWNA STRATEGIA WALIDACJI v5.10 (Blokada stanów ujemnych przez metodę GET)
   function walidujIWyslijFormularz(e) {
     e.preventDefault();
     
@@ -482,18 +481,18 @@
       return;
     }
 
-    // 2. Walidacja formatu lokalizacji (00-00-00-X-00)
+    // 2. Walidacja formatu lokalizacji (dokładnie 00-00-00-X-00)
     let regexLokalizacja = /^\d{2}-\d{2}-\d{2}-[A-Za-z]-\d{2}$/;
     if (!regexLokalizacja.test(polkaValue)) {
       alert("❌ BŁĄD WALIDACJI:\nNiepoprawny format adresu półki!\nWymagany wzór: 00-00-00-X-00 (np. 12-34-56-A-78)");
       return;
     }
 
-    // 3. Walidacja pracownika (Imię i Nazwisko z wielkich liter) - tylko dla Wydania
+    // 3. Walidacja pracownika (Imię i Nazwisko z wielkich liter) - wymagane tylko przy Wydaniu
     if (tryb === "Wydanie") {
       let regexPracownik = /^[A-ZĘÓĄŚŁŻŹĆŃ][a-zęóąśłżźćń]+\s[A-ZĘÓĄŚŁŻŹĆŃ][a-zęóąśłżźćń]+$/;
       if (!regexPracownik.test(pracownikValue)) {
-        alert("❌ BŁĄD WALIDACJI:\nW polu pracownika wymagane jest Imię i Nazwisko (np. Arkadiusz Krajewski)!");
+        alert("❌ BŁĄD WALIDACJI:\nW polu pracownika wymagane jest pełne Imię i Nazwisko (np. Arkadiusz Krajewski)!");
         return;
       }
     }
@@ -502,14 +501,12 @@
     btn.disabled = true;
     btn.innerText = "Sprawdzanie stanu magazynu...";
 
-    // 4. Weryfikacja stanu w bazie przed wykonaniem operacji Wydania
+    // 4. POPRAWKA v5.10: Zmiana na bezpieczną ścieżkę GET eliminującą błędy CORS chmury
     if (tryb === "Wydanie") {
-      const formSprawdz = "akcja=pobierz_stan&kod_towaru=" + encodeURIComponent(kodTowaru);
+      const urlZParametrami = GOOGLE_SCRIPT_URL + "?akcja=pobierz_stan&kod_towaru=" + encodeURIComponent(kodTowaru);
       
-      fetch(GOOGLE_SCRIPT_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: formSprawdz
+      fetch(urlZParametrami, {
+        method: "GET"
       })
       .then(res => res.json())
       .then(wynik => {
@@ -520,23 +517,20 @@
             btn.disabled = false;
             btn.innerText = "ZAPISZ OPERACJĘ (Enter)";
           } else {
-            // Stan pozwala na bezpieczną transakcję -> uruchamiamy procedurę zapisu
             wykonajZapisDoChmury(tryb, polkaValue, kodTowaru, pracownikValue, iloscValue);
           }
         } else {
-          alert("Błąd sprawdzania stanu z bazy danych.");
+          alert("Błąd sprawdzania ilości na magazynie.");
           btn.disabled = false;
           btn.innerText = "ZAPISZ OPERACJĘ (Enter)";
         }
       })
-      .catch(err => { alert("Błąd połączenia podczas weryfikacji ilości."); btn.disabled = false; btn.innerText = "ZAPISZ OPERACJĘ (Enter)"; });
+      .catch(err => { alert("Błąd połączenia podczas weryfikacji stanu."); btn.disabled = false; btn.innerText = "ZAPISZ OPERACJĘ (Enter)"; });
     } else {
-      // Dla Przyjęcia nie sprawdzamy stanu, przechodzimy do natychmiastowego zapisu
       wykonajZapisDoChmury(tryb, polkaValue, kodTowaru, pracownikValue, iloscValue);
     }
   }
 
-  // SEKCJA WYKONAWCZA ZAPISU DO BAZY
   function wykonajZapisDoChmury(tryb, polkaValue, kodTowaru, pracownikValue, iloscValue) {
     const btn = document.getElementById('btn-submit');
     const statusBox = document.getElementById('status');
