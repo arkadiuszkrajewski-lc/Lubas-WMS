@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>LUBAS WMS v5.12 (Three-Main-Tabs)</title>
+  <title>LUBAS WMS v5.11 (Three-Main-Tabs)</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
@@ -34,15 +34,12 @@
     .skan-aktywny { border: 2px solid var(--accent-danger) !important; box-shadow: 0 0 15px rgba(239, 68, 68, 0.3) !important; }
     .btn-modern { border-radius: 12px; padding: 14px; font-weight: 600; transition: all 0.2s; }
     
-    /* POPRAWKA CSS: Struktura flex uniemożliwia nachodzenie na siebie kontrolek */
     .wms-top-flex { display: flex !important; align-items: center !important; justify-content: space-between !important; flex-wrap: nowrap !important; }
     .wms-badge-box { display: inline-flex !important; align-items: center !important; gap: 6px !important; white-space: nowrap !important; }
 
-    /* Stylizacja głównego menu trzech zakładek */
     .glowny-przelacznik .btn-check:checked + .btn-outline-light { background-color: var(--accent-blue); border-color: var(--accent-blue); color: white; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
     .glowny-przelacznik .btn { font-size: 0.85rem; letter-spacing: 0.5px; padding: 12px 5px; font-weight: 800; border-color: rgba(255,255,255,0.15); color: #94a3b8; }
     
-    /* Mini przełącznik wewnątrz sekcji wydruków */
     .mini-przelacznik .btn-check:checked + .btn { background-color: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); color: #fff; }
     .mini-przelacznik .btn { font-size: 0.8rem; font-weight: 600; color: #a6b5cc; border-color: transparent; }
 
@@ -389,7 +386,7 @@
     setTimeout(() => { aktywujSkanowanie('kod-towaru'); }, 100);
   }
 
-  // MODYFIKACJA: PODPIĘCIE WALIDACJI I ASYNCHRONICZNEJ WERYFIKACJI STANU BQ PRZED WYSYŁKĄ FormBody
+  // PODPIĘCIE WALIDACJI I WERYFIKACJI STANU PRZED TWOIM ORYGINALNYM WYSYŁANIEM FORMULARZA
   function wyslijDane(e) {
     e.preventDefault();
     
@@ -399,12 +396,10 @@
     let pracownikValue = document.getElementById('pracownik').value.trim();
     let iloscValue = parseInt(document.getElementById('ilosc').value);
 
-    // 1. Walidacja towaru (dokładnie 5 cyfr)
-    if (!/^\d{5}$/.test(kodTowaru)) { alert("Kod towaru musi mieć dokładnie 5 cyfr!"); return; }
-    
-    // 2. Walidacja lokalizacji (wzór: 00-00-00-X-00)
+    // 1. Walidacja towaru (5 cyfr)
+    if (!/^\d{5}$/.test(kodTowaru)) { alert("Kod towaru must mieć dokładnie 5 cyfr!"); return; }
+    // 2. Walidacja lokalizacji (00-00-00-X-00)
     if (!/^\d{2}-\d{2}-\d{2}-[A-Za-z]-\d{2}$/.test(polkaValue)) { alert("Błędny format lokalizacji! Wymagany wzór: 00-00-00-X-00"); return; }
-    
     // 3. Walidacja pracownika (Imię i Nazwisko z wielkich liter)
     if (tryb === "Wydanie" && !/^[A-ZĘÓĄŚŁŻŹĆŃ][a-zęóąśłżźćń]+\s[A-ZĘÓĄŚŁŻŹĆŃ][a-zęóąśłżźćń]+$/.test(pracownikValue)) { alert("Pracownik musi być podany jako Imię i Nazwisko (np. Jan Kowalski)!"); return; }
 
@@ -429,7 +424,7 @@
     }
   }
 
-  // TWÓJ NIERUSZONY ORYGINALNY SKRYPT WYSYŁAJĄCY PACZKĘ DANYCH URLENCODED
+  // TWOJA ORYGINALNA METODA WYSYŁAJĄCA PACZKĘ URLENCODED - NIE RUSZANA
   function wykonajOryginalnaWysylkeForm(tryb, polkaValue, kodTowaru, pracownikValue, iloscValue) {
     const btn = document.getElementById('btn-submit');
     const statusBox = document.getElementById('status');
