@@ -253,16 +253,16 @@
     let nazwa = document.getElementById('p-towar-nazwa').value.trim();
     if(!kod) { alert("Wpisz kod towaru!"); return; }
     
-    // Ograniczenie nazwy do 15 znaków, aby nie wchodziła na kod QR
-    let skroconaNazwa = nazwa.length > 15 ? nazwa.substring(0, 12) + "..." : nazwa;
+    // Obcięcie nazwy, aby zmieściła się w linii po prawej stronie
+    let skroconaNazwa = nazwa.length > 16 ? nazwa.substring(0, 13) + "..." : nazwa;
     
-    // ZPL zoptymalizowany na 50x30mm (kod QR mniejszy o 1 stopień i przesunięty w lewo)
+    // QR po lewej (FO45,65), dane po prawej (FO210)
     let zpl = "^XA^CI28^BY2,3,40" +
-              "^FO20,20^A0N,18,18^FD* LUBAS WMS - TOWAR *^FS" +
-              "^FO220,45^BQN,2,3^FDQA," + kod + "^FS" +
-              "^FO20,65^A0N,22,20^FDKod produktu:^FS" +
-              "^FO20,95^A0N,26,24^FD" + kod + "^FS" +
-              "^FO20,155^A0N,18,16^FD" + skroconaNazwa + "^FS" +
+              "^FO210,35^A0N,18,18^FD* LUBAS WMS *^FS" +
+              "^FO45,65^BQN,2,4^FDQA," + kod + "^FS" + // Wyśrodkowany QR po lewej
+              "^FO210,65^A0N,20,18^FDKod produktu:^FS" +
+              "^FO210,95^A0N,26,24^FD" + kod + "^FS" +
+              "^FO210,155^A0N,18,16^FD" + skroconaNazwa + "^FS" +
               "^XZ";
               
     wyslijDoZebry(zpl);
@@ -271,13 +271,22 @@
   function drukujEtykieteLokalizacyjna() {
     let adres = document.getElementById('p-lok-adres').value.trim().toUpperCase();
     if(!adres) { alert("Wpisz adres półki!"); return; }
-    
-    // ZPL zoptymalizowany na 50x30mm (kod QR mniejszy o 1 stopień i przesunięty w lewo)
-    let zpl = "^XA^CI28^BY3,3,60" +
-              "^FO20,20^A0N,18,18^FD* LUBAS WMS - LOKALIZACJA *^FS" +
-              "^FO220,40^BQN,2,3^FDQA," + adres + "^FS" +
-              "^FO20,75^A0N,24,22^FDLOKALIZACJA:^FS" +
-              "^FO20,115^A0N,36,34^FD" + adres + "^FS" +
+
+    let czesci = adres.split('-');
+    let m = czesci[0] || "--";
+    let r = czesci[1] || "--";
+    let reg = czesci[2] || "--";
+    let p = czesci[3] || "--";
+    let poz = czesci[4] || "--";
+
+    // QR po lewej (FO45,65), dane i pozioma linia po prawej (FO210)
+    let zpl = "^XA^CI28" +
+              "^FO45,65^BQN,2,4^FDQA," + adres + "^FS" + // Wyśrodkowany QR po lewej
+              "^FO210,35^A0N,28,26^FD" + adres + "^FS" +
+              "^FO210,75^GB160,1,1^FS" + // Linia oddzielająca po prawej
+              "^FO210,90^A0N,18,16^FDMAG: " + m + " RZAD: " + r + "^FS" +
+              "^FO210,120^A0N,18,16^FDREGAL: " + reg + " POZ: " + p + "^FS" +
+              "^FO210,150^A0N,18,16^FDPOZYCJA: " + poz + "^FS" +
               "^XZ";
               
     wyslijDoZebry(zpl);
@@ -287,17 +296,20 @@
     let dane = document.getElementById('p-user-nazwa').value.trim();
     if(!dane) { alert("Wpisz dane pracownika!"); return; }
     
-    // ZPL zoptymalizowany na 50x30mm
+    // Skrócenie imienia i nazwiska w razie potrzeby
+    let skroconeDane = dane.length > 16 ? dane.substring(0, 13) + "..." : dane;
+    
+    // QR po lewej (FO45,65), dane po prawej (FO210)
     let zpl = "^XA^CI28^BY2,3,40" +
-              "^FO20,20^A0N,18,18^FD* LUBAS WMS - PRACOWNIK *^FS" +
-              "^FO220,45^BQN,2,3^FDQA," + dane + "^FS" +
-              "^FO20,70^A0N,22,20^FDPracownik:^FS" +
-              "^FO20,105^A0N,26,24^FD" + dane + "^FS" +
+              "^FO210,35^A0N,18,18^FD* LUBAS WMS *^FS" +
+              "^FO45,65^BQN,2,4^FDQA," + dane + "^FS" + // Wyśrodkowany QR po lewej
+              "^FO210,75^A0N,22,20^FDPRACOWNIK:^FS" +
+              "^FO210,110^A0N,26,24^FD" + skroconeDane + "^FS" +
+              "^FO210,155^A0N,16,14^FDID AUTORYZACYJNE^FS" +
               "^XZ";
               
     wyslijDoZebry(zpl);
   }
-
   function przelaczWidokHasla() {
     const passInput = document.getElementById('auth-password');
     passInput.type = passInput.type === "password" ? "text" : "password";
