@@ -265,12 +265,13 @@
 "^FO150,30^A0N,18,16^FDKOD TOWARU:^FS" +
 "^FO150,55^A0N,28,26^FD" + kod + "^FS" +
 
-// 3. PRAWA STRONA: Nazwa produktu z automatycznym zawijaniem
+// 3. PRAWA STRONA: Nazwa produktu (Wymuszone zawijanie przy użyciu ^TB)
 "^FO150,115^A0N,18,16^FDNAZWA:^FS" +
-// ^FB240,2,,L -> Szerokość pola tekstowego to 240 pkt, maksymalnie 2 linie tekstu, wyrównanie do lewej
-"^FO150,140^A0N,20,18^FB240,2,,L^FD" + skroconaNazwa + "^FS" +
+// ^TBN -> Blok tekstowy (szerokość 240, wysokość 50 punktów)
+"^FO150,140^TBN,240,50^A0N,20,18^FD" + skroconaNazwa + "^FS" +
 
 "^XZ";
+
               
     wyslijDoZebry(zpl);
   }
