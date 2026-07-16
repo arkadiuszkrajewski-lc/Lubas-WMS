@@ -248,15 +248,15 @@
     } else { alert("Błąd: Sterownik nie jest dostępny."); }
   }
 
-  function drukujEtykieteTowarowa() {
+ function drukujEtykieteTowarowa() {
     let kod = document.getElementById('p-towar-kod').value.trim().toUpperCase();
     let nazwa = document.getElementById('p-towar-nazwa').value.trim();
     if(!kod) { alert("Wpisz kod towaru!"); return; }
     
-    // Obcięcie nazwy, aby zmieściła się w linii po prawej stronie
-    let skroconaNazwa = nazwa.length > 16 ? nazwa.substring(0, 13) + "..." : nazwa;
+    // --- POPRAWKA: Przekazujemy PEŁNĄ nazwę bez ucinania jej do 13 znaków ---
+    let pelnaNazwa = nazwa; 
     
-    // QR po lewej (FO45,65), dane po prawej (FO210)
+    // Kod QR po lewej (FO20), dane po prawej (FO150) z automatycznym zawijaniem tekstu
     let zpl = "^XA^CI28" +
 // 1. LEWA STRONA: Kod QR
 "^FO20,35^BQN,2,4^FDQA," + kod + "^FS" + 
@@ -265,17 +265,14 @@
 "^FO150,30^A0N,18,16^FDKOD TOWARU:^FS" +
 "^FO150,55^A0N,28,26^FD" + kod + "^FS" +
 
-// 3. PRAWA STRONA: Nazwa produktu (Wymuszone zawijanie przy użyciu ^TB)
+// 3. PRAWA STRONA: Nazwa produktu (Zawijanie realizowane w 100% przez drukarkę za pomocą ^TB)
 "^FO150,115^A0N,18,16^FDNAZWA:^FS" +
-// ^TBN -> Blok tekstowy (szerokość 240, wysokość 50 punktów)
-"^FO150,140^TBN,240,50^A0N,20,18^FD" + skroconaNazwa + "^FS" +
+"^FO150,140^TBN,240,50^A0N,20,18^FD" + pelnaNazwa + "^FS" +
 
 "^XZ";
 
-              
     wyslijDoZebry(zpl);
   }
-
   function drukujEtykieteLokalizacyjna() {
     let adres = document.getElementById('p-lok-adres').value.trim().toUpperCase();
     if(!adres) { alert("Wpisz adres półki!"); return; }
