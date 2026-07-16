@@ -306,16 +306,22 @@
     let dane = document.getElementById('p-user-nazwa').value.trim();
     if(!dane) { alert("Wpisz dane pracownika!"); return; }
     
-    // Skrócenie imienia i nazwiska w razie potrzeby
-    let skroconeDane = dane.length > 16 ? dane.substring(0, 13) + "..." : dane;
+    // Zastępujemy nietypowe spacje zwykłymi, aby Zebra poprawnie łamała linie
+    let pelneDane = dane.replace(/\s+/g, ' ');
     
-    // QR po lewej (FO45,65), dane po prawej (FO210)
-    let zpl = "^XA^CI28^BY2,3,40" +
-            
-              "^FO30,30^BQN,2,4^FDQA," + dane + "^FS" + // Wyśrodkowany QR po lewej
-              "^FO150,90^A0N,22,20^FDPRACOWNIK:^FS" +
-              "^FO150,145^A0N,26,24^FD" + skroconeDane + "^FS" +
-             "^FO330,30^A0N,110,90^FDP^FS" + // Bardzo duża litera L na pozycji X=330, Y=60
+    // ZPL dopasowany do układu 50x30 mm
+    let zpl = "^XA^CI28" +
+              // 1. LEWA STRONA: Kod QR
+              "^FO20,35^BQN,2,4^FDQA," + dane + "^FS" + 
+              
+              // 2. ŚRODEK: Dane pracownika (zmniejszone Y, żeby nie kolidowało z dużym P)
+              "^FO150,45^A0N,18,16^FDPRACOWNIK:^FS" +
+              // Zwiększona czcionka (26,24), szerokość bloku 180 (zostawia miejsce na P), max 2 linie
+              "^FO150,75^A0N,26,24^FB180,2,,L^FD" + pelneDane + "^FS" +
+              
+              // 3. PRAWA STRONA: Bardzo duża litera P (wyrównana w dół do Y=60)
+              "^FO330,60^A0N,110,90^FDP^FS" + 
+              
               "^XZ";
               
     wyslijDoZebry(zpl);
