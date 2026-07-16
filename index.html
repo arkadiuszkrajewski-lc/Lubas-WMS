@@ -310,16 +310,24 @@
     let pelneDane = dane.replace(/\s+/g, ' ');
     
     // ZPL dopasowany do układu 50x30 mm
-    let zpl = "^XA^CI28^BY2,3,40" +
-            
-              "^FO30,30^BQN,2,4^FDQA," + dane + "^FS" + // Wyśrodkowany QR po lewej
-              "^FO150,90^A0N,32,30^FDPRACOWNIK:^FS" +
-              "^FO150,145^A0N,44,40^FD" + skroconeDane + "^FS" +
-             "^FO330,30^A0N,110,90^FDP^FS" + // Bardzo duża litera L na pozycji X=330, Y=60
+    let zpl = "^XA^CI28" +
+              // 1. LEWA STRONA: Wyśrodkowany QR po lewej
+              "^FO20,35^BQN,2,4^FDQA," + dane + "^FS" + 
+              
+              // 2. ŚRODEK: "PRACOWNIK:" (Czcionka 32,30 - przesunięta wyżej na Y=40)
+              "^FO150,40^A0N,32,30^FDPRACOWNIK:^FS" +
+              
+              // 3. ŚRODEK: Imię i Nazwisko (Czcionka 44,40, zawijanie do 2 linii, szerokość pola 175)
+              // POPRAWIONO: Zmieniono skroconeDane na pelneDane + dodano ^FB
+              "^FO150,80^A0N,44,40^FB175,2,,L^FD" + pelneDane + "^FS" +
+              
+              // 4. PRAWA STRONA: Bardzo duża litera P (X=330, Y=60)
+              "^FO330,60^A0N,110,90^FDP^FS" + 
+              
               "^XZ";
               
     wyslijDoZebry(zpl);
-  }
+}
   function przelaczWidokHasla() {
     const passInput = document.getElementById('auth-password');
     passInput.type = passInput.type === "password" ? "text" : "password";
