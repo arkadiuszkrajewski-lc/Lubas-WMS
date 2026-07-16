@@ -310,18 +310,12 @@
     let pelneDane = dane.replace(/\s+/g, ' ');
     
     // ZPL dopasowany do układu 50x30 mm
-    let zpl = "^XA^CI28" +
-              // 1. LEWA STRONA: Kod QR
-              "^FO20,35^BQN,2,4^FDQA," + dane + "^FS" + 
-              
-              // 2. ŚRODEK: Dane pracownika (zmniejszone Y, żeby nie kolidowało z dużym P)
-              "^FO150,45^A0N,18,16^FDPRACOWNIK:^FS" +
-              // Zwiększona czcionka (26,24), szerokość bloku 180 (zostawia miejsce na P), max 2 linie
-              "^FO150,75^A0N,26,24^FB180,2,,L^FD" + pelneDane + "^FS" +
-              
-              // 3. PRAWA STRONA: Bardzo duża litera P (wyrównana w dół do Y=60)
-              "^FO330,60^A0N,110,90^FDP^FS" + 
-              
+    let zpl = "^XA^CI28^BY2,3,40" +
+            
+              "^FO30,30^BQN,2,4^FDQA," + dane + "^FS" + // Wyśrodkowany QR po lewej
+              "^FO150,90^A0N,32,30^FDPRACOWNIK:^FS" +
+              "^FO150,145^A0N,44,40^FD" + skroconeDane + "^FS" +
+             "^FO330,30^A0N,110,90^FDP^FS" + // Bardzo duża litera L na pozycji X=330, Y=60
               "^XZ";
               
     wyslijDoZebry(zpl);
