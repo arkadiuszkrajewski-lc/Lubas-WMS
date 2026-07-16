@@ -253,10 +253,10 @@
     let nazwa = document.getElementById('p-towar-nazwa').value.trim();
     if(!kod) { alert("Wpisz kod towaru!"); return; }
     
-    // --- POPRAWKA: Przekazujemy PEŁNĄ nazwę bez ucinania jej do 13 znaków ---
-    let pelnaNazwa = nazwa; 
+    // Zastępujemy wszelkie nietypowe spacji zwykłymi spacjami, aby drukarka wiedziała, gdzie łamać tekst
+    let czystaNazwa = nazwa.replace(/\s+/g, ' '); 
     
-    // Kod QR po lewej (FO20), dane po prawej (FO150) z automatycznym zawijaniem tekstu
+    // ZPL ze sprawdzonym formatem ^FB (szerokość 240, maksymalnie 2 linie)
     let zpl = "^XA^CI28" +
 // 1. LEWA STRONA: Kod QR
 "^FO20,35^BQN,2,4^FDQA," + kod + "^FS" + 
@@ -265,9 +265,10 @@
 "^FO150,30^A0N,18,16^FDKOD TOWARU:^FS" +
 "^FO150,55^A0N,28,26^FD" + kod + "^FS" +
 
-// 3. PRAWA STRONA: Nazwa produktu (Zawijanie realizowane w 100% przez drukarkę za pomocą ^TB)
+// 3. PRAWA STRONA: Nazwa produktu z wymuszonym łamaniem linii
 "^FO150,115^A0N,18,16^FDNAZWA:^FS" +
-"^FO150,140^TBN,240,50^A0N,20,18^FD" + pelnaNazwa + "^FS" +
+// ^FB240,2,,L -> zarezerwuj szerokość 240, pozwól na 2 linie, wyrównaj do lewej (L)
+"^FO150,140^A0N,20,18^FB240,2,,L^FD" + czystaNazwa + "^FS" +
 
 "^XZ";
 
