@@ -288,7 +288,7 @@
 
     // QR po lewej (FO45,65), dane i pozioma linia po prawej (FO210)
     let zpl = "^XA^CI28" +
-"^FO20,35^BQN,2,4^FDQA," + adres + "^FS" + // Kod QR przesunięty lekko w lewo
+"^FO20,60^BQN,2,4^FDQA," + adres + "^FS" + // Kod QR przesunięty lekko w lewo
 "^FO150,45^A0N,28,26^FD" + adres + "^FS" + // Adres
 "^FO150,85^GB160,1,1^FS" + // Linia rozdzielająca (skrócona do 160, by zrobić miejsce na L)
 "^FO150,100^A0N,18,16^FDMAG: " + m + " RZAD: " + r + "^FS" +
@@ -311,11 +311,11 @@
     
     // QR po lewej (FO45,65), dane po prawej (FO210)
     let zpl = "^XA^CI28^BY2,3,40" +
-              "^FO210,35^A0N,18,18^FD* LUBAS WMS *^FS" +
-              "^FO45,65^BQN,2,4^FDQA," + dane + "^FS" + // Wyśrodkowany QR po lewej
-              "^FO210,75^A0N,22,20^FDPRACOWNIK:^FS" +
-              "^FO210,110^A0N,26,24^FD" + skroconeDane + "^FS" +
-              "^FO210,155^A0N,16,14^FDID AUTORYZACYJNE^FS" +
+            
+              "^FO30,30^BQN,2,4^FDQA," + dane + "^FS" + // Wyśrodkowany QR po lewej
+              "^FO150,75^A0N,22,20^FDPRACOWNIK:^FS" +
+              "^FO150,110^A0N,26,24^FD" + skroconeDane + "^FS" +
+             
               "^XZ";
               
     wyslijDoZebry(zpl);
