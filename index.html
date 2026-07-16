@@ -252,50 +252,49 @@
     let kod = document.getElementById('p-towar-kod').value.trim().toUpperCase();
     let nazwa = document.getElementById('p-towar-nazwa').value.trim();
     if(!kod) { alert("Wpisz kod towaru!"); return; }
-    if(nazwa.length > 26) nazwa = nazwa.substring(0, 23) + "...";
-
-    let zpl = "^XA^CI28" +
-              "^FO30,45^BQN,2,5^FDQA," + kod + "^FS" +
-              "^FO200,40^A0N,20,18^FDKOD TOWARU:^FS" +
-              "^FO200,65^A0N,36,34^FD" + kod + "^FS" + 
-              "^FO200,120^A0N,18,16^FDNAZWA:^FS" +
-              "^FO200,145^A0N,22,20^FD" + nazwa + "^FS" + 
+    
+    // Ograniczenie nazwy do 15 znaków, aby nie wchodziła na kod QR
+    let skroconaNazwa = nazwa.length > 15 ? nazwa.substring(0, 12) + "..." : nazwa;
+    
+    // ZPL zoptymalizowany na 50x30mm (kod QR mniejszy o 1 stopień i przesunięty w lewo)
+    let zpl = "^XA^CI28^BY2,3,40" +
+              "^FO20,20^A0N,18,18^FD* LUBAS WMS - TOWAR *^FS" +
+              "^FO220,45^BQN,2,3^FDQA," + kod + "^FS" +
+              "^FO20,65^A0N,22,20^FDKod produktu:^FS" +
+              "^FO20,95^A0N,26,24^FD" + kod + "^FS" +
+              "^FO20,155^A0N,18,16^FD" + skroconaNazwa + "^FS" +
               "^XZ";
+              
     wyslijDoZebry(zpl);
   }
 
   function drukujEtykieteLokalizacyjna() {
     let adres = document.getElementById('p-lok-adres').value.trim().toUpperCase();
     if(!adres) { alert("Wpisz adres półki!"); return; }
-
-    let czesci = adres.split('-');
-    let m = czesci[0] || "--";
-    let r = czesci[1] || "--";
-    let reg = czesci[2] || "--";
-    let p = czesci[3] || "--";
-    let poz = czesci[4] || "--";
-
-    let zpl = "^XA^CI28" +
-              "^FO30,45^BQN,2,5^FDQA," + adres + "^FS" +
-              "^FO200,35^A0N,32,30^FD" + adres + "^FS" +
-              "^FO200,80^GB180,1,1^FS" +
-              "^FO200,95^A0N,18,16^FDMAG: " + m + "  RZAD: " + r + "^FS" +
-              "^FO200,125^A0N,18,16^FDREGAL: " + reg + "  POZ: " + p + "^FS" +
-              "^FO200,155^A0N,18,16^FDPOZYCJA: " + poz + "^FS" +
+    
+    // ZPL zoptymalizowany na 50x30mm (kod QR mniejszy o 1 stopień i przesunięty w lewo)
+    let zpl = "^XA^CI28^BY3,3,60" +
+              "^FO20,20^A0N,18,18^FD* LUBAS WMS - LOKALIZACJA *^FS" +
+              "^FO220,40^BQN,2,3^FDQA," + adres + "^FS" +
+              "^FO20,75^A0N,24,22^FDLOKALIZACJA:^FS" +
+              "^FO20,115^A0N,36,34^FD" + adres + "^FS" +
               "^XZ";
+              
     wyslijDoZebry(zpl);
   }
 
   function drukujEtykietePracownika() {
     let dane = document.getElementById('p-user-nazwa').value.trim();
     if(!dane) { alert("Wpisz dane pracownika!"); return; }
-
-    let zpl = "^XA^CI28" +
-              "^FO30,45^BQN,2,5^FDQA," + dane + "^FS" +
-              "^FO200,50^A0N,22,20^FDPRACOWNIK WMS:^FS" +
-              "^FO200,85^A0N,32,30^FD" + dane + "^FS" +
-              "^FO200,140^A0N,18,16^FDID AUTORYZACYJNE^FS" +
+    
+    // ZPL zoptymalizowany na 50x30mm
+    let zpl = "^XA^CI28^BY2,3,40" +
+              "^FO20,20^A0N,18,18^FD* LUBAS WMS - PRACOWNIK *^FS" +
+              "^FO220,45^BQN,2,3^FDQA," + dane + "^FS" +
+              "^FO20,70^A0N,22,20^FDPracownik:^FS" +
+              "^FO20,105^A0N,26,24^FD" + dane + "^FS" +
               "^XZ";
+              
     wyslijDoZebry(zpl);
   }
 
