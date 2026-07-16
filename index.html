@@ -259,11 +259,11 @@
     // ZPL ze sprawdzonym formatem ^FB (szerokość 240, maksymalnie 2 linie)
     let zpl = "^XA^CI28" +
 // 1. LEWA STRONA: Kod QR
-"^FO20,35^BQN,2,4^FDQA," + kod + "^FS" + 
+"^FO20,60^BQN,2,4^FDQA," + kod + "^FS" + 
 
 // 2. PRAWA STRONA: Kod towaru
-"^FO150,30^A0N,18,16^FDKOD TOWARU:^FS" +
-"^FO150,55^A0N,28,26^FD" + kod + "^FS" +
+"^FO150,50^A0N,18,16^FDKOD TOWARU:^FS" +
+"^FO150,75^A0N,28,26^FD" + kod + "^FS" +
 
 // 3. PRAWA STRONA: Nazwa produktu z wymuszonym łamaniem linii
 "^FO150,115^A0N,18,16^FDNAZWA:^FS" +
