@@ -281,14 +281,14 @@
 
     // QR po lewej (FO45,65), dane i pozioma linia po prawej (FO210)
     let zpl = "^XA^CI28" +
-              "^FO25,45^BQN,2,4^FDQA," + adres + "^FS" + // Wyśrodkowany QR po lewej
-              "^FO150,35^A0N,28,26^FD" + adres + "^FS" +
-              "^FO150,75^GB160,1,1^FS" + // Linia oddzielająca po prawej
-              "^FO150,90^A0N,18,16^FDMAG: " + m + " RZAD: " + r + "^FS" +
-              "^FO150,120^A0N,18,16^FDREGAL: " + reg + " POZ: " + p + "^FS" +
-              "^FO150,150^A0N,18,16^FDPOZYCJA: " + poz + "^FS" +
+              "^FO20,35^BQN,2,4^FDQA," + adres + "^FS" + // Wyśrodkowany QR po lewej
+              "^FO150,45^A0N,28,26^FD" + adres + "^FS" +
+              "^FO150,85^GB160,1,1^FS" + // Linia oddzielająca po prawej
+              "^FO150,100^A0N,18,16^FDMAG: " + m + " RZAD: " + r + "^FS" +
+              "^FO150,130^A0N,18,16^FDREGAL: " + reg + " POZ: " + p + "^FS" +
+              "^FO150,160^A0N,18,16^FDPOZYCJA: " + poz + "^FS" +
               "^XZ";
-;
+
               
     wyslijDoZebry(zpl);
   }
