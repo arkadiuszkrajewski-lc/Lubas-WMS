@@ -257,13 +257,19 @@
     let skroconaNazwa = nazwa.length > 16 ? nazwa.substring(0, 13) + "..." : nazwa;
     
     // QR po lewej (FO45,65), dane po prawej (FO210)
-    let zpl = "^XA^CI28^BY2,3,40" +
-              "^FO210,35^A0N,18,18^FD* LUBAS WMS *^FS" +
-              "^FO45,65^BQN,2,4^FDQA," + kod + "^FS" + // Wyśrodkowany QR po lewej
-              "^FO210,65^A0N,20,18^FDKod produktu:^FS" +
-              "^FO210,95^A0N,26,24^FD" + kod + "^FS" +
-              "^FO210,155^A0N,18,16^FD" + skroconaNazwa + "^FS" +
-              "^XZ";
+    let zpl = ""^XA^CI28" +
+// 1. LEWA STRONA: Wyśrodkowany pionowo kod QR (X=20, Y=35)
+"^FO20,35^BQN,2,4^FDQA," + kod + "^FS" + 
+
+// 3. PRAWA STRONA: Kod towaru (górna sekcja)
+"^FO150,30^A0N,18,16^FDKOD TOWARU:^FS" +
+"^FO150,55^A0N,28,26^FD" + kod + "^FS" +
+
+// 4. PRAWA STRONA: Nazwa produktu (dolna sekcja)
+"^FO150,115^A0N,18,16^FDNAZWA:^FS" +
+"^FO150,140^A0N,24,22^FD" + skroconaNazwa + "^FS" +
+
+"^XZ";
               
     wyslijDoZebry(zpl);
   }
