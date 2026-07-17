@@ -355,7 +355,7 @@
     ).catch(err => { alert("Błąd kamery logowania: " + err); });
   }
 
-  function autoryzujZBazą() {
+function autoryzujZBazą() {
     const email = document.getElementById('auth-email').value.trim().toLowerCase();
     const haslo = document.getElementById('auth-password').value.trim();
     const btn = document.getElementById('btn-login-submit');
@@ -365,7 +365,8 @@
     btn.disabled = true;
     btn.innerText = "Weryfikacja danych...";
 
-    const bodyForm = {
+    // Przygotowanie paczki danych w formacie x-www-form-urlencoded, dokładnie tak jak przy wysyłaniu transakcji
+    const paczkaDanych = {
       akcja: "weryfikuj_user",
       email: email,
       haslo: haslo
@@ -373,8 +374,8 @@
 
     fetch(GOOGLE_SCRIPT_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(bodyForm)
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams(paczkaDanych).toString()
     })
     .then(res => res.text())
     .then(odpowiedz => {
