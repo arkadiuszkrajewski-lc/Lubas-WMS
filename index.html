@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>LUBAS WMS v5.10 (Three-Main-Tabs)</title>
+  <title>LUBAS WMS v5.11 (Three-Main-Tabs)</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
@@ -83,7 +83,7 @@
 
 <div class="container py-3" style="max-width: 480px;">
   <div class="naglowek-operatora mb-3">
-    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.10</span></h4>
+    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.11</span></h4>
     <div class="d-flex align-items-center gap-2">
       <span id="user-badge" class="badge bg-success p-2" style="font-size: 0.75rem;">---</span>
       <button onclick="wylogujOperatora()" class="btn btn-sm btn-outline-secondary py-1 px-2" style="font-size: 0.75rem;">Zmień</button>
@@ -114,7 +114,7 @@
       <div class="form-group-custom">
         <label class="form-label fw-bold small text-secondary mb-1">1. KOD TOWARU:</label>
         <div class="input-group">
-          <input type="text" id="kod-towaru" class="form-control wielki-input text-uppercase" placeholder="Wymagane dokładnie 5 cyfr (np. 12345)" onclick="aktywujSkanowanie('kod-towaru')" required>
+          <input type="text" id="kod-towaru" class="form-control wielki-input text-uppercase" placeholder="Format: litera + 5 cyfr (np. A12345)" onclick="aktywujSkanowanie('kod-towaru')" required>
           <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('kod-towaru')">❌</button>
         </div>
       </div>
@@ -160,7 +160,7 @@
     <div id="sub-panel-towar">
       <div class="mb-2">
         <label class="small text-secondary fw-bold mb-1">KOD TOWARU:</label>
-        <input type="text" id="p-towar-kod" class="form-control wielki-input text-uppercase" placeholder="Wpisz kod (5 cyfr)">
+    <input type="text" id="p-towar-kod" class="form-control wielki-input text-uppercase" placeholder="Wpisz kod (np. A12345)">
       </div>
       <div class="mb-3">
         <label class="small text-secondary fw-bold mb-1">NAZWA TOWARU:</label>
@@ -253,25 +253,28 @@
     let nazwa = document.getElementById('p-towar-nazwa').value.trim();
     if(!kod) { alert("Wpisz kod towaru!"); return; }
     
-    // Zastępujemy wszelkie nietypowe spacji zwykłymi spacjami, aby drukarka wiedziała, gdzie łamać tekst
+    // Zastępujemy wszelkie nietypowe spacji zwykłymi spacjami
     let czystaNazwa = nazwa.replace(/\s+/g, ' '); 
     
-    // ZPL ze sprawdzonym formatem ^FB (szerokość 240, maksymalnie 2 linie)
+    // Obniżamy limit o 2 znaki, ponieważ kod towaru zyskał dodatkową literę na początku
+    let skroconaNazwa = czystaNazwa.length > 14 ? czystaNazwa.substring(0, 11) + "..." : czystaNazwa;
+    
+    // ZPL z zachowaniem układu (QR po lewej, dane po prawej)
     let zpl = "^XA^CI28" +
-// 1. LEWA STRONA: Kod QR
-"^FO20,60^BQN,2,4^FDQA," + kod + "^FS" + 
+              // 1. LEWA STRONA: Kod QR
+              "^FO20,60^BQN,2,4^FDQA," + kod + "^FS" + 
 
-// 2. PRAWA STRONA: Kod towaru
-"^FO150,50^A0N,18,16^FDKOD TOWARU:^FS" +
-"^FO150,75^A0N,28,26^FD" + kod + "^FS" +
+              // 2. PRAWA STRONA: Kod towaru
+              "^FO150,50^A0N,18,16^FDKOD TOWARU:^FS" +
+              "^FO150,75^A0N,28,26^FD" + kod + "^FS" +
 
-// 3. PRAWA STRONA: Nazwa produktu z wymuszonym łamaniem linii
-"^FO150,115^A0N,18,16^FDNAZWA:^FS" +
-// ^FB240,2,,L -> zarezerwuj szerokość 240, pozwól na 2 linie, wyrównaj do lewej (L)
-"^FO150,140^A0N,26,24^FB240,3,,L^FD" + czystaNazwa + "^FS" +
-// --- TUTAJ DODAJEMY DUŻĄ LITERĘ L ---
-"^FO330,30^A0N,110,90^FDT^FS" + // Bardzo duża litera L na pozycji X=330, Y=60
-"^XZ";
+              // 3. PRAWA STRONA: Nazwa produktu z bezpiecznym zawijaniem
+              "^FO150,115^A0N,18,16^FDNAZWA:^FS" +
+              "^FO150,140^A0N,26,24^FB240,3,,L^FD" + skroconaNazwa + "^FS" +
+
+              // 4. DUŻA LITERA IDENTYFIKACYJNA "T"
+              "^FO330,30^A0N,110,90^FDT^FS" + 
+              "^XZ";
 
     wyslijDoZebry(zpl);
   }
