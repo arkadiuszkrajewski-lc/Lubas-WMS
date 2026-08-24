@@ -254,31 +254,21 @@
     let nazwa = document.getElementById('p-towar-nazwa').value.trim();
     if(!kod) { alert("Wpisz kod towaru!"); return; }
     
-    // Zastępujemy wszelkie nietypowe spacji zwykłymi spacjami
     let czystaNazwa = nazwa.replace(/\s+/g, ' '); 
-    
-    // Obniżamy limit o 2 znaki, ponieważ kod towaru zyskał dodatkową literę na początku
     let skroconaNazwa = czystaNazwa.length > 14 ? czystaNazwa.substring(0, 11) + "..." : czystaNazwa;
     
-    // ZPL z zachowaniem układu (QR po lewej, dane po prawej)
     let zpl = "^XA^CI28" +
-              // 1. LEWA STRONA: Kod QR
               "^FO20,60^BQN,2,4^FDQA," + kod + "^FS" + 
-
-              // 2. PRAWA STRONA: Kod towaru
               "^FO150,50^A0N,18,16^FDKOD TOWARU:^FS" +
               "^FO150,75^A0N,28,26^FD" + kod + "^FS" +
-
-              // 3. PRAWA STRONA: Nazwa produktu z bezpiecznym zawijaniem
               "^FO150,115^A0N,18,16^FDNAZWA:^FS" +
               "^FO150,140^A0N,26,24^FB240,3,,L^FD" + skroconaNazwa + "^FS" +
-
-              // 4. DUŻA LITERA IDENTYFIKACYJNA "T"
               "^FO330,30^A0N,110,90^FDT^FS" + 
               "^XZ";
 
     wyslijDoZebry(zpl);
   }
+
   function drukujEtykieteLokalizacyjna() {
     let adres = document.getElementById('p-lok-adres').value.trim().toUpperCase();
     if(!adres) { alert("Wpisz adres półki!"); return; }
@@ -290,18 +280,15 @@
     let p = czesci[3] || "--";
     let poz = czesci[4] || "--";
 
-    // QR po lewej (FO45,65), dane i pozioma linia po prawej (FO210)
     let zpl = "^XA^CI28" +
-"^FO20,60^BQN,2,4^FDQA," + adres + "^FS" + // Kod QR przesunięty lekko w lewo
-"^FO150,45^A0N,32,30^FD" + adres + "^FS" + // Adres
-"^FO150,85^GB160,1,1^FS" + // Linia rozdzielająca (skrócona do 160, by zrobić miejsce na L)
-"^FO150,100^A0N,24,22^FDMAG: " + m + " RZAD: " + r + "^FS" +
-"^FO150,130^A0N,24,22^FDREGAL: " + reg + " POZ: " + p + "^FS" +
-"^FO150,160^A0N,24,22^FDPOZYCJA: " + poz + "^FS" +
-// --- TUTAJ DODAJEMY DUŻĄ LITERĘ L ---
-"^FO330,120^A0N,110,90^FDL^FS" + // Bardzo duża litera L na pozycji X=330, Y=60
-"^XZ";
-
+      "^FO20,60^BQN,2,4^FDQA," + adres + "^FS" +
+      "^FO150,45^A0N,32,30^FD" + adres + "^FS" +
+      "^FO150,85^GB160,1,1^FS" +
+      "^FO150,100^A0N,24,22^FDMAG: " + m + " RZAD: " + r + "^FS" +
+      "^FO150,130^A0N,24,22^FDREGAL: " + reg + " POZ: " + p + "^FS" +
+      "^FO150,160^A0N,24,22^FDPOZYCJA: " + poz + "^FS" +
+      "^FO330,120^A0N,110,90^FDL^FS" +
+      "^XZ";
               
     wyslijDoZebry(zpl);
   }
@@ -310,28 +297,18 @@
     let dane = document.getElementById('p-user-nazwa').value.trim();
     if(!dane) { alert("Wpisz dane pracownika!"); return; }
     
-    // Zastępujemy nietypowe spacje zwykłymi, aby Zebra poprawnie łamała linie
     let pelneDane = dane.replace(/\s+/g, ' ');
     
-    // ZPL dopasowany do układu 50x30 mm
     let zpl = "^XA^CI28" +
-              // 1. LEWA STRONA: Wyśrodkowany QR po lewej
               "^FO20,45^BQN,2,4^FDQA," + dane + "^FS" + 
-              
-              // 2. ŚRODEK: "PRACOWNIK:" (Czcionka 32,30 - przesunięta wyżej na Y=40)
               "^FO150,60^A0N,32,30^FDPRACOWNIK:^FS" +
-              
-              // 3. ŚRODEK: Imię i Nazwisko (Czcionka 44,40, zawijanie do 2 linii, szerokość pola 175)
-              // POPRAWIONO: Zmieniono skroconeDane na pelneDane + dodano ^FB
               "^FO150,110^A0N,44,40^FB175,2,,L^FD" + pelneDane + "^FS" +
-              
-              // 4. PRAWA STRONA: Bardzo duża litera P (X=330, Y=60)
               "^FO330,60^A0N,110,90^FDP^FS" + 
-              
               "^XZ";
               
     wyslijDoZebry(zpl);
 }
+
   function przelaczWidokHasla() {
     const passInput = document.getElementById('auth-password');
     passInput.type = passInput.type === "password" ? "text" : "password";
@@ -343,9 +320,21 @@
     if (loginQrcode && loginQrcode.isScanning) return;
     
     loginQrcode = new Html5Qrcode("login-reader");
+    
+    // ZOPTYMALIZOWANA KONFIGURACJA KAMERY (Full HD + Ostrość)
+    const cameraConfig = {
+      facingMode: "environment",
+      width: { ideal: 1920 },
+      height: { ideal: 1080 },
+      focusMode: { ideal: "continuous" }
+    };
+
     loginQrcode.start(
-      { facingMode: "environment" },
-      { fps: 20, qrbox: null }, 
+      cameraConfig,
+      { 
+        fps: 20, 
+        qrbox: null 
+      }, 
       (decodedText) => {
         document.getElementById('auth-email').value = decodedText.trim().toLowerCase();
         if (loginQrcode) {
@@ -369,7 +358,6 @@ function autoryzujZBazą() {
     btn.disabled = true;
     btn.innerText = "Weryfikacja danych...";
 
-    // Przygotowanie paczki danych w formacie x-www-form-urlencoded, dokładnie tak jak przy wysyłaniu transakcji
     const paczkaDanych = {
       akcja: "weryfikuj_user",
       email: email,
@@ -442,9 +430,21 @@ function autoryzujZBazą() {
 
     if (html5Qrcode && html5Qrcode.isScanning) return;
     html5Qrcode = new Html5Qrcode("reader");
+    
+    // ZOPTYMALIZOWANA KONFIGURACJA KAMERY (Full HD + Ostrość)
+    const cameraConfig = {
+      facingMode: "environment",
+      width: { ideal: 1920 },
+      height: { ideal: 1080 },
+      focusMode: { ideal: "continuous" }
+    };
+
     html5Qrcode.start(
-      { facingMode: "environment" },
-      { fps: 25, qrbox: null }, 
+      cameraConfig,
+      { 
+        fps: 25, 
+        qrbox: null 
+      }, 
       (decodedText) => {
         if (blokadaSkanera) return;
         blokadaSkanera = true;
