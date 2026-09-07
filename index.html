@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>LUBAS WMS v5.28</title>
+  <title>LUBAS WMS v5.29</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
@@ -26,26 +26,30 @@
       --accent-purple: #a855f7;
       --text-main: #f8fafc;
     }
-    body { background-color: var(--bg-dark); color: var(--text-main); font-family: 'Inter', sans-serif; -webkit-user-select: none; user-select: none; }
-    .modern-card { background: var(--card-dark); border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 10px 30px rgba(0,0,0,0.25); margin-bottom: 25px; }
-    .SkanerOkno { background: #000; border-radius: 16px; overflow: hidden; width: 100%; margin: 0 auto; display: none; aspect-ratio: 4/3; border: 2px solid rgba(255,255,255,0.1); margin-bottom: 25px; position: relative; }
+    body { background-color: var(--bg-dark); color: var(--text-main); font-family: 'Inter', sans-serif; -webkit-user-select: none; user-select: none; line-height: 1.6; }
+    .modern-card { background: var(--card-dark); border-radius: 20px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 10px 30px rgba(0,0,0,0.3); margin-bottom: 30px; padding: 22px !important; }
+    .SkanerOkno { background: #000; border-radius: 16px; overflow: hidden; width: 100%; margin: 0 auto; display: none; aspect-ratio: 4/3; border: 2px solid rgba(255,255,255,0.15); margin-bottom: 30px; position: relative; }
     .SkanerOkno video { width: 100%; height: 100%; object-fit: cover; }
-    .wielki-input { font-size: 1.1rem; padding: 14px; background-color: #0f172a !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; }
-    .wielki-input:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25); }
-    .skan-aktywny { border: 2px solid var(--accent-danger) !important; box-shadow: 0 0 15px rgba(239, 68, 68, 0.3) !important; }
-    .btn-modern { border-radius: 12px; padding: 14px; font-weight: 600; transition: all 0.2s; }
+    .wielki-input { font-size: 1.15rem; padding: 16px; background-color: #0f172a !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; }
+    .wielki-input:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3); }
+    .skan-aktywny { border: 2px solid var(--accent-danger) !important; box-shadow: 0 0 18px rgba(239, 68, 68, 0.35) !important; }
+    .btn-modern { border-radius: 14px; padding: 16px; font-weight: 700; transition: all 0.2s; letter-spacing: 0.5px; }
     
-    .glowny-przelacznik-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
-    .glowny-przelacznik-grid .btn-check:checked + .btn { background-color: var(--accent-blue); border-color: var(--accent-blue); color: white; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
-    .glowny-przelacznik-grid .btn { font-size: 0.8rem; letter-spacing: 0.5px; padding: 12px 4px; font-weight: 800; border-color: rgba(255,255,255,0.15); color: #94a3b8; border-radius: 10px !important; }
+    /* Ujednolicona siatka przycisków nawigacyjnych */
+    .glowny-przelacznik-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
+    .glowny-przelacznik-grid .btn-check:checked + .btn { background-color: var(--accent-blue); border-color: var(--accent-blue); color: white; box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35); }
+    .glowny-przelacznik-grid .btn { font-size: 0.82rem; letter-spacing: 0.5px; padding: 14px 6px; font-weight: 800; border-color: rgba(255,255,255,0.15); color: #94a3b8; border-radius: 12px !important; text-transform: uppercase; }
     
-    .form-group-custom { margin-bottom: 20px; }
-    .label-custom { font-size: 0.9rem; letter-spacing: 0.5px; margin-bottom: 10px; display: block; }
+    .mini-przelacznik .btn-check:checked + .btn { background-color: var(--accent-blue); border-color: var(--accent-blue); color: #fff; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
+    .mini-przelacznik .btn { font-size: 0.85rem; font-weight: 700; color: #a6b5cc; border-color: rgba(255,255,255,0.15); border-radius: 10px !important; padding: 12px; }
+
+    .form-group-custom { margin-bottom: 25px; }
+    .label-custom { font-size: 0.92rem; letter-spacing: 0.5px; margin-bottom: 12px; display: block; }
     #login-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg-dark); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
     .login-scanner-box { background: #000; border-radius: 12px; overflow: hidden; width: 100%; max-width: 280px; display: none; aspect-ratio: 1/1; margin-bottom: 25px; border: 2px solid var(--accent-blue); position: relative; }
     .login-scanner-box video { width: 100%; height: 100%; object-fit: cover; }
     
-    .naglowek-operatora { display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; width: 100%; padding-bottom: 10px; }
+    .naglowek-operatora { display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; width: 100%; padding-bottom: 15px; margin-bottom: 15px; }
   </style>
 </head>
 <body>
@@ -70,7 +74,7 @@
         <label class="label-custom text-secondary fw-bold mb-2">Hasło:</label>
         <div class="input-group">
           <input type="password" id="auth-password" class="form-control wielki-input" placeholder="Wpisz hasło dostępu">
-          <button class="btn btn-outline-secondary px-3" type="button" onclick="przelaczWidokHasla()" style="border-top-right-radius: 10px; border-bottom-right-radius: 10px; border-color: rgba(255,255,255,0.1); background: #0f172a; color: #94a3b8;">👁️</button>
+          <button class="btn btn-outline-secondary px-3" type="button" onclick="przelaczWidokHasla()" style="border-top-right-radius: 12px; border-bottom-right-radius: 12px; border-color: rgba(255,255,255,0.15); background: #0f172a; color: #94a3b8;">👁️</button>
         </div>
       </div>
     </div>
@@ -80,8 +84,8 @@
 </div>
 
 <div class="container py-3" style="max-width: 480px;">
-  <div class="naglowek-operatora mb-3">
-    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.28</span></h4>
+  <div class="naglowek-operatora">
+    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.29</span></h4>
     <div class="d-flex align-items-center gap-2">
       <span class="small text-secondary fw-bold">Operator:</span>
       <span id="user-badge" class="badge bg-success p-2" style="font-size: 0.75rem;">---</span>
@@ -89,9 +93,9 @@
     </div>
   </div>
 
-  <!-- Nawigacja główna -->
-  <div class="modern-card p-2 mb-4">
-    <div class="glowny-przelacznik-grid mb-2">
+  <!-- Nawigacja główna: Jednakowa czcionka i styl dla wszystkich przycisków -->
+  <div class="modern-card p-3 mb-4">
+    <div class="glowny-przelacznik-grid mb-3">
       <div>
         <input type="radio" class="btn-check" name="main-nav" id="tab-wydanie-osoba" checked onclick="przelaczGlownyModul('Wydanie Osoba')">
         <label class="btn btn-outline-light w-100" for="tab-wydanie-osoba">🔴 WYDANIE (OSOBA)</label>
@@ -101,7 +105,7 @@
         <label class="btn btn-outline-light w-100" for="tab-wydanie-regal">📦 WYDANIE (REGAŁ)</label>
       </div>
     </div>
-    <div class="glowny-przelacznik-grid">
+    <div class="glowny-przelacznik-grid mb-3">
       <div>
         <input type="radio" class="btn-check" name="main-nav" id="tab-przyjecie" onclick="przelaczGlownyModul('Przyjęcie')">
         <label class="btn btn-outline-light w-100" for="tab-przyjecie">🟢 PRZYJĘCIE</label>
@@ -111,14 +115,14 @@
         <label class="btn btn-outline-light w-100" for="tab-przesuniecie">🟡 PRZESUNIĘCIE</label>
       </div>
     </div>
-    <div class="mt-2">
+    <div>
       <input type="radio" class="btn-check" name="main-nav" id="tab-wydruki" onclick="przelaczGlownyModul('Wydruki')">
-      <label class="btn btn-outline-info w-100 fw-bold" for="tab-wydruki" style="letter-spacing:0.5px; padding:10px;">🖨️ PANEL WYDRUKÓW (ZEBRA)</label>
+      <label class="btn btn-outline-light w-100" for="tab-wydruki">🖨️ PANEL WYDRUKÓW</label>
     </div>
   </div>
 
-  <div id="instrukcja-skanu" class="alert alert-warning text-center fw-bold small d-none" style="border-radius:10px;">Skieruj aparat na kod QR...</div>
-  <button id="btn-torch" type="button" onclick="przelaczLatarke()" class="btn btn-warning w-100 mb-2 fw-bold d-none" style="border-radius: 12px; padding: 10px;">🔦 Włącz latarkę</button>
+  <div id="instrukcja-skanu" class="alert alert-warning text-center fw-bold small d-none" style="border-radius:12px;">Skieruj aparat na kod QR...</div>
+  <button id="btn-torch" type="button" onclick="przelaczLatarke()" class="btn btn-warning w-100 mb-3 fw-bold d-none" style="border-radius: 12px; padding: 12px;">🔦 Włącz latarkę</button>
   <div id="reader" class="SkanerOkno"></div>
 
   <!-- SEKCJA OPERACJI SKANOWANIA -->
@@ -129,7 +133,7 @@
 
       <!-- 1. KOD TOWARU -->
       <div class="form-group-custom">
-        <label class="form-label fw-bold small text-secondary mb-1">1. KOD TOWARU:</label>
+        <label class="form-label fw-bold small text-secondary mb-2">1. KOD TOWARU:</label>
         <div class="input-group">
           <input type="text" id="kod-towaru" class="form-control wielki-input text-uppercase" placeholder="Format: litera + 5 cyfr (np. A12345)" onclick="aktywujSkanowanie('kod-towaru')" required>
           <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('kod-towaru')">❌</button>
@@ -138,7 +142,7 @@
 
       <!-- 2a. PÓŁKA ŹRÓDŁOWA -->
       <div class="form-group-custom" id="sekcja-polka-z">
-        <label id="label-polka-z" class="form-label fw-bold small text-secondary mb-1">2. ADRES PÓŁKI (ŹRÓDŁOWA):</label>
+        <label id="label-polka-z" class="form-label fw-bold small text-secondary mb-2">2. ADRES PÓŁKI (ŹRÓDŁOWA):</label>
         <div class="input-group">
           <input type="text" id="polka" class="form-control wielki-input text-uppercase" placeholder="Format: 00-00-00-A-00" onclick="aktywujSkanowanie('polka')" required>
           <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('polka')">❌</button>
@@ -147,7 +151,7 @@
 
       <!-- 2b. PÓŁKA DOCELOWA (PRZESUNIĘCIE) -->
       <div class="form-group-custom" id="sekcja-polka-do" style="display: none;">
-        <label id="label-polka-do" class="form-label fw-bold small text-secondary mb-1">2b. PÓŁKA DOCELOWA:</label>
+        <label id="label-polka-do" class="form-label fw-bold small text-secondary mb-2">2b. PÓŁKA DOCELOWA:</label>
         <div class="input-group">
           <input type="text" id="polka-do" class="form-control wielki-input text-uppercase" placeholder="Format: 00-00-00-A-00" onclick="aktywujSkanowanie('polka-do')">
           <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('polka-do')">❌</button>
@@ -156,7 +160,7 @@
 
       <!-- 2c. LISTA REGAŁÓW / DZIAŁÓW (WYDANIE REGAŁ) -->
       <div class="form-group-custom" id="sekcja-lista-stref" style="display: none;">
-        <label class="form-label fw-bold small text-secondary mb-1">2b. WYBIERZ REGAŁ DOCELOWY:</label>
+        <label class="form-label fw-bold small text-secondary mb-2">2b. WYBIERZ REGAŁ DOCELOWY:</label>
         <select id="strefa-select" class="form-select wielki-input text-white" onchange="schowajAparat()">
           <option value="" disabled selected>-- Wybierz regał / dział --</option>
           <option value="Odlewnia ogólna">Odlewnia ogólna</option>
@@ -172,7 +176,7 @@
 
       <!-- 3. PRACOWNIK -->
       <div class="form-group-custom" id="sekcja-pracownik">
-        <label class="form-label fw-bold small text-secondary mb-1">3. PRACOWNIK (Imię i Nazwisko):</label>
+        <label class="form-label fw-bold small text-secondary mb-2">3. PRACOWNIK (Imię i Nazwisko):</label>
         <div class="input-group">
           <input type="text" id="pracownik" class="form-control wielki-input" placeholder="Wpisz lub skanuj pełne Imię i Nazwisko" onclick="aktywujSkanowanie('pracownik')">
           <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('pracownik')">❌</button>
@@ -181,37 +185,61 @@
 
       <!-- 4. ILOŚĆ SZTUK -->
       <div class="form-group-custom">
-        <label class="form-label fw-bold small text-secondary mb-1">4. ILOŚĆ SZTUK:</label>
+        <label class="form-label fw-bold small text-secondary mb-2">4. ILOŚĆ SZTUK:</label>
         <input type="number" id="ilosc" class="form-control wielki-input" value="1" min="1" placeholder="Wpisz ilość sztuk" required onfocus="schowajAparat()">
       </div>
 
-      <button type="submit" id="btn-submit" class="btn btn-primary w-100 py-3 fw-bold fs-5 btn-modern mt-1">ZAPISZ OPERACJĘ (Enter)</button>
+      <button type="submit" id="btn-submit" class="btn btn-primary w-100 py-3 fw-bold fs-5 btn-modern mt-2">ZAPISZ OPERACJĘ (Enter)</button>
     </form>
-    <div id="status" class="alert alert-success mt-3 d-none text-center fw-bold" style="border-radius:10px;"></div>
+    <div id="status" class="alert alert-success mt-3 d-none text-center fw-bold" style="border-radius:12px;"></div>
   </div>
 
   <!-- SEKCJA PANELU WYDRUKÓW -->
-  <div id="sekcja-druku" class="modern-card p-3" style="display: none; border: 1px solid rgba(59, 130, 246, 0.25);">
+  <div id="sekcja-druku" class="modern-card p-3" style="display: none; border: 1px solid rgba(59, 130, 246, 0.3);">
     
     <!-- PRZEŁĄCZNIK DLA KOMPUTERA Z DRUKARKĄ USB -->
-    <div class="p-3 mb-4 rounded-3" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.1);">
+    <div class="p-3 mb-4 rounded-3" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.12);">
       <div class="form-check form-switch d-flex align-items-center justify-content-between p-0">
         <label class="form-check-label fw-bold text-info" for="check-agent-usb" style="cursor: pointer;">
           🖨️ STACJA DRUKUJĄCA (USB Zebra)
-          <div class="small text-muted fw-normal">Zaznacz TYLKO na komputerze z wpiętą drukarką Zebra</div>
+          <div class="small text-muted fw-normal mt-1">Zaznacz TYLKO na komputerze z wpiętą drukarką Zebra</div>
         </label>
         <input class="form-check-input ms-2" type="checkbox" id="check-agent-usb" style="transform: scale(1.4); cursor: pointer;" onchange="zapiszStanAgenta(this.checked)">
       </div>
       <div id="agent-status-badge" class="small mt-2 fw-bold text-secondary">Status: Nasłuchiwanie wyłączone</div>
     </div>
 
-    <div id="sub-panel-user">
-      <div class="mb-3">
-        <label class="small text-secondary fw-bold mb-1">IMIĘ I NAZWISKO PRACOWNIKA:</label>
-        <input type="text" id="p-user-nazwa" class="form-control wielki-input" placeholder="Wpisz Imię i Nazwisko pracownika">
-      </div>
-      <button type="button" onclick="drukujEtykietePracownika()" class="btn btn-success w-100 py-3 fw-bold btn-modern">Drukuj Identyfikator (QR)</button>
+    <!-- MINI PRZEŁĄCZNIK WYBORU WYDRUKU -->
+    <div class="btn-group w-100 mb-4 mini-przelacznik" role="group">
+      <input type="radio" class="btn-check" name="sub-print" id="sub-user" checked onclick="przelaczPodpanelDruku('user')">
+      <label class="btn btn-outline-secondary py-2 fw-bold" for="sub-user">🪪 Pracownik</label>
+      
+      <input type="radio" class="btn-check" name="sub-print" id="sub-duplikat" onclick="przelaczPodpanelDruku('duplikat')">
+      <label class="btn btn-outline-secondary py-2 fw-bold" for="sub-duplikat">📋 Duplikat Etykiety</label>
     </div>
+
+    <!-- 1. ETYKIETA PRACOWNIKA -->
+    <div id="sub-panel-user">
+      <div class="form-group-custom">
+        <label class="small text-secondary fw-bold mb-2">IMIĘ I NAZWISKO PRACOWNIKA:</label>
+        <input type="text" id="p-user-nazwa" class="form-control wielki-input" placeholder="Wpisz Imię i Nazwisko">
+      </div>
+      <button type="button" onclick="drukujEtykietePracownika()" class="btn btn-success w-100 py-3 fw-bold btn-modern mt-2">Drukuj Identyfikator (QR)</button>
+    </div>
+
+    <!-- 2. DUPLIKAT ETYKIETY (AUTO-DETEKCJA ZPL) -->
+    <div id="sub-panel-duplikat" style="display: none;">
+      <div class="form-group-custom">
+        <label class="small text-secondary fw-bold mb-2">ZESKANUJ LUB WPISZ KOD ETYKIETY:</label>
+        <div class="input-group">
+          <input type="text" id="p-duplikat-kod" class="form-control wielki-input text-uppercase" placeholder="Skanuj towar, półkę lub pracownika" onclick="aktywujSkanowanie('p-duplikat-kod')">
+          <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('p-duplikat-kod')">❌</button>
+        </div>
+        <div class="small text-muted mt-2">System sam rozpozna format (półka, towar lub pracownik) i dobierze właściwy szablon ZPL.</div>
+      </div>
+      <button type="button" onclick="drukujDuplikatEtykiety()" class="btn btn-warning w-100 py-3 fw-bold btn-modern text-dark mt-2">Drukuj Duplikat Etykiety</button>
+    </div>
+
   </div>
 
 </div>
@@ -296,6 +324,12 @@
     }
   }
 
+  function przelaczPodpanelDruku(typ) {
+    document.getElementById('sub-panel-user').style.display = (typ === 'user') ? 'block' : 'none';
+    document.getElementById('sub-panel-duplikat').style.display = (typ === 'duplikat') ? 'block' : 'none';
+    schowajAparat();
+  }
+
   function wyslijDoBezposredniejZebry(zplKod) {
     if (typeof ZebraBrowserPrint !== 'undefined') {
       ZebraBrowserPrint.getLocalDevices(function(lista) {
@@ -315,19 +349,7 @@
     }
   }
 
-  function drukujEtykietePracownika() {
-    let dane = document.getElementById('p-user-nazwa').value.trim();
-    if(!dane) { alert("Wpisz dane pracownika!"); return; }
-    
-    let pelneDane = dane.replace(/\s+/g, ' ');
-    
-    let zpl = "^XA^CI28" +
-              "^FO20,40^BQN,2,4^FDQA," + pelneDane + "^FS" + 
-              "^FO145,40^A0N,22,20^FDPRACOWNIK:^FS" +
-              "^FO145,70^A0N,30,26^FB190,2,4,L^FD" + pelneDane + "^FS" +
-              "^FO340,55^A0N,100,80^FDP^FS" + 
-              "^XZ";
-
+  function przetworzIZlecdruk(zpl) {
     const jestStacjaUsb = localStorage.getItem('wms_agent_usb') === 'true';
 
     if (jestStacjaUsb) {
@@ -343,11 +365,78 @@
       .then(data => {
         if(data.status === "SUCCESS") {
           alert("🚀 Wysłano zlecenie do drukarki Zebra!");
-          document.getElementById('p-user-nazwa').value = "";
         } else { alert("Błąd wysyłania do kolejki."); }
       })
       .catch(err => alert("Błąd połączenia z chmurą."));
     }
+  }
+
+  function drukujEtykietePracownika() {
+    let dane = document.getElementById('p-user-nazwa').value.trim();
+    if(!dane) { alert("Wpisz dane pracownika!"); return; }
+    let pelneDane = dane.replace(/\s+/g, ' ');
+    
+    let zpl = "^XA^CI28" +
+              "^FO20,40^BQN,2,4^FDQA," + pelneDane + "^FS" + 
+              "^FO145,40^A0N,22,20^FDPRACOWNIK:^FS" +
+              "^FO145,70^A0N,30,26^FB190,2,4,L^FD" + pelneDane + "^FS" +
+              "^FO340,55^A0N,100,80^FDP^FS" + 
+              "^XZ";
+
+    przetworzIZlecdruk(zpl);
+    document.getElementById('p-user-nazwa').value = "";
+  }
+
+  // LOGIKA AUTO-DETEKCJI DLA DUPLIKATU ETYKIETY
+  function drukujDuplikatEtykiety() {
+    let kod = document.getElementById('p-duplikat-kod').value.trim().toUpperCase();
+    if(!kod) { alert("Skanuj lub wpisz kod do dodania duplikatu!"); return; }
+
+    let zpl = "";
+    var polkaRegex = /^\d{2}-\d{2}-\d{2}-[A-Za-z]-\d{2}$/;
+    var towarRegex = /^[A-Za-z]\d{5}$/; // Np. A12345
+
+    if (polkaRegex.test(kod)) {
+      // Szablon Półki / Lokalizacji
+      let czesci = kod.split('-');
+      let m = czesci[0] || "--";
+      let r = czesci[1] || "--";
+      let reg = czesci[2] || "--";
+      let p = czesci[3] || "--";
+      let poz = czesci[4] || "--";
+
+      zpl = "^XA^CI28" +
+            "^FO20,60^BQN,2,4^FDQA," + kod + "^FS" +
+            "^FO150,45^A0N,32,30^FD" + kod + "^FS" +
+            "^FO150,85^GB160,1,1^FS" +
+            "^FO150,100^A0N,24,22^FDMAG: " + m + " RZAD: " + r + "^FS" +
+            "^FO150,130^A0N,24,22^FDREGAL: " + reg + " POZ: " + p + "^FS" +
+            "^FO150,160^A0N,24,22^FDPOZYCJA: " + poz + "^FS" +
+            "^FO330,120^A0N,110,90^FDL^FS" +
+            "^XZ";
+    } else if (towarRegex.test(kod)) {
+      // Szablon Towarowy
+      zpl = "^XA^CI28" +
+            "^FO20,60^BQN,2,4^FDQA," + kod + "^FS" + 
+            "^FO150,50^A0N,18,16^FDKOD TOWARU:^FS" +
+            "^FO150,75^A0N,28,26^FD" + kod + "^FS" +
+            "^FO150,115^A0N,18,16^FDNAZWA:^FS" +
+            "^FO150,140^A0N,26,24^FB240,3,,L^FD" + kod + "^FS" +
+            "^FO330,30^A0N,110,90^FDT^FS" + 
+            "^XZ";
+    } else {
+      // Szablon Identyfikatora / Pracownika / Inne
+      let pelneDane = kod.replace(/\s+/g, ' ');
+      zpl = "^XA^CI28" +
+            "^FO20,40^BQN,2,4^FDQA," + pelneDane + "^FS" + 
+            "^FO145,40^A0N,22,20^FDIDENTYFIKATOR:^FS" +
+            "^FO145,70^A0N,30,26^FB190,2,4,L^FD" + pelneDane + "^FS" +
+            "^FO340,55^A0N,100,80^FDP^FS" + 
+            "^XZ";
+    }
+
+    przetworzIZlecdruk(zpl);
+    document.getElementById('p-duplikat-kod').value = "";
   }
 
   function przelaczWidokHasla() {
@@ -387,7 +476,7 @@
     const btn = document.getElementById('btn-torch');
     if (btn) {
       btn.innerText = stan ? "🔦 Wyłącz latarkę" : "🔦 Włącz latarkę";
-      btn.className = stan ? "btn btn-outline-warning w-100 mb-2 fw-bold text-white" : "btn btn-warning w-100 mb-2 fw-bold";
+      btn.className = stan ? "btn btn-outline-warning w-100 mb-3 fw-bold text-white" : "btn btn-warning w-100 mb-3 fw-bold";
     }
   }
   
@@ -439,7 +528,7 @@
     const btnTorch = document.getElementById('btn-torch');
     if (btnTorch) {
       btnTorch.innerText = "🔦 Włącz latarkę";
-      btnTorch.className = "btn btn-warning w-100 mb-2 fw-bold d-none";
+      btnTorch.className = "btn btn-warning w-100 mb-3 fw-bold d-none";
     }
   }
 
@@ -526,7 +615,11 @@
     document.getElementById('polka').classList.remove('skan-aktywny');
     document.getElementById('polka-do').classList.remove('skan-aktywny');
     document.getElementById('pracownik').classList.remove('skan-aktywny');
-    document.getElementById(poleId).classList.add('skan-aktywny');
+    const inputDuplikat = document.getElementById('p-duplikat-kod');
+    if(inputDuplikat) inputDuplikat.classList.remove('skan-aktywny');
+
+    const el = document.getElementById(poleId);
+    if(el) el.classList.add('skan-aktywny');
     
     document.getElementById('instrukcja-skanu').classList.remove('d-none');
     document.getElementById('reader').style.display = 'block';
@@ -542,6 +635,9 @@
     } else if(poleId === 'polka-do') {
       document.getElementById('instrukcja-skanu').innerText = "📍 KROK 2b: Zeskanuj kod QR PÓŁKI DOCELOWEJ";
       document.getElementById('instrukcja-skanu').className = "alert alert-primary text-center fw-bold small text-white bg-primary";
+    } else if(poleId === 'p-duplikat-kod') {
+      document.getElementById('instrukcja-skanu').innerText = "📋 Zeskanuj dowolną etykietę do duplikatu";
+      document.getElementById('instrukcja-skanu').className = "alert alert-warning text-center fw-bold small text-dark";
     } else {
       document.getElementById('instrukcja-skanu').innerText = "🪪 KROK 3: Zeskanuj kod QR PRACOWNIKA";
       document.getElementById('instrukcja-skanu').className = "alert alert-danger text-center fw-bold small text-white bg-danger";
@@ -551,14 +647,19 @@
       if (blokadaSkanera) return;
       blokadaSkanera = true;
       let celInput = document.getElementById('aktywne-pole').value;
-      document.getElementById(celInput).value = decodedText;
-      document.getElementById(celInput).classList.remove('skan-aktywny');
+      const inputTarget = document.getElementById(celInput);
+      if(inputTarget) {
+        inputTarget.value = decodedText;
+        inputTarget.classList.remove('skan-aktywny');
+      }
       
       wstrzymajAparat().then(() => {
         setTimeout(() => { blokadaSkanera = false; }, 1500); 
         let tryb = document.getElementById('operacja').value;
         
-        if (celInput === 'kod-towaru') {
+        if (celInput === 'p-duplikat-kod') {
+          schowajAparat();
+        } else if (celInput === 'kod-towaru') {
           aktywujSkanowanie('polka');
         } else if (celInput === 'polka' && tryb === 'Przesunięcie') {
           aktywujSkanowanie('polka-do');
@@ -595,6 +696,8 @@
       document.getElementById('polka').classList.remove('skan-aktywny'); 
       document.getElementById('polka-do').classList.remove('skan-aktywny'); 
       document.getElementById('pracownik').classList.remove('skan-aktywny'); 
+      const inputDuplikat = document.getElementById('p-duplikat-kod');
+      if(inputDuplikat) inputDuplikat.classList.remove('skan-aktywny');
     }); 
   }
 
