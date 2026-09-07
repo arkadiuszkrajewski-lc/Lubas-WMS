@@ -85,7 +85,7 @@
 
 <div class="container py-3" style="max-width: 480px;">
   <div class="naglowek-operatora mb-3">
-    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.20</span></h4>
+    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.21</span></h4>
     <div class="d-flex align-items-center gap-2">
       <span class="small text-secondary fw-bold">Operator:</span>
       <span id="user-badge" class="badge bg-success p-2" style="font-size: 0.75rem;">---</span>
@@ -640,7 +640,7 @@
       inputPracownik.removeAttribute('required');
       inputPolkaDo.removeAttribute('required');
     } else if (tryb === 'Przesunięcie') {
-      sekcjaPracownik.style.display = 'none'; // Pracownik ukryty przy przesunięciu
+      sekcjaPracownik.style.display = 'none';
       sekcjaPolkaDo.style.display = 'block';
       labelPolkaZ.innerText = "2a. PÓŁKA ŹRÓDŁOWA (Z):";
       inputPracownik.removeAttribute('required');
@@ -666,15 +666,13 @@
     let polkaValue = document.getElementById('polka').value.trim();
     let polkaDoValue = document.getElementById('polka-do').value.trim();
     
-    // Zapewniamy poprawne formatowanie Imienia i Nazwiska z maila / nazwy operatora
+    // CZYSZCZENIE NAZWY OPERATORA
     let surowaNazwa = localStorage.getItem('wms_user_name') || zalogowanyUzytkownik || "";
     if (surowaNazwa.indexOf("@") !== -1) {
       surowaNazwa = surowaNazwa.split("@")[0];
     }
-    // Zamieniamy kropki, myślniki i podkreślenia na spacje
     let czystaNazwa = surowaNazwa.replace(/[\._-]/g, " ").trim();
-    // Powiększamy pierwsze litery (np. arkadiusz krajewski -> Arkadiusz Krajewski)
-    let sformatowanyOperator = czystaNazwa.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+    let sformatowanyOperator = czystaNazwa.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
 
     let pracownikValue = (tryb === "Wydanie") ? document.getElementById('pracownik').value.trim() : sformatowanyOperator;
 
@@ -702,6 +700,41 @@
       ilosc: document.getElementById('ilosc').value,
       operator: zalogowanyUzytkownik
     };
+
+    fetch(GOOGLE_SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams(paczkaDanych).toString()
+    })
+    .then(res => res.json())
+    .then(data => {
+      btn.disabled = false;
+      btn.innerText = "ZAPISZ OPERACJĘ (Enter)";
+      if(data.status === "SUCCESS") {
+        statusBox.innerText = "🚀 ZAPISANO OPERACJĘ: " + data.id_ruchu;
+        statusBox.className = "alert alert-success mt-3 text-center fw-bold bg-success text-white border-0";
+        statusBox.classList.remove('d-none');
+        
+        document.getElementById('kod-towaru').value = "";
+        document.getElementById('polka').value = "";
+        document.getElementById('polka-do').value = "";
+        document.getElementById('pracownik').value = "";
+        document.getElementById('ilosc').value = '1';
+        
+        setTimeout(() => { 
+          statusBox.classList.add('d-none'); 
+          wstrzymajAparat().then(() => { aktywujSkanowanie('kod-towaru'); }); 
+        }, 1500);
+      } else {
+        alert("Błąd walidacji lub chmury:\n" + data.message);
+      }
+    })
+    .catch(err => { 
+      alert("Błąd połączenia z bazą danych."); 
+      btn.disabled = false; 
+      btn.innerText = "ZAPISZ OPERACJĘ (Enter)";
+    });
+  }
 </script>
 </body>
 </html>
