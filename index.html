@@ -36,7 +36,7 @@
     .btn-modern { border-radius: 12px; padding: 14px; font-weight: 600; transition: all 0.2s; }
     
     .glowny-przelacznik .btn-check:checked + .btn-outline-light { background-color: var(--accent-blue); border-color: var(--accent-blue); color: white; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
-    .glowny-przelacznik .btn { font-size: 0.85rem; letter-spacing: 0.5px; padding: 12px 5px; font-weight: 800; border-color: rgba(255,255,255,0.15); color: #94a3b8; }
+    .glowny-przelacznik .btn { font-size: 0.8rem; letter-spacing: 0.5px; padding: 10px 4px; font-weight: 800; border-color: rgba(255,255,255,0.15); color: #94a3b8; }
     
     .mini-przelacznik .btn-check:checked + .btn { background-color: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); color: #fff; }
     .mini-przelacznik .btn { font-size: 0.8rem; font-weight: 600; color: #a6b5cc; border-color: transparent; }
@@ -84,26 +84,28 @@
 <div class="container py-3" style="max-width: 480px;">
   <div class="naglowek-operatora mb-3">
     <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.19</span></h4>
-   <div class="d-flex align-items-center gap-2">
-  <span class="small text-secondary fw-bold">Operator:</span>
-  <span id="user-badge" class="badge bg-success p-2" style="font-size: 0.75rem;">---</span>
-  <button onclick="wylogujOperatora()" class="btn btn-sm btn-outline-secondary py-1 px-2" style="font-size: 0.75rem;">Zmień</button>
-</div>
+    <div class="d-flex align-items-center gap-2">
+      <span class="small text-secondary fw-bold">Operator:</span>
+      <span id="user-badge" class="badge bg-success p-2" style="font-size: 0.75rem;">---</span>
+      <button onclick="wylogujOperatora()" class="btn btn-sm btn-outline-secondary py-1 px-2" style="font-size: 0.75rem;">Zmień</button>
+    </div>
   </div>
 
- <div class="btn-group w-100 m-0 glowny-przelacznik" role="group">
-  <input type="radio" class="btn-check" name="main-nav" id="tab-wydanie" checked onclick="przelaczGlownyModul('Wydanie')">
-  <label class="btn btn-outline-light" for="tab-wydanie">🔴 WYDANIE</label>
-  
-  <input type="radio" class="btn-check" name="main-nav" id="tab-przyjecie" onclick="przelaczGlownyModul('Przyjęcie')">
-  <label class="btn btn-outline-light" for="tab-przyjecie">🟢 PRZYJĘCIE</label>
+  <div class="modern-card p-2 mb-4">
+    <div class="btn-group w-100 m-0 glowny-przelacznik" role="group">
+      <input type="radio" class="btn-check" name="main-nav" id="tab-wydanie" checked onclick="przelaczGlownyModul('Wydanie')">
+      <label class="btn btn-outline-light" for="tab-wydanie">🔴 WYDANIE</label>
+      
+      <input type="radio" class="btn-check" name="main-nav" id="tab-przyjecie" onclick="przelaczGlownyModul('Przyjęcie')">
+      <label class="btn btn-outline-light" for="tab-przyjecie">🟢 PRZYJĘCIE</label>
 
-  <input type="radio" class="btn-check" name="main-nav" id="tab-przesuniecie" onclick="przelaczGlownyModul('Przesunięcie')">
-  <label class="btn btn-outline-light" for="tab-przesuniecie">🟡 PRZESUNIĘCIE</label>
-  
-  <input type="radio" class="btn-check" name="main-nav" id="tab-wydruki" onclick="przelaczGlownyModul('Wydruki')">
-  <label class="btn btn-outline-light" for="tab-wydruki">🖨️ WYDRUK</label>
-</div>
+      <input type="radio" class="btn-check" name="main-nav" id="tab-przesuniecie" onclick="przelaczGlownyModul('Przesunięcie')">
+      <label class="btn btn-outline-light" for="tab-przesuniecie">🟡 PRZESUNIĘCIE</label>
+      
+      <input type="radio" class="btn-check" name="main-nav" id="tab-wydruki" onclick="przelaczGlownyModul('Wydruki')">
+      <label class="btn btn-outline-light" for="tab-wydruki">🖨️ WYDRUK</label>
+    </div>
+  </div>
 
   <div id="instrukcja-skanu" class="alert alert-warning text-center fw-bold small d-none" style="border-radius:10px;">Skieruj aparat na kod QR...</div>
   <button id="btn-torch" type="button" onclick="przelaczLatarke()" class="btn btn-warning w-100 mb-2 fw-bold d-none" style="border-radius: 12px; padding: 10px;">🔦 Włącz latarkę</button>
@@ -114,30 +116,34 @@
       <input type="hidden" id="operacja" value="Wydanie">
       <input type="hidden" id="aktywne-pole" value="">
 
-     <div class="form-group-custom" id="sekcja-polka-z">
-  <label id="label-polka-z" class="form-label fw-bold small text-secondary mb-1">2. ADRES PÓŁKI:</label>
-  <div class="input-group">
-    <input type="text" id="polka" class="form-control wielki-input text-uppercase" placeholder="Format: 00-00-00-A-00" onclick="aktywujSkanowanie('polka')">
-    <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('polka')">❌</button>
-  </div>
-</div>
-
-<div class="form-group-custom" id="sekcja-polka-do" style="display: none;">
-  <label class="form-label fw-bold small text-secondary mb-1">2b. PÓŁKA DOCELOWA:</label>
-  <div class="input-group">
-    <input type="text" id="polka-do" class="form-control wielki-input text-uppercase" placeholder="Format: 00-00-00-A-00" onclick="aktywujSkanowanie('polka-do')">
-    <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('polka-do')">❌</button>
-  </div>
-</div>
-
+      <!-- 1. KOD TOWARU -->
       <div class="form-group-custom">
-        <label class="form-label fw-bold small text-secondary mb-1">2. ADRES PÓŁKI:</label>
+        <label class="form-label fw-bold small text-secondary mb-1">1. KOD TOWARU:</label>
+        <div class="input-group">
+          <input type="text" id="kod-towaru" class="form-control wielki-input text-uppercase" placeholder="Format: litera + 5 cyfr (np. A12345)" onclick="aktywujSkanowanie('kod-towaru')" required>
+          <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('kod-towaru')">❌</button>
+        </div>
+      </div>
+
+      <!-- 2a. PÓŁKA ŹRÓDŁOWA / GŁÓWNA -->
+      <div class="form-group-custom" id="sekcja-polka-z">
+        <label id="label-polka-z" class="form-label fw-bold small text-secondary mb-1">2. ADRES PÓŁKI (ŹRÓDŁOWA):</label>
         <div class="input-group">
           <input type="text" id="polka" class="form-control wielki-input text-uppercase" placeholder="Format: 00-00-00-A-00" onclick="aktywujSkanowanie('polka')" required>
           <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('polka')">❌</button>
         </div>
       </div>
 
+      <!-- 2b. PÓŁKA DOCELOWA (TYLKO DLA PRZESUNIĘCIA) -->
+      <div class="form-group-custom" id="sekcja-polka-do" style="display: none;">
+        <label class="form-label fw-bold small text-secondary mb-1">2b. PÓŁKA DOCELOWA:</label>
+        <div class="input-group">
+          <input type="text" id="polka-do" class="form-control wielki-input text-uppercase" placeholder="Format: 00-00-00-A-00" onclick="aktywujSkanowanie('polka-do')">
+          <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('polka-do')">❌</button>
+        </div>
+      </div>
+
+      <!-- 3. PRACOWNIK -->
       <div class="form-group-custom" id="sekcja-pracownik">
         <label class="form-label fw-bold small text-secondary mb-1">3. PRACOWNIK (Imię i Nazwisko):</label>
         <div class="input-group">
@@ -146,6 +152,7 @@
         </div>
       </div>
 
+      <!-- 4. ILOŚĆ SZTUK -->
       <div class="form-group-custom">
         <label class="form-label fw-bold small text-secondary mb-1">4. ILOŚĆ SZTUK:</label>
         <input type="number" id="ilosc" class="form-control wielki-input" value="1" min="1" placeholder="Wpisz ilość sztuk" required onfocus="schowajAparat()">
@@ -171,7 +178,7 @@
     <div id="sub-panel-towar">
       <div class="mb-2">
         <label class="small text-secondary fw-bold mb-1">KOD TOWARU:</label>
-    <input type="text" id="p-towar-kod" class="form-control wielki-input text-uppercase" placeholder="Wpisz kod (np. A12345)">
+        <input type="text" id="p-towar-kod" class="form-control wielki-input text-uppercase" placeholder="Wpisz kod (np. A12345)">
       </div>
       <div class="mb-3">
         <label class="small text-secondary fw-bold mb-1">NAZWA TOWARU:</label>
@@ -310,89 +317,69 @@
   }
 
   function drukujEtykietePracownika() {
-  let dane = document.getElementById('p-user-nazwa').value.trim();
-  if(!dane) { alert("Wpisz dane pracownika!"); return; }
-  
-  let pelneDane = dane.replace(/\s+/g, ' ');
-  
-  // POPRAWIONY ZPL:
-  // 1. Czcionka zmniejszona z 44 na 30, by tekst nie był za szeroki
-  // 2. Interlinia ustawiona prawidłowo w ^FB200,2,5,L (szerokość 200, max 2 linie, odstęp 5px)
-  let zpl = "^XA^CI28" +
-            // Kod QR po lewej
-            "^FO20,40^BQN,2,4^FDQA," + pelneDane + "^FS" + 
-            
-            // Nagłówek PRACOWNIK:
-            "^FO145,40^A0N,22,20^FDPRACOWNIK:^FS" +
-            
-            // Imię i Nazwisko bez nachodzenia na siebie (Y=70)
-            "^FO145,70^A0N,30,26^FB190,2,4,L^FD" + pelneDane + "^FS" +
-            
-            // Litera P po prawej stronie
-            "^FO340,55^A0N,100,80^FDP^FS" + 
-            
-            "^XZ";
-            
-  wyslijDoZebry(zpl);
-}
+    let dane = document.getElementById('p-user-nazwa').value.trim();
+    if(!dane) { alert("Wpisz dane pracownika!"); return; }
+    
+    let pelneDane = dane.replace(/\s+/g, ' ');
+    
+    let zpl = "^XA^CI28" +
+              "^FO20,40^BQN,2,4^FDQA," + pelneDane + "^FS" + 
+              "^FO145,40^A0N,22,20^FDPRACOWNIK:^FS" +
+              "^FO145,70^A0N,30,26^FB190,2,4,L^FD" + pelneDane + "^FS" +
+              "^FO340,55^A0N,100,80^FDP^FS" + 
+              "^XZ";
+              
+    wyslijDoZebry(zpl);
+  }
 
   function przelaczWidokHasla() {
     const passInput = document.getElementById('auth-password');
     passInput.type = passInput.type === "password" ? "text" : "password";
   }
 
-  // --- NATIVE BARCODE DETECTOR LOGIC ---
-
+  // --- LATARKA I SKANERY ---
   let torchState = false;
 
   async function przelaczLatarke() {
-  let track = null;
+    let track = null;
 
-  // 1. Sprawdzamy strumień z natywnego skanera
-  if (activeStream && activeStream.getVideoTracks().length > 0) {
-    track = activeStream.getVideoTracks()[0];
-  } 
-  // 2. Jeśli natywny nie działa, pobieramy strumień z biblioteki Html5Qrcode
-  else if (html5Qrcode && html5Qrcode.isScanning) {
-    try {
-      const capabilities = html5Qrcode.getRunningTrackCapabilities();
-      if (capabilities && capabilities.torch) {
-        torchState = !torchState;
-        await html5Qrcode.applyVideoConstraints({
-          advanced: [{ torch: torchState }]
-        });
-        zaktualizujPrzyciskLatarki(torchState);
-        return;
+    if (activeStream && activeStream.getVideoTracks().length > 0) {
+      track = activeStream.getVideoTracks()[0];
+    } else if (html5Qrcode && html5Qrcode.isScanning) {
+      try {
+        const capabilities = html5Qrcode.getRunningTrackCapabilities();
+        if (capabilities && capabilities.torch) {
+          torchState = !torchState;
+          await html5Qrcode.applyVideoConstraints({ advanced: [{ torch: torchState }] });
+          zaktualizujPrzyciskLatarki(torchState);
+          return;
+        }
+      } catch (e) {
+        console.warn("Błąd latarki Html5Qrcode:", e);
       }
-    } catch (e) {
-      console.warn("Błąd sterowania latarką przez Html5Qrcode:", e);
+    }
+
+    if (!track) {
+      alert("Aparat nie jest aktywny.");
+      return;
+    }
+
+    try {
+      torchState = !torchState;
+      await track.applyConstraints({ advanced: [{ torch: torchState }] });
+      zaktualizujPrzyciskLatarki(torchState);
+    } catch (err) {
+      alert("Przeglądarka zablokowała zmianę stanu latarki.");
     }
   }
 
-  if (!track) {
-    alert("Aparat nie jest aktywny lub nie udało się pobrać strumienia wideo.");
-    return;
+  function zaktualizujPrzyciskLatarki(stan) {
+    const btn = document.getElementById('btn-torch');
+    if (btn) {
+      btn.innerText = stan ? "🔦 Wyłącz latarkę" : "🔦 Włącz latarkę";
+      btn.className = stan ? "btn btn-outline-warning w-100 mb-2 fw-bold text-white" : "btn btn-warning w-100 mb-2 fw-bold";
+    }
   }
-
-  try {
-    torchState = !torchState;
-    await track.applyConstraints({
-      advanced: [{ torch: torchState }]
-    });
-    zaktualizujPrzyciskLatarki(torchState);
-  } catch (err) {
-    alert("Twoja przeglądarka zablokowała zmianę stanu latarki: " + err.message);
-  }
-}
-
-// Funkcja pomocnicza do zmiany wyglądu przycisku
-function zaktualizujPrzyciskLatarki(stan) {
-  const btn = document.getElementById('btn-torch');
-  if (btn) {
-    btn.innerText = stan ? "🔦 Wyłącz latarkę" : "🔦 Włącz latarkę";
-    btn.className = stan ? "btn btn-outline-warning w-100 mb-2 fw-bold text-white" : "btn btn-warning w-100 mb-2 fw-bold";
-  }
-}
   
   async function uruchomNatywnySkaner(containerId, onSuccessCallback) {
     const container = document.getElementById(containerId);
@@ -406,17 +393,13 @@ function zaktualizujPrzyciskLatarki(stan) {
       activeStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "environment" }
       });
-     video.srcObject = activeStream;
+      video.srcObject = activeStream;
       await video.play();
 
-      // DOPISZ OD TEGO MIEJSCA:
       const track = activeStream.getVideoTracks()[0];
-      if (track && track.getCapabilities) {
-        if (track.getCapabilities().torch) {
-          document.getElementById('btn-torch').classList.remove('d-none');
-        }
+      if (track && track.getCapabilities && track.getCapabilities().torch) {
+        document.getElementById('btn-torch').classList.remove('d-none');
       }
-      
 
       const barcodeDetector = new BarcodeDetector({ formats: ['qr_code'] });
 
@@ -431,7 +414,7 @@ function zaktualizujPrzyciskLatarki(stan) {
       }, 100);
 
     } catch (err) {
-      console.warn("Natywne API nie mogło uzyskać dostępu do kamery, wywołuję fallback:", err);
+      console.warn("Wywołuję fallback Html5Qrcode:", err);
       uruchomFallbackQrcode(containerId, onSuccessCallback);
     }
   }
@@ -455,7 +438,6 @@ function zaktualizujPrzyciskLatarki(stan) {
   }
 
   function uruchomFallbackQrcode(containerId, onSuccessCallback) {
-    // Pokaż przycisk latarki również przy uruchomieniu fallbacku
     document.getElementById('btn-torch').classList.remove('d-none');
 
     if (containerId === 'reader') {
@@ -539,6 +521,7 @@ function zaktualizujPrzyciskLatarki(stan) {
     .catch(err => {
       alert("Błąd połączenia z serwerem weryfikacji.");
       btn.disabled = false;
+      btn.innerText = "Zaloguj do systemu";
     });
   }
 
@@ -558,6 +541,7 @@ function zaktualizujPrzyciskLatarki(stan) {
     document.getElementById('aktywne-pole').value = poleId;
     document.getElementById('kod-towaru').classList.remove('skan-aktywny');
     document.getElementById('polka').classList.remove('skan-aktywny');
+    document.getElementById('polka-do').classList.remove('skan-aktywny');
     document.getElementById('pracownik').classList.remove('skan-aktywny');
     document.getElementById(poleId).classList.add('skan-aktywny');
     
@@ -568,8 +552,11 @@ function zaktualizujPrzyciskLatarki(stan) {
       document.getElementById('instrukcja-skanu').innerText = "📷 KROK 1: Zeskanuj kod QR PRODUKTU";
       document.getElementById('instrukcja-skanu').className = "alert alert-warning text-center fw-bold small text-dark";
     } else if(poleId === 'polka') {
-      document.getElementById('instrukcja-skanu').innerText = "📍 KROK 2: Zeskanuj kod QR ADRESU PÓŁKI";
+      document.getElementById('instrukcja-skanu').innerText = "📍 KROK 2: Zeskanuj kod QR PÓŁKI (ŹRÓDŁOWA)";
       document.getElementById('instrukcja-skanu').className = "alert alert-info text-center fw-bold small text-dark";
+    } else if(poleId === 'polka-do') {
+      document.getElementById('instrukcja-skanu').innerText = "📍 KROK 2b: Zeskanuj kod QR PÓŁKI DOCELOWEJ";
+      document.getElementById('instrukcja-skanu').className = "alert alert-primary text-center fw-bold small text-white bg-primary";
     } else {
       document.getElementById('instrukcja-skanu').innerText = "🪪 KROK 3: Zeskanuj kod QR PRACOWNIKA";
       document.getElementById('instrukcja-skanu').className = "alert alert-danger text-center fw-bold small text-white bg-danger";
@@ -588,7 +575,11 @@ function zaktualizujPrzyciskLatarki(stan) {
         
         if (celInput === 'kod-towaru') {
           aktywujSkanowanie('polka');
+        } else if (celInput === 'polka' && trybOperacji === 'Przesunięcie') {
+          aktywujSkanowanie('polka-do');
         } else if (celInput === 'polka' && trybOperacji === 'Wydanie') {
+          aktywujSkanowanie('pracownik');
+        } else if (celInput === 'polka-do' && trybOperacji === 'Przesunięcie') {
           aktywujSkanowanie('pracownik');
         } else {
           schowajAparat();
@@ -623,106 +614,64 @@ function zaktualizujPrzyciskLatarki(stan) {
       document.getElementById('instrukcja-skanu').classList.add('d-none'); 
       document.getElementById('kod-towaru').classList.remove('skan-aktywny'); 
       document.getElementById('polka').classList.remove('skan-aktywny'); 
+      document.getElementById('polka-do').classList.remove('skan-aktywny'); 
       document.getElementById('pracownik').classList.remove('skan-aktywny'); 
     }); 
   }
 
- function ustawTryb(tryb) {
-  document.getElementById('operacja').value = tryb;
-  const sekcjaPracownik = document.getElementById('sekcja-pracownik');
-  const sekcjaPolkaDo = document.getElementById('sekcja-polka-do');
-  const labelPolkaZ = document.getElementById('label-polka-z');
+  function ustawTryb(tryb) {
+    document.getElementById('operacja').value = tryb;
+    const sekcjaPracownik = document.getElementById('sekcja-pracownik');
+    const sekcjaPolkaDo = document.getElementById('sekcja-polka-do');
+    const labelPolkaZ = document.getElementById('label-polka-z');
 
-  if (tryb === 'Przyjęcie') {
-    sekcjaPracownik.style.display = 'none';
-    sekcjaPolkaDo.style.display = 'none';
-    labelPolkaZ.innerText = "2. ADRES PÓŁKI (DOCELOWA):";
-  } else if (tryb === 'Przesunięcie') {
-    sekcjaPracownik.style.display = 'block';
-    sekcjaPolkaDo.style.display = 'block';
-    labelPolkaZ.innerText = "2a. PÓŁKA ŹRÓDŁOWA (Z):";
-  } else { // Wydanie
-    sekcjaPracownik.style.display = 'block';
-    sekcjaPolkaDo.style.display = 'none';
-    labelPolkaZ.innerText = "2. ADRES PÓŁKI (ŹRÓDŁOWA):";
-  }
-  setTimeout(() => { aktywujSkanowanie('kod-towaru'); }, 100);
-}
-
-function wyslijDane(e) {
-  e.preventDefault();
-  const btn = document.getElementById('btn-submit');
-  const statusBox = document.getElementById('status');
-  btn.disabled = true;
-  btn.innerText = "Zapisywanie w chmurze...";
-
-  let tryb = document.getElementById('operacja').value;
-  let polkaValue = document.getElementById('polka').value.trim();
-  let polkaDoValue = document.getElementById('polka-do').value.trim();
-
-  let zLok = "";
-  let doLok = "";
-
-  if (tryb === "Wydanie") {
-    zLok = polkaValue;
-    doLok = "PRODUKCJA";
-  } else if (tryb === "Przyjęcie") {
-    zLok = "DOSTAWCA";
-    doLok = polkaValue;
-  } else if (tryb === "Przesunięcie") {
-    zLok = polkaValue;
-    doLok = polkaDoValue;
-  }
-
-  const paczkaDanych = {
-    akcja: "zapis_ruchu",
-    typ: tryb.toUpperCase(),
-    Z_Lokalizacji: zLok,
-    Do_Lokalizacji: doLok,
-    towar: document.getElementById('kod-towaru').value.trim(),
-    pracownik: document.getElementById('pracownik').value.trim(),
-    ilosc: document.getElementById('ilosc').value,
-    operator: zalogowanyUzytkownik
-  };
-
-  fetch(GOOGLE_SCRIPT_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams(paczkaDanych).toString()
-  })
-  .then(res => res.json())
-  .then(data => {
-    btn.disabled = false;
-    btn.innerText = "ZAPISZ OPERACJĘ (Enter)";
-    if(data.status === "SUCCESS") {
-      statusBox.innerText = "🚀 ZAPISANO PRZESUNIĘCIE: " + data.id_ruchu;
-      statusBox.className = "alert alert-success mt-3 text-center fw-bold bg-success text-white border-0";
-      statusBox.classList.remove('d-none');
-      
-      document.getElementById('kod-towaru').value = "";
-      document.getElementById('polka').value = "";
-      document.getElementById('polka-do').value = "";
-      document.getElementById('pracownik').value = "";
-      document.getElementById('ilosc').value = '1';
-      
-      setTimeout(() => { 
-        statusBox.classList.add('d-none'); 
-        wstrzymajAparat().then(() => { aktywujSkanowanie('kod-towaru'); }); 
-      }, 1500);
-    } else {
-      alert("Błąd walidacji lub chmury:\n" + data.message);
+    if (tryb === 'Przyjęcie') {
+      sekcjaPracownik.style.display = 'none';
+      sekcjaPolkaDo.style.display = 'none';
+      labelPolkaZ.innerText = "2. ADRES PÓŁKI (DOCELOWA):";
+      document.getElementById('polka-do').removeAttribute('required');
+    } else if (tryb === 'Przesunięcie') {
+      sekcjaPracownik.style.display = 'block';
+      sekcjaPolkaDo.style.display = 'block';
+      labelPolkaZ.innerText = "2a. PÓŁKA ŹRÓDŁOWA (Z):";
+      document.getElementById('polka-do').setAttribute('required', 'true');
+    } else { // Wydanie
+      sekcjaPracownik.style.display = 'block';
+      sekcjaPolkaDo.style.display = 'none';
+      labelPolkaZ.innerText = "2. ADRES PÓŁKI (ŹRÓDŁOWA):";
+      document.getElementById('polka-do').removeAttribute('required');
     }
-  })
-  .catch(err => { 
-    alert("Błąd połączenia z bazą danych."); 
-    btn.disabled = false; 
-    btn.innerText = "ZAPISZ OPERACJĘ (Enter)";
-  });
-}
+    setTimeout(() => { aktywujSkanowanie('kod-towaru'); }, 100);
+  }
+
+  function wyslijDane(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btn-submit');
+    const statusBox = document.getElementById('status');
+    btn.disabled = true;
+    btn.innerText = "Zapisywanie w chmurze...";
+
+    let tryb = document.getElementById('operacja').value;
+    let polkaValue = document.getElementById('polka').value.trim();
+    let polkaDoValue = document.getElementById('polka-do').value.trim();
+
+    let zLok = "";
+    let doLok = "";
+
+    if (tryb === "Wydanie") {
+      zLok = polkaValue;
+      doLok = "PRODUKCJA";
+    } else if (tryb === "Przyjęcie") {
+      zLok = "DOSTAWCA";
+      doLok = polkaValue;
+    } else if (tryb === "Przesunięcie") {
+      zLok = polkaValue;
+      doLok = polkaDoValue;
+    }
 
     const paczkaDanych = {
       akcja: "zapis_ruchu",
-      typ: tryb,
+      typ: tryb.toUpperCase(),
       Z_Lokalizacji: zLok,
       Do_Lokalizacji: doLok,
       towar: document.getElementById('kod-towaru').value.trim(),
@@ -740,14 +689,14 @@ function wyslijDane(e) {
     .then(data => {
       btn.disabled = false;
       btn.innerText = "ZAPISZ OPERACJĘ (Enter)";
-      
       if(data.status === "SUCCESS") {
-        statusBox.innerText = "🚀 ZAPISANO: " + data.id_ruchu;
+        statusBox.innerText = "🚀 ZAPISANO OPERACJĘ: " + data.id_ruchu;
         statusBox.className = "alert alert-success mt-3 text-center fw-bold bg-success text-white border-0";
         statusBox.classList.remove('d-none');
         
         document.getElementById('kod-towaru').value = "";
         document.getElementById('polka').value = "";
+        document.getElementById('polka-do').value = "";
         document.getElementById('pracownik').value = "";
         document.getElementById('ilosc').value = '1';
         
