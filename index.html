@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>LUBAS WMS v5.21 (Native BarcodeDetector)</title>
+  <title>LUBAS WMS v5.23 (Native BarcodeDetector)</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
@@ -35,10 +35,9 @@
     .skan-aktywny { border: 2px solid var(--accent-danger) !important; box-shadow: 0 0 15px rgba(239, 68, 68, 0.3) !important; }
     .btn-modern { border-radius: 12px; padding: 14px; font-weight: 600; transition: all 0.2s; }
     
-    /* Układ przycisków w 2 wierszach po 2 kolumny */
     .glowny-przelacznik-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
     .glowny-przelacznik-grid .btn-check:checked + .btn { background-color: var(--accent-blue); border-color: var(--accent-blue); color: white; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
-    .glowny-przelacznik-grid .btn { font-size: 0.85rem; letter-spacing: 0.5px; padding: 12px 5px; font-weight: 800; border-color: rgba(255,255,255,0.15); color: #94a3b8; border-radius: 10px !important; }
+    .glowny-przelacznik-grid .btn { font-size: 0.8rem; letter-spacing: 0.5px; padding: 12px 4px; font-weight: 800; border-color: rgba(255,255,255,0.15); color: #94a3b8; border-radius: 10px !important; }
     
     .mini-przelacznik .btn-check:checked + .btn { background-color: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); color: #fff; }
     .mini-przelacznik .btn { font-size: 0.8rem; font-weight: 600; color: #a6b5cc; border-color: transparent; }
@@ -85,7 +84,7 @@
 
 <div class="container py-3" style="max-width: 480px;">
   <div class="naglowek-operatora mb-3">
-    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.21</span></h4>
+    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.23</span></h4>
     <div class="d-flex align-items-center gap-2">
       <span class="small text-secondary fw-bold">Operator:</span>
       <span id="user-badge" class="badge bg-success p-2" style="font-size: 0.75rem;">---</span>
@@ -93,12 +92,16 @@
     </div>
   </div>
 
-  <!-- Przełącznik nawigacji: 2 wiersze po 2 przyciski -->
+  <!-- Przełącznik nawigacji: 4 opcje w układzie 2x2 -->
   <div class="modern-card p-2 mb-4">
     <div class="glowny-przelacznik-grid">
       <div>
-        <input type="radio" class="btn-check" name="main-nav" id="tab-wydanie" checked onclick="przelaczGlownyModul('Wydanie')">
-        <label class="btn btn-outline-light w-100" for="tab-wydanie">🔴 WYDANIE</label>
+        <input type="radio" class="btn-check" name="main-nav" id="tab-wydanie-osoba" checked onclick="przelaczGlownyModul('Wydanie Osoba')">
+        <label class="btn btn-outline-light w-100" for="tab-wydanie-osoba">🔴 WYDANIE (OSOBA)</label>
+      </div>
+      <div>
+        <input type="radio" class="btn-check" name="main-nav" id="tab-wydanie-regal" onclick="przelaczGlownyModul('Wydanie Regał')">
+        <label class="btn btn-outline-light w-100" for="tab-wydanie-regal">📦 WYDANIE (REGAŁ)</label>
       </div>
       <div>
         <input type="radio" class="btn-check" name="main-nav" id="tab-przyjecie" onclick="przelaczGlownyModul('Przyjęcie')">
@@ -107,10 +110,6 @@
       <div>
         <input type="radio" class="btn-check" name="main-nav" id="tab-przesuniecie" onclick="przelaczGlownyModul('Przesunięcie')">
         <label class="btn btn-outline-light w-100" for="tab-przesuniecie">🟡 PRZESUNIĘCIE</label>
-      </div>
-      <div>
-        <input type="radio" class="btn-check" name="main-nav" id="tab-wydruki" onclick="przelaczGlownyModul('Wydruki')">
-        <label class="btn btn-outline-light w-100" for="tab-wydruki">🖨️ WYDRUK</label>
       </div>
     </div>
   </div>
@@ -121,7 +120,7 @@
 
   <div id="sekcja-operacji" class="card modern-card p-3 shadow-sm border-0">
     <form id="wmsForm" onsubmit="wyslijDane(event)">
-      <input type="hidden" id="operacja" value="Wydanie">
+      <input type="hidden" id="operacja" value="Wydanie Osoba">
       <input type="hidden" id="aktywne-pole" value="">
 
       <!-- 1. KOD TOWARU -->
@@ -142,16 +141,16 @@
         </div>
       </div>
 
-      <!-- 2b. PÓŁKA DOCELOWA (TYLKO DLA PRZESUNIĘCIA) -->
+      <!-- 2b. PÓŁKA DOCELOWA (DLA PRZESUNIĘCIA I WYDANIA NA REGAŁ) -->
       <div class="form-group-custom" id="sekcja-polka-do" style="display: none;">
-        <label class="form-label fw-bold small text-secondary mb-1">2b. PÓŁKA DOCELOWA:</label>
+        <label id="label-polka-do" class="form-label fw-bold small text-secondary mb-1">2b. PÓŁKA DOCELOWA:</label>
         <div class="input-group">
           <input type="text" id="polka-do" class="form-control wielki-input text-uppercase" placeholder="Format: 00-00-00-A-00" onclick="aktywujSkanowanie('polka-do')">
           <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('polka-do')">❌</button>
         </div>
       </div>
 
-      <!-- 3. PRACOWNIK (WYMAGANY TYLKO DLA WYDANIA) -->
+      <!-- 3. PRACOWNIK (WYMAGANY DLA WYDANIA NA OSOBĘ) -->
       <div class="form-group-custom" id="sekcja-pracownik">
         <label class="form-label fw-bold small text-secondary mb-1">3. PRACOWNIK (Imię i Nazwisko):</label>
         <div class="input-group">
@@ -170,47 +169,6 @@
     </form>
     <div id="status" class="alert alert-success mt-3 d-none text-center fw-bold" style="border-radius:10px;"></div>
   </div>
-
-  <div id="sekcja-druku" class="modern-card p-3" style="display: none; border: 1px solid rgba(59, 130, 246, 0.25);">
-    <div class="btn-group w-100 mb-4 mini-przelacznik" role="group">
-      <input type="radio" class="btn-check" name="sub-print" id="sub-towar" checked onclick="przelaczPodpanelDruku('towar')">
-      <label class="btn btn-outline-secondary py-2 fw-bold" for="sub-towar">📦 Etykieta Towaru</label>
-      
-      <input type="radio" class="btn-check" name="sub-print" id="sub-lokalizacja" onclick="przelaczPodpanelDruku('lokalizacja')">
-      <label class="btn btn-outline-secondary py-2 fw-bold" for="sub-lokalizacja">📍 Adres Półki</label>
-      
-      <input type="radio" class="btn-check" name="sub-print" id="sub-user" onclick="przelaczPodpanelDruku('user')">
-      <label class="btn btn-outline-secondary py-2 fw-bold" for="sub-user">🪪 Pracownik</label>
-    </div>
-
-    <div id="sub-panel-towar">
-      <div class="mb-2">
-        <label class="small text-secondary fw-bold mb-1">KOD TOWARU:</label>
-        <input type="text" id="p-towar-kod" class="form-control wielki-input text-uppercase" placeholder="Wpisz kod (np. A12345)">
-      </div>
-      <div class="mb-3">
-        <label class="small text-secondary fw-bold mb-1">NAZWA TOWARU:</label>
-        <input type="text" id="p-towar-nazwa" class="form-control wielki-input" placeholder="np. Podkładka poliuretanowa fi 80">
-      </div>
-      <button type="button" onclick="drukujEtykieteTowarowa()" class="btn btn-info w-100 py-3 fw-bold btn-modern">Drukuj Etykietę Towaru (QR)</button>
-    </div>
-    
-    <div id="sub-panel-lokalizacja" style="display: none;">
-      <div class="mb-3">
-        <label class="small text-secondary fw-bold mb-1">ADRES PÓŁKI (Schemat: 01-02-03-A-04):</label>
-        <input type="text" id="p-lok-adres" class="form-control wielki-input text-uppercase" placeholder="Wpisz adres (np. 01-02-03-A-04)">
-      </div>
-      <button type="button" onclick="drukujEtykieteLokalizacyjna()" class="btn btn-purple w-100 py-3 fw-bold btn-modern text-white" style="background-color: var(--accent-purple);">Drukuj Etykietę Adresową (QR)</button>
-    </div>
-    
-    <div id="sub-panel-user" style="display: none;">
-      <div class="mb-3">
-        <label class="small text-secondary fw-bold mb-1">IMIĘ I NAZWISKO PRACOWNIKA:</label>
-        <input type="text" id="p-user-nazwa" class="form-control wielki-input" placeholder="Wpisz Imię i Nazwisko pracownika">
-      </div>
-      <button type="button" onclick="drukujEtykietePracownika()" class="btn btn-success w-100 py-3 fw-bold btn-modern">Drukuj Identyfikator (QR)</button>
-    </div>
-  </div>
 </div>
 
 <script>
@@ -221,7 +179,6 @@
   let blokadaSkanera = false; 
   let zalogowanyUzytkownik = "";
 
-  // Zmienne dla natywnego BarcodeDetector API
   let activeStream = null;
   let activeVideoElement = null;
   let scanInterval = null;
@@ -240,104 +197,7 @@
 
   function przelaczGlownyModul(modul) {
     schowajAparat();
-    const sekcjaOperacji = document.getElementById('sekcja-operacji');
-    const sekcjaDruku = document.getElementById('sekcja-druku');
-    
-    if (modul === 'Wydruki') {
-      sekcjaOperacji.style.display = 'none';
-      sekcjaDruku.style.display = 'block';
-    } else {
-      sekcjaOperacji.style.display = 'block';
-      sekcjaDruku.style.display = 'none';
-      ustawTryb(modul);
-    }
-  }
-
-  function przelaczPodpanelDruku(typ) {
-    document.getElementById('sub-panel-towar').style.display = (typ === 'towar') ? 'block' : 'none';
-    document.getElementById('sub-panel-lokalizacja').style.display = (typ === 'lokalizacja') ? 'block' : 'none';
-    document.getElementById('sub-panel-user').style.display = (typ === 'user') ? 'block' : 'none';
-  }
-
-  function wyslijDoZebry(zplKod) {
-    if (typeof ZebraBrowserPrint !== 'undefined') {
-      ZebraBrowserPrint.getLocalDevices(function(lista) {
-        let urzadzenie = null;
-        if (lista && lista.printer && lista.printer.length > 0) urzadzenie = lista.printer[0];
-        
-        if (urzadzenie) {
-          ZebraBrowserPrint.sendThroughPrintService(zplKod, urzadzenie, function() {
-            console.log("Wydrukowano pomyślnie.");
-          }, function(e) { alert("Błąd portu USB: " + JSON.stringify(e)); });
-        } else {
-          ZebraBrowserPrint.getDefaultDevice("printer", function(domyslne) {
-            if(domyslne && domyslne.name) {
-              ZebraBrowserPrint.sendThroughPrintService(zplKod, domyslne, function() {}, function(e) { alert(JSON.stringify(e)); });
-            } else { alert("Nie wykryto drukarki. Sprawdź kabel USB."); }
-          }, function(err) { alert("Błąd autoryzacji."); });
-        }
-      }, function(err) { alert("Błąd skanowania serwisu: " + JSON.stringify(err)); });
-    } else { alert("Błąd: Sterownik nie jest dostępny."); }
-  }
-
-  function drukujEtykieteTowarowa() {
-    let kod = document.getElementById('p-towar-kod').value.trim().toUpperCase();
-    let nazwa = document.getElementById('p-towar-nazwa').value.trim();
-    if(!kod) { alert("Wpisz kod towaru!"); return; }
-    
-    let czystaNazwa = nazwa.replace(/\s+/g, ' '); 
-    let skroconaNazwa = czystaNazwa.length > 14 ? czystaNazwa.substring(0, 11) + "..." : czystaNazwa;
-    
-    let zpl = "^XA^CI28" +
-              "^FO20,60^BQN,2,4^FDQA," + kod + "^FS" + 
-              "^FO150,50^A0N,18,16^FDKOD TOWARU:^FS" +
-              "^FO150,75^A0N,28,26^FD" + kod + "^FS" +
-              "^FO150,115^A0N,18,16^FDNAZWA:^FS" +
-              "^FO150,140^A0N,26,24^FB240,3,,L^FD" + skroconaNazwa + "^FS" +
-              "^FO330,30^A0N,110,90^FDT^FS" + 
-              "^XZ";
-
-    wyslijDoZebry(zpl);
-  }
-
-  function drukujEtykieteLokalizacyjna() {
-    let adres = document.getElementById('p-lok-adres').value.trim().toUpperCase();
-    if(!adres) { alert("Wpisz adres półki!"); return; }
-
-    let czesci = adres.split('-');
-    let m = czesci[0] || "--";
-    let r = czesci[1] || "--";
-    let reg = czesci[2] || "--";
-    let p = czesci[3] || "--";
-    let poz = czesci[4] || "--";
-
-    let zpl = "^XA^CI28" +
-      "^FO20,60^BQN,2,4^FDQA," + adres + "^FS" +
-      "^FO150,45^A0N,32,30^FD" + adres + "^FS" +
-      "^FO150,85^GB160,1,1^FS" +
-      "^FO150,100^A0N,24,22^FDMAG: " + m + " RZAD: " + r + "^FS" +
-      "^FO150,130^A0N,24,22^FDREGAL: " + reg + " POZ: " + p + "^FS" +
-      "^FO150,160^A0N,24,22^FDPOZYCJA: " + poz + "^FS" +
-      "^FO330,120^A0N,110,90^FDL^FS" +
-      "^XZ";
-              
-    wyslijDoZebry(zpl);
-  }
-
-  function drukujEtykietePracownika() {
-    let dane = document.getElementById('p-user-nazwa').value.trim();
-    if(!dane) { alert("Wpisz dane pracownika!"); return; }
-    
-    let pelneDane = dane.replace(/\s+/g, ' ');
-    
-    let zpl = "^XA^CI28" +
-              "^FO20,40^BQN,2,4^FDQA," + pelneDane + "^FS" + 
-              "^FO145,40^A0N,22,20^FDPRACOWNIK:^FS" +
-              "^FO145,70^A0N,30,26^FB190,2,4,L^FD" + pelneDane + "^FS" +
-              "^FO340,55^A0N,100,80^FDP^FS" + 
-              "^XZ";
-              
-    wyslijDoZebry(zpl);
+    ustawTryb(modul);
   }
 
   function przelaczWidokHasla() {
@@ -345,7 +205,6 @@
     passInput.type = passInput.type === "password" ? "text" : "password";
   }
 
-  // --- LATARKA I SKANERY ---
   let torchState = false;
 
   async function przelaczLatarke() {
@@ -362,23 +221,16 @@
           zaktualizujPrzyciskLatarki(torchState);
           return;
         }
-      } catch (e) {
-        console.warn("Błąd latarki Html5Qrcode:", e);
-      }
+      } catch (e) { console.warn("Błąd latarki Html5Qrcode:", e); }
     }
 
-    if (!track) {
-      alert("Aparat nie jest aktywny.");
-      return;
-    }
+    if (!track) { alert("Aparat nie jest aktywny."); return; }
 
     try {
       torchState = !torchState;
       await track.applyConstraints({ advanced: [{ torch: torchState }] });
       zaktualizujPrzyciskLatarki(torchState);
-    } catch (err) {
-      alert("Przeglądarka zablokowała zmianę stanu latarki.");
-    }
+    } catch (err) { alert("Przeglądarka zablokowała zmianę stanu latarki."); }
   }
 
   function zaktualizujPrzyciskLatarki(stan) {
@@ -398,9 +250,7 @@
     activeVideoElement = video;
 
     try {
-      activeStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" }
-      });
+      activeStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
       video.srcObject = activeStream;
       await video.play();
 
@@ -415,9 +265,7 @@
         if (blokadaSkanera || !video.videoWidth) return;
         try {
           const barcodes = await barcodeDetector.detect(video);
-          if (barcodes.length > 0) {
-            onSuccessCallback(barcodes[0].rawValue);
-          }
+          if (barcodes.length > 0) { onSuccessCallback(barcodes[0].rawValue); }
         } catch (e) {}
       }, 100);
 
@@ -450,20 +298,10 @@
 
     if (containerId === 'reader') {
       html5Qrcode = new Html5Qrcode("reader");
-      html5Qrcode.start(
-        { facingMode: "environment" },
-        { fps: 20, qrbox: 250 },
-        (text) => onSuccessCallback(text),
-        () => {}
-      );
+      html5Qrcode.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 }, (text) => onSuccessCallback(text), () => {});
     } else {
       loginQrcode = new Html5Qrcode("login-reader");
-      loginQrcode.start(
-        { facingMode: "environment" },
-        { fps: 20, qrbox: 220 },
-        (text) => onSuccessCallback(text),
-        () => {}
-      );
+      loginQrcode.start({ facingMode: "environment" }, { fps: 20, qrbox: 220 }, (text) => onSuccessCallback(text), () => {});
     }
   }
 
@@ -478,11 +316,8 @@
       document.getElementById('auth-password').focus();
     };
 
-    if (hasNativeBarcodeDetector) {
-      uruchomNatywnySkaner('login-reader', onLoginSuccess);
-    } else {
-      uruchomFallbackQrcode('login-reader', onLoginSuccess);
-    }
+    if (hasNativeBarcodeDetector) { uruchomNatywnySkaner('login-reader', onLoginSuccess); } 
+    else { uruchomFallbackQrcode('login-reader', onLoginSuccess); }
   }
 
   function autoryzujZBazą() {
@@ -495,11 +330,7 @@
     btn.disabled = true;
     btn.innerText = "Weryfikacja danych...";
 
-    const paczkaDanych = {
-      akcja: "weryfikuj_user",
-      email: email,
-      haslo: haslo
-    };
+    const paczkaDanych = { akcja: "weryfikuj_user", email: email, haslo: haslo };
 
     fetch(GOOGLE_SCRIPT_URL, {
       method: "POST",
@@ -522,15 +353,9 @@
         
         schowajAparat();
         setTimeout(() => { aktywujSkanowanie('kod-towaru'); }, 500);
-      } else {
-        alert("❌ Błąd: Niepoprawny e-mail lub hasło!");
-      }
+      } else { alert("❌ Błąd: Niepoprawny e-mail lub hasło!"); }
     })
-    .catch(err => {
-      alert("Błąd połączenia z serwerem weryfikacji.");
-      btn.disabled = false;
-      btn.innerText = "Zaloguj do systemu";
-    });
+    .catch(err => { alert("Błąd połączenia z serwerem weryfikacji."); btn.disabled = false; btn.innerText = "Zaloguj do systemu"; });
   }
 
   function wylogujOperatora() {
@@ -556,6 +381,8 @@
     document.getElementById('instrukcja-skanu').classList.remove('d-none');
     document.getElementById('reader').style.display = 'block';
 
+    let trybOperacji = document.getElementById('operacja').value;
+
     if(poleId === 'kod-towaru') {
       document.getElementById('instrukcja-skanu').innerText = "📷 KROK 1: Zeskanuj kod QR PRODUKTU";
       document.getElementById('instrukcja-skanu').className = "alert alert-warning text-center fw-bold small text-dark";
@@ -563,7 +390,8 @@
       document.getElementById('instrukcja-skanu').innerText = "📍 KROK 2: Zeskanuj kod QR PÓŁKI (ŹRÓDŁOWA)";
       document.getElementById('instrukcja-skanu').className = "alert alert-info text-center fw-bold small text-dark";
     } else if(poleId === 'polka-do') {
-      document.getElementById('instrukcja-skanu').innerText = "📍 KROK 2b: Zeskanuj kod QR PÓŁKI DOCELOWEJ";
+      let txt = (trybOperacji === 'Wydanie Regał') ? "📍 KROK 2b: Zeskanuj / Wpisz STREFĘ DOCELOWĄ" : "📍 KROK 2b: Zeskanuj kod QR PÓŁKI DOCELOWEJ";
+      document.getElementById('instrukcja-skanu').innerText = txt;
       document.getElementById('instrukcja-skanu').className = "alert alert-primary text-center fw-bold small text-white bg-primary";
     } else {
       document.getElementById('instrukcja-skanu').innerText = "🪪 KROK 3: Zeskanuj kod QR PRACOWNIKA";
@@ -579,13 +407,13 @@
       
       wstrzymajAparat().then(() => {
         setTimeout(() => { blokadaSkanera = false; }, 1500); 
-        let trybOperacji = document.getElementById('operacja').value;
+        let tryb = document.getElementById('operacja').value;
         
         if (celInput === 'kod-towaru') {
           aktywujSkanowanie('polka');
-        } else if (celInput === 'polka' && trybOperacji === 'Przesunięcie') {
+        } else if (celInput === 'polka' && (tryb === 'Przesunięcie' || tryb === 'Wydanie Regał')) {
           aktywujSkanowanie('polka-do');
-        } else if (celInput === 'polka' && trybOperacji === 'Wydanie') {
+        } else if (celInput === 'polka' && tryb === 'Wydanie Osoba') {
           aktywujSkanowanie('pracownik');
         } else {
           schowajAparat();
@@ -595,21 +423,14 @@
       });
     };
 
-    if (hasNativeBarcodeDetector) {
-      uruchomNatywnySkaner('reader', onScanSuccess);
-    } else {
-      uruchomFallbackQrcode('reader', onScanSuccess);
-    }
+    if (hasNativeBarcodeDetector) { uruchomNatywnySkaner('reader', onScanSuccess); } 
+    else { uruchomFallbackQrcode('reader', onScanSuccess); }
   }
 
   function wstrzymajAparat() { 
     zatrzymajNatywnySkaner();
-    if (html5Qrcode && html5Qrcode.isScanning) {
-      return html5Qrcode.stop();
-    } 
-    if (loginQrcode && loginQrcode.isScanning) {
-      return loginQrcode.stop();
-    }
+    if (html5Qrcode && html5Qrcode.isScanning) { return html5Qrcode.stop(); } 
+    if (loginQrcode && loginQrcode.isScanning) { return loginQrcode.stop(); }
     return Promise.resolve(); 
   }
 
@@ -630,8 +451,9 @@
     const sekcjaPracownik = document.getElementById('sekcja-pracownik');
     const sekcjaPolkaDo = document.getElementById('sekcja-polka-do');
     const labelPolkaZ = document.getElementById('label-polka-z');
-    const inputPracownik = document.getElementById('pracownik');
+    const labelPolkaDo = document.getElementById('label-polka-do');
     const inputPolkaDo = document.getElementById('polka-do');
+    const inputPracownik = document.getElementById('pracownik');
 
     if (tryb === 'Przyjęcie') {
       sekcjaPracownik.style.display = 'none';
@@ -639,13 +461,26 @@
       labelPolkaZ.innerText = "2. ADRES PÓŁKI (DOCELOWA):";
       inputPracownik.removeAttribute('required');
       inputPolkaDo.removeAttribute('required');
+
     } else if (tryb === 'Przesunięcie') {
       sekcjaPracownik.style.display = 'none';
       sekcjaPolkaDo.style.display = 'block';
       labelPolkaZ.innerText = "2a. PÓŁKA ŹRÓDŁOWA (Z):";
+      labelPolkaDo.innerText = "2b. PÓŁKA DOCELOWA:";
+      inputPolkaDo.placeholder = "Format: 00-00-00-A-00";
       inputPracownik.removeAttribute('required');
       inputPolkaDo.setAttribute('required', 'true');
-    } else { // Wydanie
+
+    } else if (tryb === 'Wydanie Regał') {
+      sekcjaPracownik.style.display = 'none';
+      sekcjaPolkaDo.style.display = 'block';
+      labelPolkaZ.innerText = "2a. PÓŁKA ŹRÓDŁOWA (Z):";
+      labelPolkaDo.innerText = "2b. REGAŁ / STREFA DOCELOWA (Dowolna etykieta):";
+      inputPolkaDo.placeholder = "np. MONTAŻ, REGAŁ-1, STREFA-A";
+      inputPracownik.removeAttribute('required');
+      inputPolkaDo.setAttribute('required', 'true');
+
+    } else { // Wydanie Osoba
       sekcjaPracownik.style.display = 'block';
       sekcjaPolkaDo.style.display = 'none';
       labelPolkaZ.innerText = "2. ADRES PÓŁKI (ŹRÓDŁOWA):";
@@ -666,28 +501,32 @@
     let polkaValue = document.getElementById('polka').value.trim();
     let polkaDoValue = document.getElementById('polka-do').value.trim();
     
-    // CZYSZCZENIE NAZWY OPERATORA
+    // CZYSZCZENIE NAZWY OPERATORA DLA AUTOMATU
     let surowaNazwa = localStorage.getItem('wms_user_name') || zalogowanyUzytkownik || "";
-    if (surowaNazwa.indexOf("@") !== -1) {
-      surowaNazwa = surowaNazwa.split("@")[0];
-    }
+    if (surowaNazwa.indexOf("@") !== -1) { surowaNazwa = surowaNazwa.split("@")[0]; }
     let czystaNazwa = surowaNazwa.replace(/[\._-]/g, " ").trim();
     let sformatowanyOperator = czystaNazwa.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
 
-    let pracownikValue = (tryb === "Wydanie") ? document.getElementById('pracownik').value.trim() : sformatowanyOperator;
-
     let zLok = "";
     let doLok = "";
+    let pracownikValue = "";
 
-    if (tryb === "Wydanie") {
+    if (tryb === "Wydanie Osoba") {
       zLok = polkaValue;
       doLok = "PRODUKCJA";
+      pracownikValue = document.getElementById('pracownik').value.trim();
     } else if (tryb === "Przyjęcie") {
       zLok = "DOSTAWCA";
       doLok = polkaValue;
+      pracownikValue = sformatowanyOperator;
     } else if (tryb === "Przesunięcie") {
       zLok = polkaValue;
       doLok = polkaDoValue;
+      pracownikValue = sformatowanyOperator;
+    } else if (tryb === "Wydanie Regał") {
+      zLok = polkaValue;
+      doLok = polkaDoValue;
+      pracownikValue = polkaDoValue; // PÓŁKA / STREFA DOCELOWA
     }
 
     const paczkaDanych = {
