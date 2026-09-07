@@ -35,8 +35,10 @@
     .skan-aktywny { border: 2px solid var(--accent-danger) !important; box-shadow: 0 0 15px rgba(239, 68, 68, 0.3) !important; }
     .btn-modern { border-radius: 12px; padding: 14px; font-weight: 600; transition: all 0.2s; }
     
-    .glowny-przelacznik .btn-check:checked + .btn-outline-light { background-color: var(--accent-blue); border-color: var(--accent-blue); color: white; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
-    .glowny-przelacznik .btn { font-size: 0.8rem; letter-spacing: 0.5px; padding: 10px 4px; font-weight: 800; border-color: rgba(255,255,255,0.15); color: #94a3b8; }
+    /* Układ przycisków w 2 wierszach po 2 kolumny */
+    .glowny-przelacznik-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
+    .glowny-przelacznik-grid .btn-check:checked + .btn { background-color: var(--accent-blue); border-color: var(--accent-blue); color: white; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
+    .glowny-przelacznik-grid .btn { font-size: 0.85rem; letter-spacing: 0.5px; padding: 12px 5px; font-weight: 800; border-color: rgba(255,255,255,0.15); color: #94a3b8; border-radius: 10px !important; }
     
     .mini-przelacznik .btn-check:checked + .btn { background-color: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); color: #fff; }
     .mini-przelacznik .btn { font-size: 0.8rem; font-weight: 600; color: #a6b5cc; border-color: transparent; }
@@ -83,7 +85,7 @@
 
 <div class="container py-3" style="max-width: 480px;">
   <div class="naglowek-operatora mb-3">
-    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.19</span></h4>
+    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.20</span></h4>
     <div class="d-flex align-items-center gap-2">
       <span class="small text-secondary fw-bold">Operator:</span>
       <span id="user-badge" class="badge bg-success p-2" style="font-size: 0.75rem;">---</span>
@@ -91,19 +93,25 @@
     </div>
   </div>
 
+  <!-- Przełącznik nawigacji: 2 wiersze po 2 przyciski -->
   <div class="modern-card p-2 mb-4">
-    <div class="btn-group w-100 m-0 glowny-przelacznik" role="group">
-      <input type="radio" class="btn-check" name="main-nav" id="tab-wydanie" checked onclick="przelaczGlownyModul('Wydanie')">
-      <label class="btn btn-outline-light" for="tab-wydanie">🔴 WYDANIE</label>
-      
-      <input type="radio" class="btn-check" name="main-nav" id="tab-przyjecie" onclick="przelaczGlownyModul('Przyjęcie')">
-      <label class="btn btn-outline-light" for="tab-przyjecie">🟢 PRZYJĘCIE</label>
-
-      <input type="radio" class="btn-check" name="main-nav" id="tab-przesuniecie" onclick="przelaczGlownyModul('Przesunięcie')">
-      <label class="btn btn-outline-light" for="tab-przesuniecie">🟡 PRZESUNIĘCIE</label>
-      
-      <input type="radio" class="btn-check" name="main-nav" id="tab-wydruki" onclick="przelaczGlownyModul('Wydruki')">
-      <label class="btn btn-outline-light" for="tab-wydruki">🖨️ WYDRUK</label>
+    <div class="glowny-przelacznik-grid">
+      <div>
+        <input type="radio" class="btn-check" name="main-nav" id="tab-wydanie" checked onclick="przelaczGlownyModul('Wydanie')">
+        <label class="btn btn-outline-light w-100" for="tab-wydanie">🔴 WYDANIE</label>
+      </div>
+      <div>
+        <input type="radio" class="btn-check" name="main-nav" id="tab-przyjecie" onclick="przelaczGlownyModul('Przyjęcie')">
+        <label class="btn btn-outline-light w-100" for="tab-przyjecie">🟢 PRZYJĘCIE</label>
+      </div>
+      <div>
+        <input type="radio" class="btn-check" name="main-nav" id="tab-przesuniecie" onclick="przelaczGlownyModul('Przesunięcie')">
+        <label class="btn btn-outline-light w-100" for="tab-przesuniecie">🟡 PRZESUNIĘCIE</label>
+      </div>
+      <div>
+        <input type="radio" class="btn-check" name="main-nav" id="tab-wydruki" onclick="przelaczGlownyModul('Wydruki')">
+        <label class="btn btn-outline-light w-100" for="tab-wydruki">🖨️ WYDRUK</label>
+      </div>
     </div>
   </div>
 
@@ -143,7 +151,7 @@
         </div>
       </div>
 
-      <!-- 3. PRACOWNIK -->
+      <!-- 3. PRACOWNIK (WYMAGANY TYLKO DLA WYDANIA) -->
       <div class="form-group-custom" id="sekcja-pracownik">
         <label class="form-label fw-bold small text-secondary mb-1">3. PRACOWNIK (Imię i Nazwisko):</label>
         <div class="input-group">
@@ -579,8 +587,6 @@
           aktywujSkanowanie('polka-do');
         } else if (celInput === 'polka' && trybOperacji === 'Wydanie') {
           aktywujSkanowanie('pracownik');
-        } else if (celInput === 'polka-do' && trybOperacji === 'Przesunięcie') {
-          aktywujSkanowanie('pracownik');
         } else {
           schowajAparat();
           document.getElementById('ilosc').focus();
@@ -624,22 +630,27 @@
     const sekcjaPracownik = document.getElementById('sekcja-pracownik');
     const sekcjaPolkaDo = document.getElementById('sekcja-polka-do');
     const labelPolkaZ = document.getElementById('label-polka-z');
+    const inputPracownik = document.getElementById('pracownik');
+    const inputPolkaDo = document.getElementById('polka-do');
 
     if (tryb === 'Przyjęcie') {
       sekcjaPracownik.style.display = 'none';
       sekcjaPolkaDo.style.display = 'none';
       labelPolkaZ.innerText = "2. ADRES PÓŁKI (DOCELOWA):";
-      document.getElementById('polka-do').removeAttribute('required');
+      inputPracownik.removeAttribute('required');
+      inputPolkaDo.removeAttribute('required');
     } else if (tryb === 'Przesunięcie') {
-      sekcjaPracownik.style.display = 'block';
+      sekcjaPracownik.style.display = 'none'; // Pracownik ukryty przy przesunięciu
       sekcjaPolkaDo.style.display = 'block';
       labelPolkaZ.innerText = "2a. PÓŁKA ŹRÓDŁOWA (Z):";
-      document.getElementById('polka-do').setAttribute('required', 'true');
+      inputPracownik.removeAttribute('required');
+      inputPolkaDo.setAttribute('required', 'true');
     } else { // Wydanie
       sekcjaPracownik.style.display = 'block';
       sekcjaPolkaDo.style.display = 'none';
       labelPolkaZ.innerText = "2. ADRES PÓŁKI (ŹRÓDŁOWA):";
-      document.getElementById('polka-do').removeAttribute('required');
+      inputPracownik.setAttribute('required', 'true');
+      inputPolkaDo.removeAttribute('required');
     }
     setTimeout(() => { aktywujSkanowanie('kod-towaru'); }, 100);
   }
@@ -654,6 +665,10 @@
     let tryb = document.getElementById('operacja').value;
     let polkaValue = document.getElementById('polka').value.trim();
     let polkaDoValue = document.getElementById('polka-do').value.trim();
+    
+    // Jeśli to przesunięcie/przyjęcie - wstaw nazwisko operatora zamiast pustego pracownika
+    let nazwaOperatora = localStorage.getItem('wms_user_name') || zalogowanyUzytkownik;
+    let pracownikValue = (tryb === "Wydanie") ? document.getElementById('pracownik').value.trim() : nazwaOperatora;
 
     let zLok = "";
     let doLok = "";
@@ -675,7 +690,7 @@
       Z_Lokalizacji: zLok,
       Do_Lokalizacji: doLok,
       towar: document.getElementById('kod-towaru').value.trim(),
-      pracownik: document.getElementById('pracownik').value.trim(),
+      pracownik: pracownikValue,
       ilosc: document.getElementById('ilosc').value,
       operator: zalogowanyUzytkownik
     };
