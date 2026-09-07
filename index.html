@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>LUBAS WMS v5.23 (Native BarcodeDetector)</title>
+  <title>LUBAS WMS v5.24 (List Selector)</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
@@ -39,9 +39,6 @@
     .glowny-przelacznik-grid .btn-check:checked + .btn { background-color: var(--accent-blue); border-color: var(--accent-blue); color: white; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
     .glowny-przelacznik-grid .btn { font-size: 0.8rem; letter-spacing: 0.5px; padding: 12px 4px; font-weight: 800; border-color: rgba(255,255,255,0.15); color: #94a3b8; border-radius: 10px !important; }
     
-    .mini-przelacznik .btn-check:checked + .btn { background-color: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); color: #fff; }
-    .mini-przelacznik .btn { font-size: 0.8rem; font-weight: 600; color: #a6b5cc; border-color: transparent; }
-
     .form-group-custom { margin-bottom: 20px; }
     .label-custom { font-size: 0.9rem; letter-spacing: 0.5px; margin-bottom: 10px; display: block; }
     #login-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg-dark); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
@@ -84,7 +81,7 @@
 
 <div class="container py-3" style="max-width: 480px;">
   <div class="naglowek-operatora mb-3">
-    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.23</span></h4>
+    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.24</span></h4>
     <div class="d-flex align-items-center gap-2">
       <span class="small text-secondary fw-bold">Operator:</span>
       <span id="user-badge" class="badge bg-success p-2" style="font-size: 0.75rem;">---</span>
@@ -92,7 +89,7 @@
     </div>
   </div>
 
-  <!-- Przełącznik nawigacji: 4 opcje w układzie 2x2 -->
+  <!-- Nawigacja: 4 tryby w układzie 2x2 -->
   <div class="modern-card p-2 mb-4">
     <div class="glowny-przelacznik-grid">
       <div>
@@ -101,7 +98,7 @@
       </div>
       <div>
         <input type="radio" class="btn-check" name="main-nav" id="tab-wydanie-regal" onclick="przelaczGlownyModul('Wydanie Regał')">
-        <label class="btn btn-outline-light w-100" for="tab-wydanie-regal">📦 WYDANIE (REGAŁ)</label>
+        <label class="btn btn-outline-light w-100" for="tab-wydanie-regal">📦 WYDANIE (STREFA)</label>
       </div>
       <div>
         <input type="radio" class="btn-check" name="main-nav" id="tab-przyjecie" onclick="przelaczGlownyModul('Przyjęcie')">
@@ -141,13 +138,29 @@
         </div>
       </div>
 
-      <!-- 2b. PÓŁKA DOCELOWA (DLA PRZESUNIĘCIA I WYDANIA NA REGAŁ) -->
+      <!-- 2b. PÓŁKA DOCELOWA (DLA PRZESUNIĘCIA) -->
       <div class="form-group-custom" id="sekcja-polka-do" style="display: none;">
         <label id="label-polka-do" class="form-label fw-bold small text-secondary mb-1">2b. PÓŁKA DOCELOWA:</label>
         <div class="input-group">
           <input type="text" id="polka-do" class="form-control wielki-input text-uppercase" placeholder="Format: 00-00-00-A-00" onclick="aktywujSkanowanie('polka-do')">
           <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('polka-do')">❌</button>
         </div>
+      </div>
+
+      <!-- 2c. LISTA STREF / DZIAŁÓW (TYLKO DLA WYDANIA STREFA) -->
+      <div class="form-group-custom" id="sekcja-lista-stref" style="display: none;">
+        <label class="form-label fw-bold small text-secondary mb-1">2b. WYBIERZ STREFĘ DOCELOWĄ:</label>
+        <select id="strefa-select" class="form-select wielki-input text-white" onchange="schowajAparat()">
+          <option value="" disabled selected>-- Wybierz dział / strefę --</option>
+          <option value="Odlewnia ogólna">Odlewnia ogólna</option>
+          <option value="Ślusarnia ogólna">Ślusarnia ogólna</option>
+          <option value="Odlewnia sita">Odlewnia sita</option>
+          <option value="Ślusarnia sita">Ślusarnia sita</option>
+          <option value="Obróbka Mechaniczna">Obróbka Mechaniczna</option>
+          <option value="Magazyn wyrobów gotowych">Magazyn wyrobów gotowych</option>
+          <option value="Nowa hala">Nowa hala</option>
+          <option value="Pierścienie">Pierścienie</option>
+        </select>
       </div>
 
       <!-- 3. PRACOWNIK (WYMAGANY DLA WYDANIA NA OSOBĘ) -->
@@ -390,8 +403,7 @@
       document.getElementById('instrukcja-skanu').innerText = "📍 KROK 2: Zeskanuj kod QR PÓŁKI (ŹRÓDŁOWA)";
       document.getElementById('instrukcja-skanu').className = "alert alert-info text-center fw-bold small text-dark";
     } else if(poleId === 'polka-do') {
-      let txt = (trybOperacji === 'Wydanie Regał') ? "📍 KROK 2b: Zeskanuj / Wpisz STREFĘ DOCELOWĄ" : "📍 KROK 2b: Zeskanuj kod QR PÓŁKI DOCELOWEJ";
-      document.getElementById('instrukcja-skanu').innerText = txt;
+      document.getElementById('instrukcja-skanu').innerText = "📍 KROK 2b: Zeskanuj kod QR PÓŁKI DOCELOWEJ";
       document.getElementById('instrukcja-skanu').className = "alert alert-primary text-center fw-bold small text-white bg-primary";
     } else {
       document.getElementById('instrukcja-skanu').innerText = "🪪 KROK 3: Zeskanuj kod QR PRACOWNIKA";
@@ -411,8 +423,11 @@
         
         if (celInput === 'kod-towaru') {
           aktywujSkanowanie('polka');
-        } else if (celInput === 'polka' && (tryb === 'Przesunięcie' || tryb === 'Wydanie Regał')) {
+        } else if (celInput === 'polka' && tryb === 'Przesunięcie') {
           aktywujSkanowanie('polka-do');
+        } else if (celInput === 'polka' && tryb === 'Wydanie Regał') {
+          schowajAparat();
+          document.getElementById('strefa-select').focus();
         } else if (celInput === 'polka' && tryb === 'Wydanie Osoba') {
           aktywujSkanowanie('pracownik');
         } else {
@@ -450,42 +465,47 @@
     document.getElementById('operacja').value = tryb;
     const sekcjaPracownik = document.getElementById('sekcja-pracownik');
     const sekcjaPolkaDo = document.getElementById('sekcja-polka-do');
+    const sekcjaListaStref = document.getElementById('sekcja-lista-stref');
     const labelPolkaZ = document.getElementById('label-polka-z');
-    const labelPolkaDo = document.getElementById('label-polka-do');
     const inputPolkaDo = document.getElementById('polka-do');
     const inputPracownik = document.getElementById('pracownik');
+    const selectStrefa = document.getElementById('strefa-select');
 
     if (tryb === 'Przyjęcie') {
       sekcjaPracownik.style.display = 'none';
       sekcjaPolkaDo.style.display = 'none';
+      sekcjaListaStref.style.display = 'none';
       labelPolkaZ.innerText = "2. ADRES PÓŁKI (DOCELOWA):";
       inputPracownik.removeAttribute('required');
       inputPolkaDo.removeAttribute('required');
+      selectStrefa.removeAttribute('required');
 
     } else if (tryb === 'Przesunięcie') {
       sekcjaPracownik.style.display = 'none';
       sekcjaPolkaDo.style.display = 'block';
+      sekcjaListaStref.style.display = 'none';
       labelPolkaZ.innerText = "2a. PÓŁKA ŹRÓDŁOWA (Z):";
-      labelPolkaDo.innerText = "2b. PÓŁKA DOCELOWA:";
-      inputPolkaDo.placeholder = "Format: 00-00-00-A-00";
       inputPracownik.removeAttribute('required');
+      selectStrefa.removeAttribute('required');
       inputPolkaDo.setAttribute('required', 'true');
 
     } else if (tryb === 'Wydanie Regał') {
       sekcjaPracownik.style.display = 'none';
-      sekcjaPolkaDo.style.display = 'block';
+      sekcjaPolkaDo.style.display = 'none';
+      sekcjaListaStref.style.display = 'block';
       labelPolkaZ.innerText = "2a. PÓŁKA ŹRÓDŁOWA (Z):";
-      labelPolkaDo.innerText = "2b. REGAŁ / STREFA DOCELOWA (Dowolna etykieta):";
-      inputPolkaDo.placeholder = "np. MONTAŻ, REGAŁ-1, STREFA-A";
       inputPracownik.removeAttribute('required');
-      inputPolkaDo.setAttribute('required', 'true');
+      inputPolkaDo.removeAttribute('required');
+      selectStrefa.setAttribute('required', 'true');
 
     } else { // Wydanie Osoba
       sekcjaPracownik.style.display = 'block';
       sekcjaPolkaDo.style.display = 'none';
+      sekcjaListaStref.style.display = 'none';
       labelPolkaZ.innerText = "2. ADRES PÓŁKI (ŹRÓDŁOWA):";
       inputPracownik.setAttribute('required', 'true');
       inputPolkaDo.removeAttribute('required');
+      selectStrefa.removeAttribute('required');
     }
     setTimeout(() => { aktywujSkanowanie('kod-towaru'); }, 100);
   }
@@ -500,8 +520,9 @@
     let tryb = document.getElementById('operacja').value;
     let polkaValue = document.getElementById('polka').value.trim();
     let polkaDoValue = document.getElementById('polka-do').value.trim();
+    let wybranaStrefa = document.getElementById('strefa-select').value;
     
-    // CZYSZCZENIE NAZWY OPERATORA DLA AUTOMATU
+    // CZYSZCZENIE NAZWY OPERATORA
     let surowaNazwa = localStorage.getItem('wms_user_name') || zalogowanyUzytkownik || "";
     if (surowaNazwa.indexOf("@") !== -1) { surowaNazwa = surowaNazwa.split("@")[0]; }
     let czystaNazwa = surowaNazwa.replace(/[\._-]/g, " ").trim();
@@ -525,8 +546,8 @@
       pracownikValue = sformatowanyOperator;
     } else if (tryb === "Wydanie Regał") {
       zLok = polkaValue;
-      doLok = polkaDoValue;
-      pracownikValue = polkaDoValue; // PÓŁKA / STREFA DOCELOWA
+      doLok = wybranaStrefa;
+      pracownikValue = wybranaStrefa; // W POLU PRACOWNIK ZAPISUJEMY NAZWĘ WYBRANEJ STREFY
     }
 
     const paczkaDanych = {
@@ -558,6 +579,7 @@
         document.getElementById('polka').value = "";
         document.getElementById('polka-do').value = "";
         document.getElementById('pracownik').value = "";
+        document.getElementById('strefa-select').value = "";
         document.getElementById('ilosc').value = '1';
         
         setTimeout(() => { 
