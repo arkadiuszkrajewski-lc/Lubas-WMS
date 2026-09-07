@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>LUBAS WMS v5.24 (List Selector)</title>
+  <title>LUBAS WMS v5.25</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
@@ -81,7 +81,7 @@
 
 <div class="container py-3" style="max-width: 480px;">
   <div class="naglowek-operatora mb-3">
-    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.24</span></h4>
+    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.25</span></h4>
     <div class="d-flex align-items-center gap-2">
       <span class="small text-secondary fw-bold">Operator:</span>
       <span id="user-badge" class="badge bg-success p-2" style="font-size: 0.75rem;">---</span>
@@ -89,7 +89,7 @@
     </div>
   </div>
 
-  <!-- Nawigacja: 4 tryby w układzie 2x2 -->
+  <!-- Nawigacja: 4 tryby -->
   <div class="modern-card p-2 mb-4">
     <div class="glowny-przelacznik-grid">
       <div>
@@ -98,7 +98,7 @@
       </div>
       <div>
         <input type="radio" class="btn-check" name="main-nav" id="tab-wydanie-regal" onclick="przelaczGlownyModul('Wydanie Regał')">
-        <label class="btn btn-outline-light w-100" for="tab-wydanie-regal">📦 WYDANIE (STREFA)</label>
+        <label class="btn btn-outline-light w-100" for="tab-wydanie-regal">📦 WYDANIE (REGAŁ)</label>
       </div>
       <div>
         <input type="radio" class="btn-check" name="main-nav" id="tab-przyjecie" onclick="przelaczGlownyModul('Przyjęcie')">
@@ -129,7 +129,7 @@
         </div>
       </div>
 
-      <!-- 2a. PÓŁKA ŹRÓDŁOWA / GŁÓWNA -->
+      <!-- 2a. PÓŁKA ŹRÓDŁOWA -->
       <div class="form-group-custom" id="sekcja-polka-z">
         <label id="label-polka-z" class="form-label fw-bold small text-secondary mb-1">2. ADRES PÓŁKI (ŹRÓDŁOWA):</label>
         <div class="input-group">
@@ -147,11 +147,11 @@
         </div>
       </div>
 
-      <!-- 2c. LISTA STREF / DZIAŁÓW (TYLKO DLA WYDANIA STREFA) -->
+      <!-- 2c. LISTA REGAŁÓW / DZIAŁÓW (TYLKO DLA WYDANIA REGAŁ) -->
       <div class="form-group-custom" id="sekcja-lista-stref" style="display: none;">
-        <label class="form-label fw-bold small text-secondary mb-1">2b. WYBIERZ STREFĘ DOCELOWĄ:</label>
+        <label class="form-label fw-bold small text-secondary mb-1">2b. WYBIERZ REGAŁ DOCELOWY:</label>
         <select id="strefa-select" class="form-select wielki-input text-white" onchange="schowajAparat()">
-          <option value="" disabled selected>-- Wybierz dział / strefę --</option>
+          <option value="" disabled selected>-- Wybierz regał / dział --</option>
           <option value="Odlewnia ogólna">Odlewnia ogólna</option>
           <option value="Ślusarnia ogólna">Ślusarnia ogólna</option>
           <option value="Odlewnia sita">Odlewnia sita</option>
@@ -163,7 +163,7 @@
         </select>
       </div>
 
-      <!-- 3. PRACOWNIK (WYMAGANY DLA WYDANIA NA OSOBĘ) -->
+      <!-- 3. PRACOWNIK (DLA WYDANIA NA OSOBĘ) -->
       <div class="form-group-custom" id="sekcja-pracownik">
         <label class="form-label fw-bold small text-secondary mb-1">3. PRACOWNIK (Imię i Nazwisko):</label>
         <div class="input-group">
@@ -547,7 +547,7 @@
     } else if (tryb === "Wydanie Regał") {
       zLok = polkaValue;
       doLok = wybranaStrefa;
-      pracownikValue = wybranaStrefa; // W POLU PRACOWNIK ZAPISUJEMY NAZWĘ WYBRANEJ STREFY
+      pracownikValue = wybranaStrefa;
     }
 
     const paczkaDanych = {
