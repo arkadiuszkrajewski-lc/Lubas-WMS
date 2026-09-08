@@ -1,428 +1,1311 @@
-// =========================================================================
-// LUBAS WMS v5.40 - SYSTEM BACKENDOWY + ADVANCED EXECUTIVE DASHBOARD
-// =========================================================================
-
-var BQ_PROJECT_ID = 'lubas-prod-erp-enovoapi-0';
-var BQ_DATASET_ID = 'Lubas_WMS_2';
-var BQ_TABLE_ID   = 'wms_dataset'; 
-
-function doGet(e) {
-  try {
-    if (e.parameter && e.parameter.akcja === "pobierz_stan") {
-      var kodTowaru = (e.parameter.kod_towaru || "").trim();
-      var polka = (e.parameter.polka || "").trim().toUpperCase();
-      var stan = pobierzAktualnyStan(kodTowaru, polka);
-      return ContentService.createTextOutput(JSON.stringify({ status: "SUCCESS", stan: stan })).setMimeType(ContentService.MimeType.JSON);
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>LUBAS WMS v5.40 Executive</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+  
+  <script type="text/javascript">
+    var ZebraBrowserPrint = function() {
+      function e(e, t) { var n = new XMLHttpRequest; return "withCredentials" in n ? n.open(e, t, !0) : "undefined" != typeof XDomainRequest ? (n = new XDomainRequest, n.open(e, t)) : n = null, n }
+      function t(t, n, o, r) { var i = e(t, n); return i ? (i.onload = function() { if (200 === i.status) o(i.responseText); else { var e = i.responseText; try { e = JSON.parse(i.responseText) } catch (t) {} r(e) } }, i.onerror = function() { r(i.responseText) }, i) : void r("CORS not supported") }
+      var n = {}, o = "https://localhost:9101/"; return n.getLocalDevices = function(e, n, o) { var r = t("GET", "https://localhost:9101/available", function(t) { try { var o = JSON.parse(t); e(o) } catch (r) { n(r) } }, n); r && r.send() }, n.getDefaultDevice = function(e, o, r) { var i = t("GET", "https://localhost:9101/default", function(t) { try { var r = JSON.parse(t); o(r) } catch (i) { r(i) } }, r); i && i.send() }, n.sendThroughPrintService = function(e, n, i, s) { var a = t("POST", o + "write", i, s); a && a.send(JSON.stringify({ device: n, data: e })) }, n
+    }();
+  </script>
+  
+  <style>
+    :root {
+      --bg-dark: #0b0f19;
+      --card-dark: #1e293b;
+      --accent-blue: #38bdf8;
+      --accent-danger: #ef4444;
+      --accent-success: #34d399;
+      --accent-amber: #fbbf24;
+      --text-main: #f8fafc;
     }
-    return ContentService.createTextOutput(JSON.stringify({ status: "ERROR", message: "Brak parametrów." })).setMimeType(ContentService.MimeType.JSON);
-  } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ status: "ERROR", message: err.toString() })).setMimeType(ContentService.MimeType.JSON);
-  }
-}
-
-function doPost(e) {
-  try {
-    zapiszLogDoArkusza("INFO", "Odebrano żądanie POST", e.postData.contents);
-    var data = {};
-    var surowyTekst = e.postData.contents;
+    body { background-color: var(--bg-dark); color: var(--text-main); font-family: 'Inter', sans-serif; -webkit-user-select: none; user-select: none; line-height: 1.6; }
     
-    if (surowyTekst.indexOf("{") === 0) {
-      data = JSON.parse(surowyTekst);
+    .modern-card { background: var(--card-dark); border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 10px 30px rgba(0,0,0,0.4); margin-bottom: 20px; padding: 22px !important; }
+    .SkanerOkno { background: #000; border-radius: 16px; overflow: hidden; width: 100%; margin: 0 auto; display: none; aspect-ratio: 4/3; border: 2px solid rgba(255,255,255,0.15); margin-bottom: 28px; position: relative; }
+    .SkanerOkno video { width: 100%; height: 100%; object-fit: cover; }
+    
+    .wielki-input { font-size: 1.1rem; padding: 16px; background-color: #0f172a !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.18); border-radius: 12px; }
+    .wielki-input:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.35); outline: none; }
+    .skan-aktywny { border: 2px solid var(--accent-danger) !important; box-shadow: 0 0 20px rgba(239, 68, 68, 0.5) !important; outline: none; }
+    
+    .btn-modern { border-radius: 14px; padding: 16px; font-weight: 700; transition: all 0.2s; letter-spacing: 0.5px; }
+    
+    .menu-grid-container { display: grid; grid-template-columns: 1fr; gap: 12px; width: 100%; }
+    @media (min-width: 576px) { .menu-grid-container { grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 992px) { .menu-grid-container { grid-template-columns: repeat(3, 1fr); } }
+    
+    .btn-check { position: absolute; clip: rect(0, 0, 0, 0); pointer-events: none; }
+    
+    .kafelek-menu { 
+      display: flex; align-items: center; justify-content: center; 
+      padding: 16px 12px; font-size: 0.85rem; font-weight: 800; 
+      color: #94a3b8; background-color: #0f172a; 
+      border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; 
+      cursor: pointer; transition: all 0.2s ease; text-transform: uppercase; 
+      text-align: center; line-height: 1.3; width: 100%;
+    }
+    
+    .btn-check:checked + .kafelek-menu { 
+      background-color: var(--accent-blue); border-color: var(--accent-blue); 
+      color: #0b0f19; box-shadow: 0 4px 16px rgba(56, 189, 248, 0.4); 
+    }
+
+    .form-group-custom { margin-bottom: 26px; }
+    .label-custom { font-size: 0.92rem; letter-spacing: 0.5px; margin-bottom: 12px; display: block; }
+    #login-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg-dark); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+    .login-scanner-box { background: #000; border-radius: 12px; overflow: hidden; width: 100%; max-width: 280px; display: none; aspect-ratio: 1/1; margin-bottom: 28px; border: 2px solid var(--accent-blue); position: relative; }
+    .login-scanner-box video { width: 100%; height: 100%; object-fit: cover; }
+    
+    .naglowek-operatora { display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; width: 100%; padding-bottom: 15px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .karta-lokalizacji { background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 14px 18px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+
+    /* DASHBOARD EXECUTIVE STRUCTURE & ALERTS */
+    .dash-kpi-row {
+      display: flex !important; flex-direction: row !important;
+      gap: 15px !important; width: 100% !important; margin-bottom: 20px !important;
+    }
+    .kpi-card-dash { 
+      flex: 1 1 0px !important; background: #1e293b; 
+      border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; 
+      padding: 16px 20px; min-width: 0; transition: all 0.3s;
+    }
+    .kpi-card-alert {
+      border: 1px solid var(--accent-danger) !important;
+      box-shadow: 0 0 15px rgba(239, 68, 68, 0.35) !important;
+      background: rgba(239, 68, 68, 0.05) !important;
+    }
+    .kpi-title-dash { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.5px; }
+    .kpi-val-dash { font-size: 1.8rem; font-weight: 800; margin-top: 2px; line-height: 1.2; }
+
+    .dash-main-grid {
+      display: grid !important; grid-template-columns: 1fr 1fr !important;
+      gap: 20px !important; width: 100% !important; align-items: start;
+    }
+
+    @media (max-width: 991px) {
+      .dash-kpi-row { flex-wrap: wrap !important; }
+      .kpi-card-dash { flex: 1 1 45% !important; }
+      .dash-main-grid { grid-template-columns: 1fr !important; }
+    }
+
+    .bar-row { margin-bottom: 12px; }
+    .bar-meta { display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 4px; }
+    .bar-name { color: #cbd5e1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 75%; }
+    .bar-val { font-weight: 700; color: #f8fafc; }
+    .bar-track { height: 8px; background: #0f172a; border-radius: 4px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #38bdf8, #818cf8); }
+
+    .table-dash { width: 100%; font-size: 0.82rem; color: #e2e8f0; border-collapse: collapse; }
+    .table-dash th { background: #0f172a; padding: 8px 12px; color: #94a3b8; text-align: left; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .table-dash td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+
+    .badge-sec { padding: 3px 8px; border-radius: 6px; font-weight: 700; font-size: 0.7rem; display: inline-block; }
+    .bg-sec-a { background: rgba(52, 211, 153, 0.15); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); }
+    .bg-sec-b { background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3); }
+    .bg-sec-c { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+    .app-viewport { width: 100%; margin: 0 auto; transition: max-width 0.3s ease; }
+    
+    /* POSZERZONE WIDOKI DLA KOMPUTERA: 680px DLA ZWYKŁYCH KART, 1400px DLA DASHBOARDU */
+    .mode-mobile { max-width: 680px; }
+    .mode-desktop { max-width: 1400px; }
+  </style>
+</head>
+<body>
+
+<div id="login-overlay">
+  <div class="text-center p-4 modern-card" style="max-width: 420px; width: 100%;">
+    <h3 class="fw-bold mb-2">LUBAS <span class="text-primary">WMS</span></h3>
+    <p class="text-muted small mb-4">Zaloguj się swoimi danymi z bazy</p>
+    
+    <div id="login-reader" class="login-scanner-box mx-auto"></div>
+
+    <div class="text-start">
+      <div class="form-group-custom">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <label class="label-custom text-secondary fw-bold m-0">Email:</label>
+          <button id="btn-toggle-login-scan" onclick="odpalSkanerLogowania()" class="btn btn-sm btn-outline-info py-1 px-2" style="font-size:0.75rem;">📷 Skanuj kartę</button>
+        </div>
+        <input type="email" id="auth-email" class="form-control wielki-input text-lowercase" placeholder="Wpisz lub zeskanuj e-mail">
+      </div>
+      
+      <div class="form-group-custom">
+        <label class="label-custom text-secondary fw-bold mb-2">Hasło:</label>
+        <div class="input-group">
+          <input type="password" id="auth-password" class="form-control wielki-input" placeholder="Wpisz hasło dostępu">
+          <button class="btn btn-outline-secondary px-3" type="button" onclick="przelaczWidokHasla()" style="border-top-right-radius: 12px; border-bottom-right-radius: 12px; border-color: rgba(255,255,255,0.15); background: #0f172a; color: #94a3b8;">👁️</button>
+        </div>
+      </div>
+    </div>
+    
+    <button id="btn-login-submit" onclick="autoryzujZBazą()" class="btn btn-primary w-100 btn-modern fs-5 mt-4">Zaloguj do systemu</button>
+  </div>
+</div>
+
+<div class="container-fluid py-3 px-2 px-md-4 app-viewport mode-mobile" id="main-wrapper">
+  <div class="naglowek-operatora">
+    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.40</span></h4>
+    <div class="d-flex align-items-center gap-2">
+      <span class="small text-secondary fw-bold">Operator:</span>
+      <span id="user-badge" class="badge bg-success p-2" style="font-size: 0.75rem;">---</span>
+      <button onclick="wylogujOperatora()" class="btn btn-sm btn-outline-secondary py-1 px-2" style="font-size: 0.75rem;">Zmień</button>
+    </div>
+  </div>
+
+  <!-- NAWIGACJA KAFELKOWA -->
+  <div class="modern-card p-3 mb-4">
+    <div class="menu-grid-container">
+      <div>
+        <input type="radio" class="btn-check" name="main-nav" id="tab-wydanie-osoba" checked onclick="przelaczGlownyModul('Wydanie Osoba')">
+        <label class="kafelek-menu" for="tab-wydanie-osoba">🔴 WYDANIE (OSOBA)</label>
+      </div>
+      <div>
+        <input type="radio" class="btn-check" name="main-nav" id="tab-wydanie-regal" onclick="przelaczGlownyModul('Wydanie Regał')">
+        <label class="kafelek-menu" for="tab-wydanie-regal">📦 WYDANIE (REGAŁ)</label>
+      </div>
+      <div>
+        <input type="radio" class="btn-check" name="main-nav" id="tab-przyjecie" onclick="przelaczGlownyModul('Przyjęcie')">
+        <label class="kafelek-menu" for="tab-przyjecie">🟢 PRZYJĘCIE</label>
+      </div>
+      <div>
+        <input type="radio" class="btn-check" name="main-nav" id="tab-przesuniecie" onclick="przelaczGlownyModul('Przesunięcie')">
+        <label class="kafelek-menu" for="tab-przesuniecie">🟡 PRZESUNIĘCIE</label>
+      </div>
+      <div>
+        <input type="radio" class="btn-check" name="main-nav" id="tab-szukaj" onclick="przelaczGlownyModul('Szukaj')">
+        <label class="kafelek-menu text-warning" for="tab-szukaj" style="border-color: rgba(245, 158, 11, 0.3);">🔍 SPRAWDŹ LOKALIZACJE</label>
+      </div>
+      <div>
+        <input type="radio" class="btn-check" name="main-nav" id="tab-wydruki" onclick="przelaczGlownyModul('Wydruki')">
+        <label class="kafelek-menu" for="tab-wydruki">🖨️ PANEL WYDRUKÓW</label>
+      </div>
+      <div style="grid-column: 1 / -1;">
+        <input type="radio" class="btn-check" name="main-nav" id="tab-raporty" onclick="przelaczGlownyModul('Raporty')">
+        <label class="kafelek-menu text-info fw-bold" for="tab-raporty" style="border-color: rgba(56, 189, 248, 0.4); background: rgba(56, 189, 248, 0.08);">📊 RAPORTY & ANALITYKA (DESKTOP)</label>
+      </div>
+    </div>
+  </div>
+
+  <div id="instrukcja-skanu" class="alert alert-warning text-center fw-bold small d-none" style="border-radius:12px;">Skieruj aparat na kod QR...</div>
+  <button id="btn-torch" type="button" onclick="przelaczLatarke()" class="btn btn-warning w-100 mb-3 fw-bold d-none" style="border-radius: 12px; padding: 12px;">🔦 Włącz latarkę</button>
+  <div id="reader" class="SkanerOkno"></div>
+
+  <!-- SEKCJA OPERACJI SKANOWANIA -->
+  <div id="sekcja-operacji" class="card modern-card p-3 shadow-sm border-0">
+    <form id="wmsForm" onsubmit="wyslijDane(event)">
+      <input type="hidden" id="operacja" value="Wydanie Osoba">
+      <input type="hidden" id="aktywne-pole" value="">
+
+      <div class="form-group-custom">
+        <label class="form-label fw-bold small text-secondary mb-2">1. KOD TOWARU:</label>
+        <div class="input-group">
+          <input type="text" id="kod-towaru" class="form-control wielki-input text-uppercase" placeholder="Format: litera + 5 cyfr (np. A12345)" onclick="aktywujSkanowanie('kod-towaru')" required>
+          <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('kod-towaru')">❌</button>
+        </div>
+      </div>
+
+      <div class="form-group-custom" id="sekcja-polka-z">
+        <label id="label-polka-z" class="form-label fw-bold small text-secondary mb-2">2. ADRES PÓŁKI (ŹRÓDŁOWA):</label>
+        <div class="input-group">
+          <input type="text" id="polka" class="form-control wielki-input text-uppercase" placeholder="Format: 00-00-00-A-00" onclick="aktywujSkanowanie('polka')" required>
+          <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('polka')">❌</button>
+        </div>
+      </div>
+
+      <div class="form-group-custom" id="sekcja-polka-do" style="display: none;">
+        <label id="label-polka-do" class="form-label fw-bold small text-secondary mb-2">2b. PÓŁKA DOCELOWA:</label>
+        <div class="input-group">
+          <input type="text" id="polka-do" class="form-control wielki-input text-uppercase" placeholder="Format: 00-00-00-A-00" onclick="aktywujSkanowanie('polka-do')">
+          <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('polka-do')">❌</button>
+        </div>
+      </div>
+
+      <div class="form-group-custom" id="sekcja-lista-stref" style="display: none;">
+        <label class="form-label fw-bold small text-secondary mb-2">2b. WYBIERZ REGAŁ DOCELOWY:</label>
+        <select id="strefa-select" class="form-select wielki-input text-white" onchange="schowajAparat()">
+          <option value="" disabled selected>-- Wybierz regał / dział --</option>
+          <option value="Odlewnia ogólna">Odlewnia ogólna</option>
+          <option value="Ślusarnia ogólna">Ślusarnia ogólna</option>
+          <option value="Odlewnia sita">Odlewnia sita</option>
+          <option value="Ślusarnia sita">Ślusarnia sita</option>
+          <option value="Obróbka Mechaniczna">Obróbka Mechaniczna</option>
+          <option value="Magazyn wyrobów gotowych">Magazyn wyrobów gotowych</option>
+          <option value="Nowa hala">Nowa hala</option>
+          <option value="Pierścienie">Pierścienie</option>
+        </select>
+      </div>
+
+      <div class="form-group-custom" id="sekcja-pracownik">
+        <label class="form-label fw-bold small text-secondary mb-2">3. PRACOWNIK (Imię i Nazwisko):</label>
+        <div class="input-group">
+          <input type="text" id="pracownik" class="form-control wielki-input" placeholder="Wpisz lub skanuj pełne Imię i Nazwisko" onclick="aktywujSkanowanie('pracownik')">
+          <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('pracownik')">❌</button>
+        </div>
+      </div>
+
+      <div class="form-group-custom">
+        <label class="form-label fw-bold small text-secondary mb-2">4. ILOŚĆ SZTUK:</label>
+        <input type="number" id="ilosc" class="form-control wielki-input" value="1" min="1" placeholder="Wpisz ilość sztuk" required onfocus="schowajAparat()">
+      </div>
+
+      <button type="submit" id="btn-submit" class="btn btn-primary w-100 py-3 fw-bold fs-5 btn-modern mt-3">ZAPISZ OPERACJĘ (Enter)</button>
+    </form>
+    <div id="status" class="alert alert-success mt-3 d-none text-center fw-bold" style="border-radius:12px;"></div>
+  </div>
+
+  <!-- SEKCJA SPRAWDZANIA LOKALIZACJI -->
+  <div id="sekcja-szukaj" class="modern-card p-3" style="display: none; border: 1px solid rgba(245, 158, 11, 0.3);">
+    <h5 class="fw-bold text-warning mb-3">🔍 Podgląd stref i lokalizacji towaru</h5>
+    <div class="form-group-custom">
+      <label class="small text-secondary fw-bold mb-2">ZESKANUJ LUB WPISZ KOD TOWARU:</label>
+      <div class="input-group">
+        <input type="text" id="search-towar-kod" class="form-control wielki-input text-uppercase" placeholder="np. A12345" onclick="aktywujSkanowanie('search-towar-kod')">
+        <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('search-towar-kod')">❌</button>
+      </div>
+    </div>
+    <button type="button" id="btn-szukaj-submit" onclick="sprawdzLokalizacjeTowaru()" class="btn btn-warning w-100 py-3 fw-bold btn-modern text-dark mb-4">Sprawdź gdzie leży towar</button>
+
+    <div id="szukaj-wyniki" class="d-none">
+      <div class="p-3 mb-3 rounded-3" style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255,255,255,0.12);">
+        <div class="text-secondary small fw-bold mb-1">PRODUKT:</div>
+        <div id="res-kod-nazwa" class="fw-bold text-white fs-5 mb-2">---</div>
+        <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary">
+          <span class="fw-bold text-secondary">ŁĄCZNIE NA MAGAZYNIE:</span>
+          <span id="res-suma" class="badge bg-success fs-6">0 szt.</span>
+        </div>
+      </div>
+      <div id="res-lista-polki"></div>
+    </div>
+  </div>
+
+  <!-- SEKCJA PANELU WYDRUKÓW -->
+  <div id="sekcja-druku" class="modern-card p-3" style="display: none; border: 1px solid rgba(56, 189, 248, 0.3);">
+    <div class="p-3 mb-4 rounded-3" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.12);">
+      <div class="form-check form-switch d-flex align-items-center justify-content-between p-0">
+        <label class="form-check-label fw-bold text-info" for="check-agent-usb" style="cursor: pointer;">
+          🖨️ STACJA DRUKUJĄCA (USB Zebra)
+          <div class="small text-muted fw-normal mt-1">Zaznacz TYLKO na komputerze z wpiętą drukarką Zebra</div>
+        </label>
+        <input class="form-check-input ms-2" type="checkbox" id="check-agent-usb" style="transform: scale(1.4); cursor: pointer;" onchange="zapiszStanAgenta(this.checked)">
+      </div>
+      <div id="agent-status-badge" class="small mt-2 fw-bold text-secondary">Status: Nasłuchiwanie wyłączone</div>
+    </div>
+
+    <div class="d-flex gap-2 mb-4">
+      <input type="radio" class="btn-check" name="sub-print" id="sub-user" checked onclick="przelaczPodpanelDruku('user')">
+      <label class="kafelek-menu" for="sub-user">🪪 Pracownik</label>
+      <input type="radio" class="btn-check" name="sub-print" id="sub-duplikat" onclick="przelaczPodpanelDruku('duplikat')">
+      <label class="kafelek-menu" for="sub-duplikat">📋 Duplikat Etykiety</label>
+    </div>
+
+    <div id="sub-panel-user">
+      <div class="form-group-custom">
+        <label class="small text-secondary fw-bold mb-2">IMIĘ I NAZWISKO PRACOWNIKA:</label>
+        <input type="text" id="p-user-nazwa" class="form-control wielki-input" placeholder="Wpisz Imię i Nazwisko">
+      </div>
+      <button type="button" onclick="drukujEtykietePracownika()" class="btn btn-success w-100 py-3 fw-bold btn-modern mt-2">Drukuj Identyfikator (QR)</button>
+    </div>
+
+    <div id="sub-panel-duplikat" style="display: none;">
+      <div class="form-group-custom">
+        <label class="small text-secondary fw-bold mb-2">ZESKANUJ LUB WPISZ KOD ETYKIETY:</label>
+        <div class="input-group">
+          <input type="text" id="p-duplikat-kod" class="form-control wielki-input text-uppercase" placeholder="Skanuj towar, półkę lub pracownika" onclick="aktywujSkanowanie('p-duplikat-kod')">
+          <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('p-duplikat-kod')">❌</button>
+        </div>
+      </div>
+      <button type="button" id="btn-duplikat-submit" onclick="drukujDuplikatEtykiety()" class="btn btn-warning w-100 py-3 fw-bold btn-modern text-dark mt-2">Drukuj Duplikat Etykiety</button>
+    </div>
+  </div>
+
+  <!-- 💡 SEKCJA PEŁNEGO EXECUTIVE DASHBOARDU (Z ANTYCZERWONYM ALARMEM I OBSZARAMI) -->
+  <div id="sekcja-raporty" style="display: none;">
+    
+    <!-- HEADER -->
+    <div class="modern-card p-3 mb-4" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+          <h2 class="fw-bold text-info m-0">LUBAS WMS Executive Dashboard</h2>
+          <p class="text-secondary small m-0">Zaawansowany Raport Analityczny & Financial Inventory Overview • Stan na: Real-time BQ Data</p>
+        </div>
+        <button onclick="zaladujDaneDashboardu()" class="btn btn-sm btn-outline-info fw-bold py-2 px-3" style="border-radius: 10px;">🔄 Odśwież Raport</button>
+      </div>
+    </div>
+
+    <!-- 4 KARTY KPI (Z CZERWONYM ALARMEM) -->
+    <div class="dash-kpi-row">
+      <div class="kpi-card-dash">
+        <div class="kpi-title-dash">Wartość Magazynu (PLN)</div>
+        <div id="kpi-wartosc" class="kpi-val-dash text-info">0,00 zł</div>
+        <div class="small text-muted" style="font-size:0.75rem;">Wycena wg bazy Enova/BigQuery</div>
+      </div>
+      <div class="kpi-card-dash">
+        <div class="kpi-title-dash">Łączny Stan Towarów</div>
+        <div id="kpi-sztuki" class="kpi-val-dash text-success">0 szt.</div>
+        <div class="small text-muted" style="font-size:0.75rem;">Obsługiwane lokalizacje fizyczne</div>
+      </div>
+      <div class="kpi-card-dash id-kpi-braki-card">
+        <div class="kpi-title-dash text-danger">Pozycje Poniżej Min.</div>
+        <div id="kpi-braki-ilosc" class="kpi-val-dash text-danger">0 pozycji</div>
+        <div class="small text-muted" style="font-size:0.75rem;">Wymagają pilnego uzupełnienia</div>
+      </div>
+      <div class="kpi-card-dash">
+        <div class="kpi-title-dash">Koszt Dokupienia (PLN)</div>
+        <div id="kpi-braki-koszt" class="kpi-val-dash text-warning">0,00 zł</div>
+        <div class="small text-muted" style="font-size:0.75rem;">Suma wg v_aktualne_braki_magazynowe</div>
+      </div>
+    </div>
+
+    <!-- SIATKA DWUKOLUMNOWA OBOK SIEBIE -->
+    <div class="dash-main-grid">
+      
+      <!-- LEWA STRONA: TOP 5 + ROTACJA ABCD + AGREGACJA OBSZARÓW -->
+      <div>
+        <!-- TOP 5 BAR CHART -->
+        <div class="modern-card p-3 mb-4">
+          <h5 class="fw-bold text-white mb-3" style="font-size: 0.95rem;">💎 TOP 5 Najcenniejszych Pozycji na Stanie (PLN)</h5>
+          <div id="container-top-bars">
+            <div class="text-center text-muted py-3">Ładowanie danych...</div>
+          </div>
+        </div>
+
+        <!-- WYDANIA WG OBSZARÓW / DZIAŁÓW -->
+        <div class="modern-card p-3 mb-4">
+          <h5 class="fw-bold text-info mb-3" style="font-size: 0.95rem;">🏢 Pobrania i Zużycie wg Obszarów / Działów</h5>
+          <div class="table-responsive">
+            <table class="table-dash">
+              <thead>
+                <tr>
+                  <th>OBSZAR / DZIAŁ</th>
+                  <th>ILOŚĆ SZTUK</th>
+                  <th>LICZBA WYDAŃ</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-obszary">
+                <tr><td colspan="3" class="text-center text-muted py-3">Ładowanie danych...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- STRUKTURA ROTACJI ABCD TABLE -->
+        <div class="modern-card p-3 mb-0">
+          <h5 class="fw-bold text-white mb-3" style="font-size: 0.95rem;">📦 Struktura Rotacji ABCD (Udział Wartościowy)</h5>
+          <div class="table-responsive">
+            <table class="table-dash">
+              <thead>
+                <tr>
+                  <th>SEKTOR</th>
+                  <th>KATEGORIA</th>
+                  <th>LICZBA POZYCJI</th>
+                  <th>WARTOŚĆ (PLN)</th>
+                  <th>UDZIAŁ %</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-sektory">
+                <tr><td colspan="5" class="text-center text-muted py-3">Ładowanie danych...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRAWA STRONA: PILNE BRAKI MAGAZYNOWE + TOP PRACOWNICY -->
+      <div>
+        <!-- PILNE BRAKI -->
+        <div class="modern-card p-3 mb-4">
+          <h5 class="fw-bold text-danger mb-3" style="font-size: 0.95rem;">⚠️ Pilne Braki Magazynowe (Sugestie Zakupowe)</h5>
+          <div class="table-responsive" style="max-height: 420px; overflow-y: auto;">
+            <table class="table-dash">
+              <thead>
+                <tr>
+                  <th>KOD</th>
+                  <th>NAZWA TOWARU</th>
+                  <th>STAN</th>
+                  <th>MIN / MAX</th>
+                  <th>BRAK</th>
+                  <th>KOSZT (PLN)</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-braki">
+                <tr><td colspan="6" class="text-center text-muted py-4">Ładowanie danych...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TOP PRACOWNICI POBIERAJĄCY -->
+        <div class="modern-card p-3 mb-0">
+          <h5 class="fw-bold text-success mb-3" style="font-size: 0.95rem;">👷 Top Pracownicy Pobierający Materiały</h5>
+          <div class="table-responsive">
+            <table class="table-dash">
+              <thead>
+                <tr>
+                  <th>PRACOWNIK</th>
+                  <th>POBRANE SZTUKI</th>
+                  <th>LICZBA OPERACJI</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-pracownicy">
+                <tr><td colspan="3" class="text-center text-muted py-3">Ładowanie danych...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+  const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbykKaTjGfb4H-S-AUUIIMr8g62hAE1V0YWYDhssCbAh26Y9r0u96xVySApf01PqO9sZ0Q/exec";
+  
+  let html5Qrcode = null;
+  let loginQrcode = null;
+  let blokadaSkanera = false; 
+  let zalogowanyUzytkownik = "";
+
+  let activeStream = null;
+  let activeVideoElement = null;
+  let scanInterval = null;
+  const hasNativeBarcodeDetector = ('BarcodeDetector' in window);
+
+  let printLoopInterval = null;
+
+  window.onload = function() {
+    const zapamietanyEmail = localStorage.getItem('wms_user_email');
+    const zapamietanaNazwa = localStorage.getItem('wms_user_name');
+    if (zapamietanyEmail && zapamietanaNazwa) {
+      zalogowanyUzytkownik = zapamietanyEmail;
+      document.getElementById('user-badge').innerText = zapamietanaNazwa;
+      document.getElementById('login-overlay').style.display = 'none';
+      setTimeout(() => { aktywujSkanowanie('kod-towaru'); }, 600);
+    }
+
+    const stanAgenta = localStorage.getItem('wms_agent_usb') === 'true';
+    const chk = document.getElementById('check-agent-usb');
+    if(chk) {
+      chk.checked = stanAgenta;
+      zapiszStanAgenta(stanAgenta);
+    }
+  };
+
+  function przelaczGlownyModul(modul) {
+    schowajAparat();
+    const sekcjaOperacji = document.getElementById('sekcja-operacji');
+    const sekcjaDruku = document.getElementById('sekcja-druku');
+    const sekcjaSzukaj = document.getElementById('sekcja-szukaj');
+    const sekcjaRaporty = document.getElementById('sekcja-raporty');
+    const mainWrapper = document.getElementById('main-wrapper');
+    
+    sekcjaOperacji.style.display = 'none';
+    sekcjaDruku.style.display = 'none';
+    sekcjaSzukaj.style.display = 'none';
+    sekcjaRaporty.style.display = 'none';
+
+    if (modul === 'Wydruki') {
+      mainWrapper.className = "container-fluid py-3 px-2 px-md-4 app-viewport mode-mobile";
+      sekcjaDruku.style.display = 'block';
+    } else if (modul === 'Szukaj') {
+      mainWrapper.className = "container-fluid py-3 px-2 px-md-4 app-viewport mode-mobile";
+      sekcjaSzukaj.style.display = 'block';
+      setTimeout(() => { aktywujSkanowanie('search-towar-kod'); }, 100);
+    } else if (modul === 'Raporty') {
+      mainWrapper.className = "container-fluid py-3 px-2 px-md-4 app-viewport mode-desktop";
+      sekcjaRaporty.style.display = 'block';
+      zaladujDaneDashboardu();
     } else {
-      var pary = surowyTekst.split("&");
-      for (var i = 0; i < pary.length; i++) {
-        var k_v = pary[i].split("=");
-        var klucz = decodeURIComponent(k_v[0]);
-        var wartosc = k_v.length > 1 ? decodeURIComponent(k_v[1].replace(/\+/g, " ")) : "";
-        data[klucz] = wartosc;
+      mainWrapper.className = "container-fluid py-3 px-2 px-md-4 app-viewport mode-mobile";
+      sekcjaOperacji.style.display = 'block';
+      ustawTryb(modul);
+    }
+  }
+
+  function zaladujDaneDashboardu() {
+    fetch(GOOGLE_SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ akcja: "pobierz_dane_dashboardu" }).toString()
+    })
+    .then(res => res.json())
+    .then(data => {
+      if(data.status === "SUCCESS") {
+        renderujMakietaDashboard(data.stany || [], data.braki || [], data.obszary || [], data.pracownicy || []);
+      } else { alert("Błąd pobierania raportów."); }
+    })
+    .catch(err => console.error("Błąd połączenia z BQ:", err));
+  }
+
+  function renderujMakietaDashboard(stany, braki, obszary, pracownicy) {
+    let sumaWartosci = 0;
+    let sumaSztuk = 0;
+    let sektoryStats = {};
+
+    stany.sort((a, b) => (parseFloat(b.wartosc_magazynowa) || 0) - (parseFloat(a.wartosc_magazynowa) || 0));
+
+    stany.forEach(s => {
+      let val = parseFloat(s.wartosc_magazynowa) || 0;
+      let il = parseInt(s.BIEZACY_STAN_MAGAZYNU) || 0;
+      let sek = (s.Sektor_ABCD || "C").toUpperCase().trim();
+      let kat = s.Kategoria || "Inne";
+
+      sumaWartosci += val;
+      sumaSztuk += il;
+
+      if (!sektoryStats[sek]) {
+        sektoryStats[sek] = { ilosc: 0, wartosc: 0, kategoria: kat };
       }
-    }
+      sektoryStats[sek].ilosc += 1;
+      sektoryStats[sek].wartosc += val;
+    });
 
-    // ==========================================
-    // 1. TŁUSTA ANALITYKA DASHBOARDU (FULL AGGREGATION)
-    // ==========================================
-    if (data.akcja === "pobierz_dane_dashboardu") {
-      try {
-        // A. Stany i wycena z v_pelny_stan_magazynu
-        var sqlStan = `
-          SELECT 
-            towar, Kod_enova, nazwa_towaru, BIEZACY_STAN_MAGAZYNU, 
-            Sektor_ABCD, Kategoria, cena_jednostkowa, wartosc_magazynowa 
-          FROM \`lubas-prod-erp-enovoapi-0.Lubas_WMS_2.v_pelny_stan_magazynu\`
-          LIMIT 2000
-        `;
-        var resStan = BigQuery.Jobs.query({ query: sqlStan, useLegacySql: false }, BQ_PROJECT_ID);
-        var listaStany = parsujWynikiBQ(resStan);
+    document.getElementById('kpi-wartosc').innerText = sumaWartosci.toLocaleString('pl-PL', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + " zł";
+    document.getElementById('kpi-sztuki').innerText = sumaSztuk.toLocaleString('pl-PL') + " szt.";
 
-        // B. Braki z v_aktualne_braki_magazynowe
-        var sqlBraki = `
-          SELECT 
-            towar, Kod_enova, nazwa_towaru, BIEZACY_STAN_MAGAZYNU, 
-            stan_minimalny, stan_maksymalny, ilosc_do_domowienia, wartosc_do_domowienia 
-          FROM \`lubas-prod-erp-enovoapi-0.Lubas_WMS_2.v_aktualne_braki_magazynowe\`
-          LIMIT 1000
-        `;
-        var resBraki = BigQuery.Jobs.query({ query: sqlBraki, useLegacySql: false }, BQ_PROJECT_ID);
-        var listaBraki = parsujWynikiBQ(resBraki);
-
-        // C. Analiza wydań wg Obszarów / Działów
-        var sqlObszary = `
-          SELECT 
-            do_lokalizacji AS obszar, 
-            SUM(ilosc) AS suma_sztuk, 
-            COUNT(1) AS ilosc_operacji
-          FROM \`lubas-prod-erp-enovoapi-0.Lubas_WMS_2.wms_dataset\`
-          WHERE UPPER(typ) LIKE '%WYDANIE%'
-          GROUP BY obszar
-          ORDER BY suma_sztuk DESC
-          LIMIT 15
-        `;
-        var resObszary = BigQuery.Jobs.query({ query: sqlObszary, useLegacySql: false }, BQ_PROJECT_ID);
-        var listaObszary = parsujWynikiBQ(resObszary);
-
-        // D. Top Pracownicy Pobierający
-        var sqlPracownicy = `
-          SELECT 
-            pracownik, 
-            SUM(ilosc) AS suma_pobrano, 
-            COUNT(1) AS ilosc_wydań
-          FROM \`lubas-prod-erp-enovoapi-0.Lubas_WMS_2.wms_dataset\`
-          WHERE UPPER(typ) LIKE '%WYDANIE%' AND pracownik IS NOT NULL AND TRIM(pracownik) != ''
-          GROUP BY pracownik
-          ORDER BY suma_pobrano DESC
-          LIMIT 10
-        `;
-        var resPracownicy = BigQuery.Jobs.query({ query: sqlPracownicy, useLegacySql: false }, BQ_PROJECT_ID);
-        var listaPracownicy = parsujWynikiBQ(resPracownicy);
-
-        // E. Wydajność Operatorów Magazynu
-        var sqlOperatorzy = `
-          SELECT 
-            operator, 
-            COUNT(1) AS ilosc_skanow, 
-            SUM(ilosc) AS suma_sztuk
-          FROM \`lubas-prod-erp-enovoapi-0.Lubas_WMS_2.wms_dataset\`
-          WHERE operator IS NOT NULL AND TRIM(operator) != ''
-          GROUP BY operator
-          ORDER BY ilosc_skanow DESC
-          LIMIT 10
-        `;
-        var resOperatorzy = BigQuery.Jobs.query({ query: sqlOperatorzy, useLegacySql: false }, BQ_PROJECT_ID);
-        var listaOperatorzy = parsujWynikiBQ(resOperatorzy);
-
-        return ContentService.createTextOutput(JSON.stringify({
-          status: "SUCCESS",
-          stany: listaStany,
-          braki: listaBraki,
-          obszary: listaObszary,
-          pracownicy: listaPracownicy,
-          operatorzy: listaOperatorzy
-        })).setMimeType(ContentService.MimeType.JSON);
-
-      } catch (errBQ) {
-        return ContentService.createTextOutput(JSON.stringify({
-          status: "ERROR",
-          message: "Błąd BigQuery: " + errBQ.toString()
-        })).setMimeType(ContentService.MimeType.JSON);
-      }
-    }
-
-    // --- 2. SPRAWDZANIE STANU TOWARU WE WSZYSTKICH LOKALIZACJACH ---
-    if (data.akcja === "sprawdz_lokalizacje_towaru") {
-      var kodTowaruSearch = (data.kod_towaru || "").trim().toUpperCase();
-      
-      var sqlNazwa = `
-        SELECT Nazwa_WMS 
-        FROM \`lubas-prod-erp-enovoapi-0.Lubas_WMS_2.Towary_kod_P\`
-        WHERE UPPER(TRIM(Kod_WMS)) = '${kodTowaruSearch}'
-        LIMIT 1
-      `;
-      var resNazwa = BigQuery.Jobs.query({ query: sqlNazwa, useLegacySql: false }, BQ_PROJECT_ID);
-      var nazwa = (resNazwa.rows && resNazwa.rows.length > 0 && resNazwa.rows[0].f[0].v !== null) ? String(resNazwa.rows[0].f[0].v).trim() : "Brak opisu w bazie";
-
-      var sqlPolki = `
-        WITH Ruchy AS (
-          SELECT do_lokalizacji AS polka, ilosc AS zmiana FROM \`lubas-prod-erp-enovoapi-0.Lubas_WMS_2.wms_dataset\` WHERE UPPER(TRIM(towar)) = '${kodTowaruSearch}'
-          UNION ALL
-          SELECT z_lokalizacji AS polka, -ilosc AS zmiana FROM \`lubas-prod-erp-enovoapi-0.Lubas_WMS_2.wms_dataset\` WHERE UPPER(TRIM(towar)) = '${kodTowaruSearch}'
-        )
-        SELECT polka, SUM(zmiana) AS stan
-        FROM Ruchy
-        WHERE UPPER(polka) NOT IN ('DOSTAWCA', 'PRODUKCJA')
-        GROUP BY polka
-        HAVING stan > 0
-        ORDER BY stan DESC
-      `;
-      var resPolki = BigQuery.Jobs.query({ query: sqlPolki, useLegacySql: false }, BQ_PROJECT_ID);
-      
-      var lokalizacje = [];
-      var sumaOgolna = 0;
-      
-      if (resPolki.rows && resPolki.rows.length > 0) {
-        for (var i = 0; i < resPolki.rows.length; i++) {
-          var p = String(resPolki.rows[i].f[0].v);
-          var s = parseInt(resPolki.rows[i].f[1].v) || 0;
-          lokalizacje.push({ polka: p, ilosc: s });
-          sumaOgolna += s;
-        }
-      }
-
-      return ContentService.createTextOutput(JSON.stringify({
-        status: "SUCCESS",
-        kod: kodTowaruSearch,
-        nazwa: nazwa,
-        suma: sumaOgolna,
-        lokalizacje: lokalizacje
-      })).setMimeType(ContentService.MimeType.JSON);
-    }
-
-    // --- 3. POBIERANIE NAZWY TOWARU DLA DUPLIKATU ---
-    if (data.akcja === "pobierz_nazwe_towaru") {
-      var kodTowaruSearch = (data.kod_towaru || "").trim().toUpperCase();
-      var sqlQuery = `
-        SELECT Nazwa_WMS 
-        FROM \`lubas-prod-erp-enovoapi-0.Lubas_WMS_2.Towary_kod_P\`
-        WHERE UPPER(TRIM(Kod_WMS)) = '${kodTowaruSearch}'
-        LIMIT 1
-      `;
-      var res = BigQuery.Jobs.query({ query: sqlQuery, useLegacySql: false }, BQ_PROJECT_ID);
-      var rows = res.rows;
-      var nazwa = "";
-      if (rows && rows.length > 0 && rows[0].f[0].v !== null) {
-        nazwa = String(rows[0].f[0].v).trim();
-      }
-      return ContentService.createTextOutput(JSON.stringify({ status: "SUCCESS", nazwa: nazwa }))
-                           .setMimeType(ContentService.MimeType.JSON);
-    }
-
-    // --- 4. OBSŁUGA KOLEJKI DRUKU ---
-    if (data.akcja === "dodaj_do_kolejki") {
-      var idZadania = dodajDoKolejkiDruku(data.zpl);
-      return ContentService.createTextOutput(JSON.stringify({ status: "SUCCESS", id: idZadania }))
-                           .setMimeType(ContentService.MimeType.JSON);
-    }
-
-    if (data.akcja === "pobierz_kolejke") {
-      var zplKod = pobierzINastepnyWydruk();
-      return ContentService.createTextOutput(JSON.stringify({ zpl: zplKod }))
-                           .setMimeType(ContentService.MimeType.JSON);
-    }
-
-    // --- 5. WERYFIKACJA UŻYTKOWNIKA ---
-    if (data.akcja === "weryfikuj_user") {
-      var emailWejsciowy = (data.email || "").trim().toLowerCase();
-      var hasloWejsciowe = (data.haslo || "").trim();
-
-      var sqlQueryUser = `
-        SELECT Email, \`has__o\`, Nazwisko_Imie 
-        FROM \`lubas-prod-erp-enovoapi-0.Lubas_WMS_2.wms_użytkownicy\`
-        WHERE LOWER(TRIM(Email)) = '${emailWejsciowy}'
-        LIMIT 1
-      `;
-
-      var resUser = BigQuery.Jobs.query({ query: sqlQueryUser, useLegacySql: false }, BQ_PROJECT_ID);
-      var rowsUser = resUser.rows;
-
-      if (rowsUser && rowsUser.length > 0) {
-        var dbHaslo = rowsUser[0].f[1].v ? String(rowsUser[0].f[1].v).trim() : "";
-        var dbNazwiskoImie = rowsUser[0].f[2].v ? String(rowsUser[0].f[2].v).trim() : "";
-
-        if (dbHaslo === hasloWejsciowe) {
-          return ContentService.createTextOutput("DOZWOLONY|" + dbNazwiskoImie).setMimeType(ContentService.MimeType.TEXT);
-        } else {
-          return ContentService.createTextOutput("ODRZUCONY|Błędne hasło.").setMimeType(ContentService.MimeType.TEXT);
-        }
-      } else {
-        return ContentService.createTextOutput("ODRZUCONY|Brak użytkownika w bazie.").setMimeType(ContentService.MimeType.TEXT);
-      }
-    }
+    // TOP 5 PROGRESS BARS
+    let containerTop = document.getElementById('container-top-bars');
+    containerTop.innerHTML = "";
     
-    // --- 6. OPERACJA ZAPISU RUCHU WMS ---
-    var towarRaw = (data.towar || "").trim().toUpperCase();
-    if (!/^[A-Z]\d{5}$/.test(towarRaw)) {
-      throw new Error("Nieprawidłowy kod towaru: '" + towarRaw + "'. Wymagana litera + 5 cyfr.");
+    let top5 = stany.slice(0, 5);
+    let maxVal = top5.length > 0 ? (parseFloat(top5[0].wartosc_magazynowa) || 1) : 1;
+
+    top5.forEach(item => {
+      let v = parseFloat(item.wartosc_magazynowa) || 0;
+      let pct = Math.min(Math.round((v / maxVal) * 100), 100);
+      let nazwaFull = item.nazwa_towaru || item.Kod_enova || item.towar;
+
+      let htmlRow = `
+        <div class="bar-row">
+          <div class="bar-meta">
+            <span class="bar-name"><b>${item.towar}</b> - ${nazwaFull}</span>
+            <span class="bar-val">${v.toLocaleString('pl-PL', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} zł</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width: ${pct}%;"></div>
+          </div>
+        </div>
+      `;
+      containerTop.innerHTML += htmlRow;
+    });
+
+    // OBSZARY TABLE
+    let tbodyObszary = document.getElementById('tbody-obszary');
+    tbodyObszary.innerHTML = "";
+    obszary.forEach(o => {
+      let tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="fw-bold text-info">${o.obszar || "INNY / NIEPRZYPISANY"}</td>
+        <td class="fw-bold">${parseInt(o.suma_sztuk || 0).toLocaleString('pl-PL')} szt.</td>
+        <td class="text-secondary">${o.ilosc_operacji || 0} wydań</td>
+      `;
+      tbodyObszary.appendChild(tr);
+    });
+
+    // PRACOWNICY TABLE
+    let tbodyPracownicy = document.getElementById('tbody-pracownicy');
+    tbodyPracownicy.innerHTML = "";
+    pracownicy.forEach(p => {
+      let tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="fw-bold text-success">${p.pracownik}</td>
+        <td class="fw-bold">${parseInt(p.suma_pobrano || 0).toLocaleString('pl-PL')} szt.</td>
+        <td class="text-secondary">${p.ilosc_wydań || 0} operacji</td>
+      `;
+      tbodyPracownicy.appendChild(tr);
+    });
+
+    // SEKTORY ABCD TABLE
+    let tbodySektory = document.getElementById('tbody-sektory');
+    tbodySektory.innerHTML = "";
+
+    let klucze = Object.keys(sektoryStats).sort();
+    klucze.forEach(k => {
+      let st = sektoryStats[k];
+      let udzial = sumaWartosci > 0 ? ((st.wartosc / sumaWartosci) * 100).toFixed(1) : "0.0";
+      let badgeClass = k === "A" ? "bg-sec-a" : (k === "B" ? "bg-sec-b" : "bg-sec-c");
+
+      let tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><span class="badge-sec ${badgeClass}">SEKTOR ${k}</span></td>
+        <td class="small">${st.kategoria}</td>
+        <td>${st.ilosc}</td>
+        <td class="fw-bold">${st.wartosc.toLocaleString('pl-PL', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} zł</td>
+        <td class="fw-bold text-info">${udzial}%</td>
+      `;
+      tbodySektory.appendChild(tr);
+    });
+
+    // BRAKI MAGAZYNOWE TABLE & ALARMY
+    let sumaBrakiKoszt = 0;
+    let tbodyBraki = document.getElementById('tbody-braki');
+    tbodyBraki.innerHTML = "";
+
+    braki.forEach(b => {
+      let koszt = parseFloat(b.wartosc_do_domowienia) || 0;
+      let ileBrak = parseInt(b.ilosc_do_domowienia) || 0;
+      let stMin = b.stan_minimalny || b.Stany_minimalne || "--";
+      let stMax = b.stan_maksymalny || b.Stan_maksymalny || "--";
+      sumaBrakiKoszt += koszt;
+
+      let tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="fw-bold text-danger">${b.towar || "---"}</td>
+        <td class="small">${b.nazwa_towaru || b.Kod_enova || "---"}</td>
+        <td class="text-danger fw-bold" style="background: rgba(239, 68, 68, 0.15); border-radius: 6px;">${b.BIEZACY_STAN_MAGAZYNU || 0}</td>
+        <td class="text-muted small">${stMin} / ${stMax}</td>
+        <td class="fw-bold text-white">${ileBrak}</td>
+        <td class="fw-bold text-warning">${koszt.toLocaleString('pl-PL', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} zł</td>
+      `;
+      tbodyBraki.appendChild(tr);
+    });
+
+    document.getElementById('kpi-braki-ilosc').innerText = braki.length + " pozycji";
+    document.getElementById('kpi-braki-koszt').innerText = sumaBrakiKoszt.toLocaleString('pl-PL', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + " zł";
+
+    // AKTYWACJA CZERWONEGO ALARMU DLA BRAKÓW
+    let kpiBrakiCard = document.querySelector('.id-kpi-braki-card');
+    if (braki.length > 0) {
+      kpiBrakiCard.classList.add('kpi-card-alert');
+    } else {
+      kpiBrakiCard.classList.remove('kpi-card-alert');
     }
-    var towar = towarRaw;
+  }
 
-    var typOperacji = (data.typ || "PRZYJĘCIE").toUpperCase();
-    var zLokalizacji = (data.Z_Lokalizacji || "").trim();
-    var doLokalizacji = (data.Do_Lokalizacji || "").trim();
-    var lokalizacjaRegex = /^\d{2}-\d{2}-\d{2}-[A-Za-z]-\d{2}$/;
+  function sprawdzLokalizacjeTowaru() {
+    let kod = document.getElementById('search-towar-kod').value.trim().toUpperCase();
+    if(!kod) { alert("Wpisz lub zeskanuj kod towaru!"); return; }
 
-    if (typOperacji !== "PRZYJĘCIE" && !lokalizacjaRegex.test(zLokalizacji)) {
-      throw new Error("Półka źródłowa musi mieć format: 00-00-00-A-00.");
+    const btn = document.getElementById('btn-szukaj-submit');
+    const boxWyniki = document.getElementById('szukaj-wyniki');
+    const listContainer = document.getElementById('res-lista-polki');
+    
+    btn.disabled = true;
+    btn.innerText = "Szukam w BigQuery...";
+
+    fetch(GOOGLE_SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ akcja: "sprawdz_lokalizacje_towaru", kod_towaru: kod }).toString()
+    })
+    .then(res => res.json())
+    .then(data => {
+      btn.disabled = false;
+      btn.innerText = "Sprawdź gdzie leży towar";
+
+      if(data.status === "SUCCESS") {
+        boxWyniki.classList.remove('d-none');
+        document.getElementById('res-kod-nazwa').innerText = data.kod + " - " + data.nazwa;
+        document.getElementById('res-suma').innerText = data.suma + " szt.";
+
+        listContainer.innerHTML = "";
+
+        if(data.lokalizacje && data.lokalizacje.length > 0) {
+          data.lokalizacje.forEach(item => {
+            let el = document.createElement('div');
+            el.className = "karta-lokalizacji";
+            el.innerHTML = `<span class="fw-bold text-info">📍 ${item.polka}</span><span class="badge bg-primary fs-6">${item.ilosc} szt.</span>`;
+            listContainer.appendChild(el);
+          });
+        } else {
+          listContainer.innerHTML = `<div class="alert alert-warning text-center fw-bold mt-2">⚠️ Brak towaru na fizycznych półkach magazynu.</div>`;
+        }
+      } else { alert("Błąd pobierania danych."); }
+    })
+    .catch(err => {
+      btn.disabled = false;
+      btn.innerText = "Sprawdź gdzie leży towar";
+      alert("Błąd połączenia z bazą.");
+    });
+  }
+
+  function zapiszStanAgenta(wlaczony) {
+    localStorage.setItem('wms_agent_usb', wlaczony);
+    const badge = document.getElementById('agent-status-badge');
+    if (wlaczony) {
+      if(badge) { badge.innerText = "Status: 🟢 NASŁUCHIWANIE AKTYWNE (Drukuję z chmury)"; badge.className = "small mt-2 fw-bold text-success"; }
+      uruchomNasluchiwanieKolejki();
+    } else {
+      if(badge) { badge.innerText = "Status: ⚪ Nasłuchiwanie wyłączone"; badge.className = "small mt-2 fw-bold text-secondary"; }
+      if (printLoopInterval) clearInterval(printLoopInterval);
+    }
+  }
+
+  function uruchomNasluchiwanieKolejki() {
+    if (printLoopInterval) clearInterval(printLoopInterval);
+    printLoopInterval = setInterval(() => {
+      fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ akcja: "pobierz_kolejke" }).toString()
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.zpl && data.zpl.length > 5) {
+          wyslijDoBezposredniejZebry(data.zpl);
+        }
+      })
+      .catch(e => console.warn("Błąd kolejki:", e));
+    }, 1200);
+  }
+
+  function przelaczPodpanelDruku(typ) {
+    document.getElementById('sub-panel-user').style.display = (typ === 'user') ? 'block' : 'none';
+    document.getElementById('sub-panel-duplikat').style.display = (typ === 'duplikat') ? 'block' : 'none';
+    schowajAparat();
+  }
+
+  function wyslijDoBezposredniejZebry(zplKod) {
+    if (typeof ZebraBrowserPrint !== 'undefined') {
+      ZebraBrowserPrint.getLocalDevices(function(lista) {
+        let urzadzenie = null;
+        if (lista && lista.printer && lista.printer.length > 0) urzadzenie = lista.printer[0];
+        if (urzadzenie) {
+          ZebraBrowserPrint.sendThroughPrintService(zplKod, urzadzenie, function() {}, function(e) {});
+        } else {
+          ZebraBrowserPrint.getDefaultDevice("printer", function(domyslne) {
+            if(domyslne && domyslne.name) {
+              ZebraBrowserPrint.sendThroughPrintService(zplKod, domyslne, function() {}, function(e) {});
+            }
+          }, function(err) {});
+        }
+      }, function(err) {});
+    }
+  }
+
+  function przetworzIZlecdruk(zpl) {
+    const jestStacjaUsb = localStorage.getItem('wms_agent_usb') === 'true';
+
+    if (jestStacjaUsb) {
+      wyslijDoBezposredniejZebry(zpl);
+      alert("Wydrukowano pomyślnie.");
+    } else {
+      fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ akcja: "dodaj_do_kolejki", zpl: zpl }).toString()
+      })
+      .then(res => res.json())
+      .then(data => {
+        if(data.status === "SUCCESS") {
+          alert("🚀 Wysłano zlecenie do drukarki Zebra!");
+        } else { alert("Błąd wysyłania do kolejki."); }
+      })
+      .catch(err => alert("Błąd połączenia z chmurą."));
+    }
+  }
+
+  function drukujEtykietePracownika() {
+    let dane = document.getElementById('p-user-nazwa').value.trim();
+    if(!dane) { alert("Wpisz dane pracownika!"); return; }
+    let pelneDane = dane.replace(/\s+/g, ' ');
+    
+    let zpl = "^XA^CI28" +
+              "^FO20,40^BQN,2,4^FDQA," + pelneDane + "^FS" + 
+              "^FO145,40^A0N,22,20^FDPRACOWNIK:^FS" +
+              "^FO145,70^A0N,30,26^FB190,2,4,L^FD" + pelneDane + "^FS" +
+              "^FO340,55^A0N,100,80^FDP^FS" + 
+              "^XZ";
+
+    przetworzIZlecdruk(zpl);
+    document.getElementById('p-user-nazwa').value = "";
+  }
+
+  function drukujDuplikatEtykiety() {
+    let kod = document.getElementById('p-duplikat-kod').value.trim().toUpperCase();
+    if(!kod) { alert("Skanuj lub wpisz kod!"); return; }
+
+    let polkaRegex = /^\d{2}-\d{2}-\d{2}-[A-Za-z]-\d{2}$/;
+    let towarRegex = /^[A-Za-z]\d{5}$/; 
+
+    if (polkaRegex.test(kod)) {
+      let czesci = kod.split('-');
+      let m = czesci[0] || "--";
+      let r = czesci[1] || "--";
+      let reg = czesci[2] || "--";
+      let p = czesci[3] || "--";
+      let poz = czesci[4] || "--";
+
+      let zpl = "^XA^CI28" +
+                "^FO20,60^BQN,2,4^FDQA," + kod + "^FS" +
+                "^FO150,45^A0N,32,30^FD" + kod + "^FS" +
+                "^FO150,85^GB160,1,1^FS" +
+                "^FO150,100^A0N,24,22^FDMAG: " + m + " RZAD: " + r + "^FS" +
+                "^FO150,130^A0N,24,22^FDREGAL: " + reg + " POZ: " + p + "^FS" +
+                "^FO150,160^A0N,24,22^FDPOZYCJA: " + poz + "^FS" +
+                "^FO330,120^A0N,110,90^FDL^FS" +
+                "^XZ";
+      przetworzIZlecdruk(zpl);
+      document.getElementById('p-duplikat-kod').value = "";
+
+    } else if (towarRegex.test(kod)) {
+      const btn = document.getElementById('btn-duplikat-submit');
+      btn.disabled = true;
+      btn.innerText = "Pobieranie nazwy z BQ...";
+
+      fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ akcja: "pobierz_nazwe_towaru", kod_towaru: kod }).toString()
+      })
+      .then(res => res.json())
+      .then(data => {
+        btn.disabled = false;
+        btn.innerText = "Drukuj Duplikat Etykiety";
+
+        let pobranaNazwa = (data && data.nazwa && data.nazwa.length > 0) ? data.nazwa : kod;
+        let czystaNazwa = pobranaNazwa.replace(/\s+/g, ' '); 
+        let skroconaNazwa = czystaNazwa.length > 14 ? czystaNazwa.substring(0, 11) + "..." : czystaNazwa;
+
+        let zpl = "^XA^CI28" +
+                  "^FO20,60^BQN,2,4^FDQA," + kod + "^FS" + 
+                  "^FO150,50^A0N,18,16^FDKOD TOWARU:^FS" +
+                  "^FO150,75^A0N,28,26^FD" + kod + "^FS" +
+                  "^FO150,115^A0N,18,16^FDNAZWA:^FS" +
+                  "^FO150,140^A0N,26,24^FB240,3,,L^FD" + skroconaNazwa + "^FS" +
+                  "^FO330,30^A0N,110,90^FDT^FS" + 
+                  "^XZ";
+
+        przetworzIZlecdruk(zpl);
+        document.getElementById('p-duplikat-kod').value = "";
+      })
+      .catch(err => {
+        btn.disabled = false;
+        btn.innerText = "Drukuj Duplikat Etykiety";
+        let zpl = "^XA^CI28^FO20,60^BQN,2,4^FDQA," + kod + "^FS^FO150,50^A0N,18,16^FDKOD TOWARU:^FS^FO150,75^A0N,28,26^FD" + kod + "^FS^FO330,30^A0N,110,90^FDT^FS^XZ";
+        przetworzIZlecdruk(zpl);
+        document.getElementById('p-duplikat-kod').value = "";
+      });
+
+    } else {
+      let pelneDane = kod.replace(/\s+/g, ' ');
+      let zpl = "^XA^CI28" +
+                "^FO20,40^BQN,2,4^FDQA," + pelneDane + "^FS" + 
+                "^FO145,40^A0N,22,20^FDIDENTYFIKATOR:^FS" +
+                "^FO145,70^A0N,30,26^FB190,2,4,L^FD" + pelneDane + "^FS" +
+                "^FO340,55^A0N,100,80^FDP^FS" + 
+                "^XZ";
+      przetworzIZlecdruk(zpl);
+      document.getElementById('p-duplikat-kod').value = "";
+    }
+  }
+
+  function przelaczWidokHasla() {
+    const passInput = document.getElementById('auth-password');
+    passInput.type = passInput.type === "password" ? "text" : "password";
+  }
+
+  let torchState = false;
+
+  async function przelaczLatarke() {
+    let track = null;
+    if (activeStream && activeStream.getVideoTracks().length > 0) {
+      track = activeStream.getVideoTracks()[0];
+    } else if (html5Qrcode && html5Qrcode.isScanning) {
+      try {
+        const capabilities = html5Qrcode.getRunningTrackCapabilities();
+        if (capabilities && capabilities.torch) {
+          torchState = !torchState;
+          await html5Qrcode.applyVideoConstraints({ advanced: [{ torch: torchState }] });
+          zaktualizujPrzyciskLatarki(torchState);
+          return;
+        }
+      } catch (e) {}
     }
 
-    if (typOperacji === "PRZYJĘCIE" || typOperacji === "PRZESUNIĘCIE") {
-      if (!lokalizacjaRegex.test(doLokalizacji)) {
-        throw new Error("Lokalizacja docelowa musi mieć format: 00-00-00-A-00.");
+    if (!track) { alert("Aparat nie jest aktywny."); return; }
+    try {
+      torchState = !torchState;
+      await track.applyConstraints({ advanced: [{ torch: torchState }] });
+      zaktualizujPrzyciskLatarki(torchState);
+    } catch (err) {}
+  }
+
+  function zaktualizujPrzyciskLatarki(stan) {
+    const btn = document.getElementById('btn-torch');
+    if (btn) {
+      btn.innerText = stan ? "🔦 Wyłącz latarkę" : "🔦 Włącz latarkę";
+      btn.className = stan ? "btn btn-outline-warning w-100 mb-3 fw-bold text-white" : "btn btn-warning w-100 mb-3 fw-bold";
+    }
+  }
+  
+  async function uruchomNatywnySkaner(containerId, onSuccessCallback) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = "";
+    const video = document.createElement('video');
+    video.setAttribute('playsinline', 'true');
+    container.appendChild(video);
+    activeVideoElement = video;
+
+    try {
+      activeStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+      video.srcObject = activeStream;
+      await video.play();
+
+      const track = activeStream.getVideoTracks()[0];
+      if (track && track.getCapabilities && track.getCapabilities().torch) {
+        document.getElementById('btn-torch').classList.remove('d-none');
       }
-    } else if (typOperacji === "WYDANIE REGAŁ" || typOperacji === "WYDANIE (REGAŁ)") {
-      if (!doLokalizacji || doLokalizacji.length < 2) {
-        throw new Error("Wymagane podanie nazwy regału/strefy docelowej.");
-      }
+
+      const barcodeDetector = new BarcodeDetector({ formats: ['qr_code'] });
+
+      scanInterval = setInterval(async () => {
+        if (blokadaSkanera || !video.videoWidth) return;
+        try {
+          const barcodes = await barcodeDetector.detect(video);
+          if (barcodes.length > 0) { onSuccessCallback(barcodes[0].rawValue); }
+        } catch (e) {}
+      }, 100);
+
+    } catch (err) {
+      uruchomFallbackQrcode(containerId, onSuccessCallback);
     }
+  }
 
-    var pracownikSurowy = (data.pracownik || data.operator || "").trim();
-    if (pracownikSurowy.indexOf("@") !== -1) {
-      pracownikSurowy = pracownikSurowy.split("@")[0].replace(/\./g, " ");
+  function zatrzymajNatywnySkaner() {
+    if (scanInterval) { clearInterval(scanInterval); scanInterval = null; }
+    if (activeStream) {
+      activeStream.getTracks().forEach(track => track.stop());
+      activeStream = null;
     }
-    pracownikSurowy = pracownikSurowy.replace(/[^a-zA-Zà-žÀ-Ž\s-]/g, "").replace(/\s+/g, " ").trim();
-    var czesciImienia = pracownikSurowy.split(" ");
-    if (czesciImienia.length < 2 || czesciImienia[0].length < 2 || czesciImienia[1].length < 2) {
-      throw new Error("Nieprawidłowe dane pracownika: Wymagane pełne imię i nazwisko.");
+    if (activeVideoElement) {
+      activeVideoElement.remove();
+      activeVideoElement = null;
     }
-    var pracownik = czesciImienia.map(function(slowo) {
-      return slowo.charAt(0).toUpperCase() + slowo.slice(1).toLowerCase();
-    }).join(" ");
+    torchState = false;
+    const btnTorch = document.getElementById('btn-torch');
+    if (btnTorch) {
+      btnTorch.innerText = "🔦 Włącz latarkę";
+      btnTorch.className = "btn btn-warning w-100 mb-3 fw-bold d-none";
+    }
+  }
 
-    var teraz = new Date(new Date().getTime() + (2 * 60 * 60 * 1000));
-    var isoZlokalizowany = teraz.toISOString().replace('T', ' ').substring(0, 19);
+  function uruchomFallbackQrcode(containerId, onSuccessCallback) {
+    document.getElementById('btn-torch').classList.remove('d-none');
+    if (containerId === 'reader') {
+      html5Qrcode = new Html5Qrcode("reader");
+      html5Qrcode.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 }, (text) => onSuccessCallback(text), () => {});
+    } else {
+      loginQrcode = new Html5Qrcode("login-reader");
+      loginQrcode.start({ facingMode: "environment" }, { fps: 20, qrbox: 220 }, (text) => onSuccessCallback(text), () => {});
+    }
+  }
 
-    var idRuchu = "RUCH-" + Utilities.formatDate(teraz, "GMT", "yyyyMMdd-HHmmss");
-    var ilosc = parseInt(data.ilosc) || 1;
-    var operator = data.operator || "";
+  function odpalSkanerLogowania() {
+    const box = document.getElementById('login-reader');
+    box.style.display = 'block';
 
-    var wiersz = {
-      insertId: idRuchu,
-      json: {
-        id_ruchu: String(idRuchu),
-        data_czas: isoZlokalizowany,
-        operator: String(operator),
-        typ: String(typOperacji).toUpperCase(),
-        towar: String(towar),
-        ilosc: ilosc,
-        z_lokalizacji: String(zLokalizacji).toUpperCase(),
-        do_lokalizacji: String(doLokalizacji).toUpperCase(),
-        pracownik: String(pracownik)
-      }
+    const onLoginSuccess = (decodedText) => {
+      document.getElementById('auth-email').value = decodedText.trim().toLowerCase();
+      schowajAparat();
+      box.style.display = 'none';
+      document.getElementById('auth-password').focus();
     };
 
-    var polkaDoArkusza = (wiersz.json.typ === "PRZYJĘCIE") ? wiersz.json.do_lokalizacji : wiersz.json.z_lokalizacji;
-    if (wiersz.json.typ !== "PRZYJĘCIE") {
-      var aktualnyStan = pobierzAktualnyStan(wiersz.json.towar, polkaDoArkusza);
-      if (aktualnyStan < ilosc) {
-        throw new Error("Brak wystarczającej ilości towaru na półce " + polkaDoArkusza + ". Dostępne: " + aktualnyStan);
-      }
-    }
+    if (hasNativeBarcodeDetector) { uruchomNatywnySkaner('login-reader', onLoginSuccess); } 
+    else { uruchomFallbackQrcode('login-reader', onLoginSuccess); }
+  }
 
-    var dataLoad = { rows: [wiersz] };
-    var odpowiedzBQ = BigQuery.Tabledata.insertAll(dataLoad, BQ_PROJECT_ID, BQ_DATASET_ID, BQ_TABLE_ID);
+  function autoryzujZBazą() {
+    const email = document.getElementById('auth-email').value.trim().toLowerCase();
+    const haslo = document.getElementById('auth-password').value.trim();
+    const btn = document.getElementById('btn-login-submit');
     
-    if (odpowiedzBQ.insertErrors && odpowiedzBQ.insertErrors.length > 0) {
-      throw new Error("BigQuery insert error: " + JSON.stringify(odpowiedzBQ.insertErrors));
-    }
-
-    aktualizujArkuszStanow(wiersz.json.towar, polkaDoArkusza, wiersz.json.typ, wiersz.json.ilosc);
+    if (email.length < 3 || haslo.length === 0) { alert("Wpisz e-mail oraz hasło."); return; }
     
-    return ContentService.createTextOutput(JSON.stringify({ status: "SUCCESS", id_ruchu: idRuchu }))
-                         .setMimeType(ContentService.MimeType.JSON);
-                         
-  } catch (error) {
-    zapiszLogDoArkusza("ERROR", "Wyjątek w doPost", error.toString());
-    return ContentService.createTextOutput(JSON.stringify({ status: "ERROR", message: error.toString() }))
-                         .setMimeType(ContentService.MimeType.JSON);
-  }
-}
+    btn.disabled = true;
+    btn.innerText = "Weryfikacja danych...";
 
-// Funkcja pomocnicza do czytelnej konwersji wyników SQL na obiekty JSON
-function parsujWynikiBQ(queryResult) {
-  var wynik = [];
-  if (queryResult && queryResult.rows) {
-    var fields = queryResult.schema.fields;
-    for (var i = 0; i < queryResult.rows.length; i++) {
-      var obj = {};
-      for (var j = 0; j < queryResult.rows[i].f.length; j++) {
-        obj[fields[j].name] = queryResult.rows[i].f[j].v !== null ? queryResult.rows[i].f[j].v : "";
+    const paczkaDanych = { akcja: "weryfikuj_user", email: email, haslo: haslo };
+
+    fetch(GOOGLE_SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams(paczkaDanych).toString()
+    })
+    .then(res => res.text())
+    .then(odpowiedz => {
+      btn.disabled = false;
+      btn.innerText = "Zaloguj do systemu";
+      
+      if (odpowiedz.startsWith("DOZWOLONY")) {
+        const nazwaPracownika = odpowiedz.split('|')[1];
+        localStorage.setItem('wms_user_email', email);
+        localStorage.setItem('wms_user_name', nazwaPracownika);
+        zalogowanyUzytkownik = email;
+        
+        document.getElementById('user-badge').innerText = nazwaPracownika;
+        document.getElementById('login-overlay').style.display = 'none';
+        
+        schowajAparat();
+        setTimeout(() => { aktywujSkanowanie('kod-towaru'); }, 500);
+      } else { alert("❌ Błąd: Niepoprawny e-mail lub hasło!"); }
+    })
+    .catch(err => { alert("Błąd połączenia z serwerem weryfikacji."); btn.disabled = false; btn.innerText = "Zaloguj do systemu"; });
+  }
+
+  function wylogujOperatora() {
+    localStorage.removeItem('wms_user_email');
+    localStorage.removeItem('wms_user_name');
+    zalogowanyUzytkownik = "";
+    document.getElementById('login-overlay').style.display = 'flex';
+    document.getElementById('auth-email').value = "";
+    document.getElementById('auth-password').value = "";
+    schowajAparat();
+  }
+
+  function wyczyscPole(id) { document.getElementById(id).value = ""; document.getElementById(id).focus(); }
+
+  function aktywujSkanowanie(poleId) {
+    document.getElementById('aktywne-pole').value = poleId;
+    document.getElementById('kod-towaru').classList.remove('skan-aktywny');
+    document.getElementById('polka').classList.remove('skan-aktywny');
+    document.getElementById('polka-do').classList.remove('skan-aktywny');
+    document.getElementById('pracownik').classList.remove('skan-aktywny');
+    
+    const inputDuplikat = document.getElementById('p-duplikat-kod');
+    if(inputDuplikat) inputDuplikat.classList.remove('skan-aktywny');
+
+    const inputSearch = document.getElementById('search-towar-kod');
+    if(inputSearch) inputSearch.classList.remove('skan-aktywny');
+
+    const el = document.getElementById(poleId);
+    if(el) el.classList.add('skan-aktywny');
+    
+    document.getElementById('instrukcja-skanu').classList.remove('d-none');
+    document.getElementById('reader').style.display = 'block';
+
+    let trybOperacji = document.getElementById('operacja').value;
+
+    if(poleId === 'kod-towaru') {
+      document.getElementById('instrukcja-skanu').innerText = "📷 KROK 1: Zeskanuj kod QR PRODUKTU";
+      document.getElementById('instrukcja-skanu').className = "alert alert-warning text-center fw-bold small text-dark";
+    } else if(poleId === 'polka') {
+      document.getElementById('instrukcja-skanu').innerText = "📍 KROK 2: Zeskanuj kod QR PÓŁKI (ŹRÓDŁOWA)";
+      document.getElementById('instrukcja-skanu').className = "alert alert-info text-center fw-bold small text-dark";
+    } else if(poleId === 'polka-do') {
+      document.getElementById('instrukcja-skanu').innerText = "📍 KROK 2b: Zeskanuj kod QR PÓŁKI DOCELOWEJ";
+      document.getElementById('instrukcja-skanu').className = "alert alert-primary text-center fw-bold small text-white bg-primary";
+    } else if(poleId === 'p-duplikat-kod') {
+      document.getElementById('instrukcja-skanu').innerText = "📋 Zeskanuj dowolną etykietę do duplikatu";
+      document.getElementById('instrukcja-skanu').className = "alert alert-warning text-center fw-bold small text-dark";
+    } else if(poleId === 'search-towar-kod') {
+      document.getElementById('instrukcja-skanu').innerText = "🔍 Zeskanuj kod QR towaru do sprawdzania stref";
+      document.getElementById('instrukcja-skanu').className = "alert alert-warning text-center fw-bold small text-dark";
+    } else {
+      document.getElementById('instrukcja-skanu').innerText = "🪪 KROK 3: Zeskanuj kod QR PRACOWNIKA";
+      document.getElementById('instrukcja-skanu').className = "alert alert-danger text-center fw-bold small text-white bg-danger";
+    }
+
+    const onScanSuccess = (decodedText) => {
+      if (blokadaSkanera) return;
+      blokadaSkanera = true;
+      let celInput = document.getElementById('aktywne-pole').value;
+      const inputTarget = document.getElementById(celInput);
+      if(inputTarget) {
+        inputTarget.value = decodedText;
+        inputTarget.classList.remove('skan-aktywny');
       }
-      wynik.push(obj);
-    }
+      
+      wstrzymajAparat().then(() => {
+        setTimeout(() => { blokadaSkanera = false; }, 1500); 
+        let tryb = document.getElementById('operacja').value;
+        
+        if (celInput === 'p-duplikat-kod') {
+          schowajAparat();
+        } else if (celInput === 'search-towar-kod') {
+          schowajAparat();
+          sprawdzLokalizacjeTowaru();
+        } else if (celInput === 'kod-towaru') {
+          aktywujSkanowanie('polka');
+        } else if (celInput === 'polka' && tryb === 'Przesunięcie') {
+          aktywujSkanowanie('polka-do');
+        } else if (celInput === 'polka' && tryb === 'Wydanie Regał') {
+          schowajAparat();
+          document.getElementById('strefa-select').focus();
+        } else if (celInput === 'polka' && tryb === 'Wydanie Osoba') {
+          aktywujSkanowanie('pracownik');
+        } else {
+          schowajAparat();
+          document.getElementById('ilosc').focus();
+          document.getElementById('ilosc').select();
+        }
+      });
+    };
+
+    if (hasNativeBarcodeDetector) { uruchomNatywnySkaner('reader', onScanSuccess); } 
+    else { uruchomFallbackQrcode('reader', onScanSuccess); }
   }
-  return wynik;
-}
 
-function dodajDoKolejkiDruku(zplKod) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName("KOLEJKA_DRUKU") || ss.insertSheet("KOLEJKA_DRUKU");
-  if (sheet.getLastRow() === 0) {
-    sheet.appendRow(["ID_ZADANIA", "DATA_CZAS", "ZPL", "STATUS"]);
+  function wstrzymajAparat() { 
+    zatrzymajNatywnySkaner();
+    if (html5Qrcode && html5Qrcode.isScanning) { return html5Qrcode.stop(); } 
+    if (loginQrcode && loginQrcode.isScanning) { return loginQrcode.stop(); }
+    return Promise.resolve(); 
   }
-  var id = "PRN-" + Utilities.formatDate(new Date(), "GMT+2", "yyyyMMdd-HHmmss-SSS");
-  var dataCzas = Utilities.formatDate(new Date(), "GMT+2", "yyyy-MM-dd HH:mm:ss");
-  sheet.appendRow([id, dataCzas, zplKod, "OCZEKUJE"]);
-  return id;
-}
 
-function pobierzINastepnyWydruk() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName("KOLEJKA_DRUKU");
-  if (!sheet) return "";
-  var data = sheet.getDataRange().getValues();
-  for (var i = 1; i < data.length; i++) {
-    if (data[i][3] === "OCZEKUJE") {
-      var zplKod = data[i][2];
-      sheet.deleteRow(i + 1);
-      return zplKod;
-    }
+  function schowajAparat() { 
+    wstrzymajAparat().then(() => { 
+      document.getElementById('reader').style.display = 'none'; 
+      document.getElementById('login-reader').style.display = 'none'; 
+      document.getElementById('instrukcja-skanu').classList.add('d-none'); 
+      document.getElementById('kod-towaru').classList.remove('skan-aktywny'); 
+      document.getElementById('polka').classList.remove('skan-aktywny'); 
+      document.getElementById('polka-do').classList.remove('skan-aktywny'); 
+      document.getElementById('pracownik').classList.remove('skan-aktywny'); 
+      
+      const inputDuplikat = document.getElementById('p-duplikat-kod');
+      if(inputDuplikat) inputDuplikat.classList.remove('skan-aktywny');
+
+      const inputSearch = document.getElementById('search-towar-kod');
+      if(inputSearch) inputSearch.classList.remove('skan-aktywny');
+    }); 
   }
-  return "";
-}
 
-function pobierzAktualnyStan(kod, polka) {
-  try {
-    var sqlQuery = `
-      WITH RuchyNaPolce AS (
-        SELECT ilosc AS zmiana FROM \`lubas-prod-erp-enovoapi-0.Lubas_WMS_2.wms_dataset\`
-        WHERE UPPER(TRIM(towar)) = '${kod}' AND UPPER(TRIM(do_lokalizacji)) = '${polka}'
-        UNION ALL
-        SELECT -ilosc AS zmiana FROM \`lubas-prod-erp-enovoapi-0.Lubas_WMS_2.wms_dataset\`
-        WHERE UPPER(TRIM(towar)) = '${kod}' AND UPPER(TRIM(z_lokalizacji)) = '${polka}'
-      )
-      SELECT COALESCE(SUM(zmiana), 0) AS stan FROM RuchyNaPolce
-    `;
-    var res = BigQuery.Jobs.query({ query: sqlQuery, useLegacySql: false }, BQ_PROJECT_ID);
-    if (res.rows && res.rows.length > 0 && res.rows[0].f[0].v !== null) {
-      return parseInt(res.rows[0].f[0].v) || 0;
+  function ustawTryb(tryb) {
+    document.getElementById('operacja').value = tryb;
+    const sekcjaPracownik = document.getElementById('sekcja-pracownik');
+    const sekcjaPolkaDo = document.getElementById('sekcja-polka-do');
+    const sekcjaListaStref = document.getElementById('sekcja-lista-stref');
+    const labelPolkaZ = document.getElementById('label-polka-z');
+    const inputPolkaDo = document.getElementById('polka-do');
+    const inputPracownik = document.getElementById('pracownik');
+    const selectStrefa = document.getElementById('strefa-select');
+
+    if (tryb === 'Przyjęcie') {
+      sekcjaPracownik.style.display = 'none';
+      sekcjaPolkaDo.style.display = 'none';
+      sekcjaListaStref.style.display = 'none';
+      labelPolkaZ.innerText = "2. ADRES PÓŁKI (DOCELOWA):";
+      inputPracownik.removeAttribute('required');
+      inputPolkaDo.removeAttribute('required');
+      selectStrefa.removeAttribute('required');
+
+    } else if (tryb === 'Przesunięcie') {
+      sekcjaPracownik.style.display = 'none';
+      sekcjaPolkaDo.style.display = 'block';
+      sekcjaListaStref.style.display = 'none';
+      labelPolkaZ.innerText = "2a. PÓŁKA ŹRÓDŁOWA (Z):";
+      inputPracownik.removeAttribute('required');
+      selectStrefa.removeAttribute('required');
+      inputPolkaDo.setAttribute('required', 'true');
+
+    } else if (tryb === 'Wydanie Regał') {
+      sekcjaPracownik.style.display = 'none';
+      sekcjaPolkaDo.style.display = 'none';
+      sekcjaListaStref.style.display = 'block';
+      labelPolkaZ.innerText = "2a. PÓŁKA ŹRÓDŁOWA (Z):";
+      inputPracownik.removeAttribute('required');
+      inputPolkaDo.removeAttribute('required');
+      selectStrefa.setAttribute('required', 'true');
+
+    } else { // Wydanie Osoba
+      sekcjaPracownik.style.display = 'block';
+      sekcjaPolkaDo.style.display = 'none';
+      sekcjaListaStref.style.display = 'none';
+      labelPolkaZ.innerText = "2. ADRES PÓŁKI (ŹRÓDŁOWA):";
+      inputPracownik.setAttribute('required', 'true');
+      inputPolkaDo.removeAttribute('required');
+      selectStrefa.removeAttribute('required');
     }
-    return 0;
-  } catch (err) {
-    return 0;
+    setTimeout(() => { aktywujSkanowanie('kod-towaru'); }, 100);
   }
-}
 
-function zapiszLogDoArkusza(status, akcja, szczegoly) {
-  try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName("LOGI SCRIPTU") || ss.insertSheet("LOGI SCRIPTU");
-    if (sheet.getLastRow() === 0) {
-      sheet.appendRow(["DATA I GODZINA", "STATUS", "AKCJA", "SZCZEGÓŁY / DANE JSON"]);
-    }
-    sheet.appendRow([new Date(), status, akcja, szczegoly]);
-  } catch (e) {}
-}
+  function wyslijDane(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btn-submit');
+    const statusBox = document.getElementById('status');
+    btn.disabled = true;
+    btn.innerText = "Zapisywanie w chmurze...";
 
-function aktualizujArkuszStanow(kod, polka, typ, ilosc) {
-  try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName("STAN AKTUALNY") || ss.insertSheet("STAN AKTUALNY");
-    if (sheet.getLastRow() === 0) {
-      sheet.appendRow(["KOD TOWARU", "PÓŁKA / LOKALIZACJA", "STAN AKTUALNY"]);
+    let tryb = document.getElementById('operacja').value;
+    let polkaValue = document.getElementById('polka').value.trim();
+    let polkaDoValue = document.getElementById('polka-do').value.trim();
+    let wybranaStrefa = document.getElementById('strefa-select').value;
+    
+    let surowaNazwa = localStorage.getItem('wms_user_name') || zalogowanyUzytkownik || "";
+    if (surowaNazwa.indexOf("@") !== -1) { surowaNazwa = surowaNazwa.split("@")[0]; }
+    let czystaNazwa = surowaNazwa.replace(/[\._-]/g, " ").trim();
+    let sformatowanyOperator = czystaNazwa.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
+
+    let zLok = "";
+    let doLok = "";
+    let pracownikValue = "";
+
+    if (tryb === "Wydanie Osoba") {
+      zLok = polkaValue;
+      doLok = "PRODUKCJA";
+      pracownikValue = document.getElementById('pracownik').value.trim();
+    } else if (tryb === "Przyjęcie") {
+      zLok = "DOSTAWCA";
+      doLok = polkaValue;
+      pracownikValue = sformatowanyOperator;
+    } else if (tryb === "Przesunięcie") {
+      zLok = polkaValue;
+      doLok = polkaDoValue;
+      pracownikValue = sformatowanyOperator;
+    } else if (tryb === "Wydanie Regał") {
+      zLok = polkaValue;
+      doLok = wybranaStrefa;
+      pracownikValue = wybranaStrefa;
     }
-    var dane = sheet.getDataRange().getValues();
-    var zmiana = (typ === "PRZYJĘCIE") ? parseInt(ilosc) : -parseInt(ilosc);
-    var znaleziono = false;
-    for (var i = 1; i < dane.length; i++) {
-      if (dane[i][0] == kod && dane[i][1] == polka) {
-        var staryStan = parseInt(dane[i][2]) || 0;
-        var nowyStan = staryStan + zmiana;
-        if (nowyStan < 0) nowyStan = 0;
-        sheet.getRange(i + 1, 3).setValue(nowyStan);
-        znaleziono = true;
-        break;
+
+    const paczkaDanych = {
+      akcja: "zapis_ruchu",
+      typ: tryb.toUpperCase(),
+      Z_Lokalizacji: zLok,
+      Do_Lokalizacji: doLok,
+      towar: document.getElementById('kod-towaru').value.trim(),
+      pracownik: pracownikValue,
+      ilosc: document.getElementById('ilosc').value,
+      operator: zalogowanyUzytkownik
+    };
+
+    fetch(GOOGLE_SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams(paczkaDanych).toString()
+    })
+    .then(res => res.json())
+    .then(data => {
+      btn.disabled = false;
+      btn.innerText = "ZAPISZ OPERACJĘ (Enter)";
+      if(data.status === "SUCCESS") {
+        statusBox.innerText = "🚀 ZAPISANO OPERACJĘ: " + data.id_ruchu;
+        statusBox.className = "alert alert-success mt-3 text-center fw-bold bg-success text-white border-0";
+        statusBox.classList.remove('d-none');
+        
+        document.getElementById('kod-towaru').value = "";
+        document.getElementById('polka').value = "";
+        document.getElementById('polka-do').value = "";
+        document.getElementById('pracownik').value = "";
+        document.getElementById('strefa-select').value = "";
+        document.getElementById('ilosc').value = '1';
+        
+        setTimeout(() => { 
+          statusBox.classList.add('d-none'); 
+          wstrzymajAparat().then(() => { aktywujSkanowanie('kod-towaru'); }); 
+        }, 1500);
+      } else {
+        alert("Błąd walidacji lub chmury:\n" + data.message);
       }
-    }
-    if (!znaleziono && typ === "PRZYJĘCIE") {
-      sheet.appendRow([kod, polka, ilosc]);
-    }
-  } catch (err) {}
-}
+    })
+    .catch(err => { 
+      alert("Błąd połączenia z bazą danych."); 
+      btn.disabled = false; 
+      btn.innerText = "ZAPISZ OPERACJĘ (Enter)";
+    });
+  }
+</script>
+</body>
+</html>
