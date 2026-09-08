@@ -3,11 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>LUBAS WMS v5.37</title>
+  <title>LUBAS WMS v5.38</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   
   <script type="text/javascript">
     var ZebraBrowserPrint = function() {
@@ -19,62 +18,45 @@
   
   <style>
     :root {
-      --bg-dark: #0f172a;
+      --bg-dark: #0b0f19;
       --card-dark: #1e293b;
-      --accent-blue: #3b82f6;
-      --accent-danger: #ef4444;
-      --accent-success: #10b981;
-      --accent-purple: #a855f7;
-      --accent-amber: #f59e0b;
+      --accent-blue: #38bdf8;
+      --accent-danger: #f43f5e;
+      --accent-success: #34d399;
+      --accent-amber: #fbbf24;
       --text-main: #f8fafc;
     }
     body { background-color: var(--bg-dark); color: var(--text-main); font-family: 'Inter', sans-serif; -webkit-user-select: none; user-select: none; line-height: 1.6; }
     
-    .modern-card { background: var(--card-dark); border-radius: 20px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 10px 30px rgba(0,0,0,0.3); margin-bottom: 28px; padding: 22px !important; }
+    .modern-card { background: var(--card-dark); border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 10px 30px rgba(0,0,0,0.4); margin-bottom: 24px; padding: 22px !important; }
     .SkanerOkno { background: #000; border-radius: 16px; overflow: hidden; width: 100%; margin: 0 auto; display: none; aspect-ratio: 4/3; border: 2px solid rgba(255,255,255,0.15); margin-bottom: 28px; position: relative; }
     .SkanerOkno video { width: 100%; height: 100%; object-fit: cover; }
     
     .wielki-input { font-size: 1.1rem; padding: 16px; background-color: #0f172a !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.18); border-radius: 12px; }
-    .wielki-input:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.35); outline: none; }
-    .skan-aktywny { border: 2px solid var(--accent-danger) !important; box-shadow: 0 0 20px rgba(239, 68, 68, 0.4) !important; outline: none; }
+    .wielki-input:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.35); outline: none; }
+    .skan-aktywny { border: 2px solid var(--accent-danger) !important; box-shadow: 0 0 20px rgba(244, 63, 94, 0.4) !important; outline: none; }
     
     .btn-modern { border-radius: 14px; padding: 16px; font-weight: 700; transition: all 0.2s; letter-spacing: 0.5px; }
     
     /* ELASTYCZNA SIATKA KAFELKÓW NAWI */
     .menu-grid-container { display: grid; grid-template-columns: 1fr; gap: 12px; width: 100%; }
-    @media (min-width: 576px) {
-      .menu-grid-container { grid-template-columns: repeat(2, 1fr); }
-    }
-    @media (min-width: 992px) {
-      .menu-grid-container { grid-template-columns: repeat(3, 1fr); }
-    }
+    @media (min-width: 576px) { .menu-grid-container { grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 992px) { .menu-grid-container { grid-template-columns: repeat(3, 1fr); } }
     
     .btn-check { position: absolute; clip: rect(0, 0, 0, 0); pointer-events: none; }
     
     .kafelek-menu { 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-      padding: 16px 12px; 
-      font-size: 0.85rem; 
-      font-weight: 800; 
-      color: #94a3b8; 
-      background-color: #0f172a; 
-      border: 1px solid rgba(255,255,255,0.12); 
-      border-radius: 14px; 
-      cursor: pointer; 
-      transition: all 0.2s ease; 
-      text-transform: uppercase; 
-      text-align: center;
-      line-height: 1.3;
-      width: 100%;
+      display: flex; align-items: center; justify-content: center; 
+      padding: 16px 12px; font-size: 0.85rem; font-weight: 800; 
+      color: #94a3b8; background-color: #0f172a; 
+      border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; 
+      cursor: pointer; transition: all 0.2s ease; text-transform: uppercase; 
+      text-align: center; line-height: 1.3; width: 100%;
     }
     
     .btn-check:checked + .kafelek-menu { 
-      background-color: var(--accent-blue); 
-      border-color: var(--accent-blue); 
-      color: #ffffff; 
-      box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4); 
+      background-color: var(--accent-blue); border-color: var(--accent-blue); 
+      color: #0b0f19; box-shadow: 0 4px 16px rgba(56, 189, 248, 0.4); 
     }
 
     .form-group-custom { margin-bottom: 26px; }
@@ -86,15 +68,29 @@
     .naglowek-operatora { display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; width: 100%; padding-bottom: 15px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
     .karta-lokalizacji { background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 14px 18px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
 
-    /* DASHBOARD STYLES */
-    .kpi-card-dash { background: #1e293b; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 20px; }
-    .kpi-title-dash { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.5px; }
-    .kpi-val-dash { font-size: 1.8rem; font-weight: 800; margin-top: 4px; }
-    .table-dash { width: 100%; font-size: 0.85rem; color: #e2e8f0; border-collapse: collapse; }
-    .table-dash th { background: #0f172a; padding: 12px; color: #94a3b8; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); }
-    .table-dash td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    /* PURE MAKIETA EXECUTIVE DASHBOARD STYLES */
+    .kpi-card-dash { background: #1e293b; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px 20px; }
+    .kpi-title-dash { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.5px; }
+    .kpi-val-dash { font-size: 1.8rem; font-weight: 800; margin-top: 2px; line-height: 1.2; }
 
-    /* DYNAMICZNY KONTENER GLÓWNY: WĄSKI NA TELEFONIE / DLA MODUŁÓW, SZEROKI DLA DASHBOARDU */
+    /* Custom horizontal progress bars for Top Items */
+    .bar-row { margin-bottom: 12px; }
+    .bar-meta { display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 4px; }
+    .bar-name { color: #cbd5e1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 75%; }
+    .bar-val { font-weight: 700; color: #f8fafc; }
+    .bar-track { height: 8px; background: #0f172a; border-radius: 4px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #38bdf8, #818cf8); }
+
+    /* Table styles matching PDF mockup */
+    .table-dash { width: 100%; font-size: 0.82rem; color: #e2e8f0; border-collapse: collapse; }
+    .table-dash th { background: #0f172a; padding: 8px 12px; color: #94a3b8; text-align: left; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .table-dash td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+
+    .badge-sec { padding: 3px 8px; border-radius: 6px; font-weight: 700; font-size: 0.7rem; display: inline-block; }
+    .bg-sec-a { background: rgba(52, 211, 153, 0.15); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); }
+    .bg-sec-b { background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3); }
+    .bg-sec-c { background: rgba(244, 63, 94, 0.15); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.3); }
+
     .app-viewport { width: 100%; margin: 0 auto; transition: max-width 0.3s ease; }
     .mode-mobile { max-width: 520px; }
     .mode-desktop { max-width: 1400px; }
@@ -133,7 +129,7 @@
 
 <div class="container-fluid py-3 px-2 px-md-4 app-viewport mode-mobile" id="main-wrapper">
   <div class="naglowek-operatora">
-    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.37</span></h4>
+    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.38</span></h4>
     <div class="d-flex align-items-center gap-2">
       <span class="small text-secondary fw-bold">Operator:</span>
       <span id="user-badge" class="badge bg-success p-2" style="font-size: 0.75rem;">---</span>
@@ -141,7 +137,7 @@
     </div>
   </div>
 
-  <!-- Nawigacja kafelkowa -->
+  <!-- NAWIGACJA -->
   <div class="modern-card p-3 mb-4">
     <div class="menu-grid-container">
       <div>
@@ -245,7 +241,6 @@
   <!-- SEKCJA SPRAWDZANIA LOKALIZACJI -->
   <div id="sekcja-szukaj" class="modern-card p-3" style="display: none; border: 1px solid rgba(245, 158, 11, 0.3);">
     <h5 class="fw-bold text-warning mb-3">🔍 Podgląd stref i lokalizacji towaru</h5>
-    
     <div class="form-group-custom">
       <label class="small text-secondary fw-bold mb-2">ZESKANUJ LUB WPISZ KOD TOWARU:</label>
       <div class="input-group">
@@ -253,7 +248,6 @@
         <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('search-towar-kod')">❌</button>
       </div>
     </div>
-    
     <button type="button" id="btn-szukaj-submit" onclick="sprawdzLokalizacjeTowaru()" class="btn btn-warning w-100 py-3 fw-bold btn-modern text-dark mb-4">Sprawdź gdzie leży towar</button>
 
     <div id="szukaj-wyniki" class="d-none">
@@ -265,7 +259,6 @@
           <span id="res-suma" class="badge bg-success fs-6">0 szt.</span>
         </div>
       </div>
-
       <div id="res-lista-polki"></div>
     </div>
   </div>
@@ -286,7 +279,6 @@
     <div class="d-flex gap-2 mb-4">
       <input type="radio" class="btn-check" name="sub-print" id="sub-user" checked onclick="przelaczPodpanelDruku('user')">
       <label class="kafelek-menu" for="sub-user">🪪 Pracownik</label>
-      
       <input type="radio" class="btn-check" name="sub-print" id="sub-duplikat" onclick="przelaczPodpanelDruku('duplikat')">
       <label class="kafelek-menu" for="sub-duplikat">📋 Duplikat Etykiety</label>
     </div>
@@ -311,111 +303,115 @@
     </div>
   </div>
 
-  <!-- SEKCJA EXCLUSIVE DASHBOARDU (AUTOMATYCZNIE ROZSZERZA RAMKĘ NA KOMPUTERZE) -->
+  <!-- 💡 PERFEKCYJNIE ZMAPOWANA SEKCJA MAKIETY EXECUTIVE DASHBOARD -->
   <div id="sekcja-raporty" style="display: none;">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <div>
-        <h3 class="fw-bold text-info m-0">📊 LUBAS WMS Executive Dashboard</h3>
-        <p class="text-secondary small m-0">Analityka finansowa i operacyjna w czasie rzeczywistym z BigQuery</p>
+    
+    <!-- HEADER -->
+    <div class="modern-card p-3 mb-4" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+          <h2 class="fw-bold text-info m-0">LUBAS WMS Executive Dashboard</h2>
+          <p class="text-secondary small m-0">Zaawansowany Raport Analityczny & Financial Inventory Overview • Stan na: Real-time BQ Data</p>
+        </div>
+        <button onclick="zaladujDaneDashboardu()" class="btn btn-sm btn-outline-info fw-bold py-2 px-3" style="border-radius: 10px;">🔄 Odśwież Raport</button>
       </div>
-      <button onclick="zaladujDaneDashboardu()" class="btn btn-outline-info fw-bold py-2 px-3" style="border-radius: 12px;">🔄 Odśwież Raport</button>
     </div>
 
+    <!-- KPI GRID (4 KARTY W POZIOMYM RZĄDKU) -->
     <div class="row g-3 mb-4">
-      <div class="col-md-3">
+      <div class="col-12 col-sm-6 col-lg-3">
         <div class="kpi-card-dash">
           <div class="kpi-title-dash">Wartość Magazynu (PLN)</div>
           <div id="kpi-wartosc" class="kpi-val-dash text-info">0,00 zł</div>
-          <div class="small text-muted mt-1">Wycena stanu na fizycznych półkach</div>
+          <div class="small text-muted" style="font-size:0.75rem;">Wycena wg bazy Enova/BigQuery</div>
         </div>
       </div>
-      <div class="col-md-3">
+      <div class="col-12 col-sm-6 col-lg-3">
         <div class="kpi-card-dash">
-          <div class="kpi-title-dash">Sztuk na Stanie Magazynu</div>
+          <div class="kpi-title-dash">Łączny Stan Towarów</div>
           <div id="kpi-sztuki" class="kpi-val-dash text-success">0 szt.</div>
-          <div class="small text-muted mt-1">Sumaryczny stan w lokalizacjach</div>
+          <div class="small text-muted" style="font-size:0.75rem;">Obsługiwane lokalizacje fizyczne</div>
         </div>
       </div>
-      <div class="col-md-3">
+      <div class="col-12 col-sm-6 col-lg-3">
         <div class="kpi-card-dash">
-          <div class="kpi-title-dash">Pozycje Poniżej Minimum</div>
-          <div id="kpi-braki-ilosc" class="kpi-val-dash text-danger">0 poz.</div>
-          <div class="small text-muted mt-1">Status z v_aktualne_braki_magazynowe</div>
+          <div class="kpi-title-dash">Pozycje Poniżej Min.</div>
+          <div id="kpi-braki-ilosc" class="kpi-val-dash text-danger">0 pozycji</div>
+          <div class="small text-muted" style="font-size:0.75rem;">Wymagają pilnego uzupełnienia</div>
         </div>
       </div>
-      <div class="col-md-3">
+      <div class="col-12 col-sm-6 col-lg-3">
         <div class="kpi-card-dash">
-          <div class="kpi-title-dash">Szacowany Koszt Dokupienia</div>
+          <div class="kpi-title-dash">Koszt Dokupienia (PLN)</div>
           <div id="kpi-braki-koszt" class="kpi-val-dash text-warning">0,00 zł</div>
-          <div class="small text-muted mt-1">Wartość brakujących sztuk do MAX</div>
+          <div class="small text-muted" style="font-size:0.75rem;">Suma wg v_aktualne_braki_magazynowe</div>
         </div>
       </div>
     </div>
 
-    <div class="row g-4 mb-4">
-      <div class="col-md-8">
-        <div class="modern-card p-3 mb-0">
-          <h5 class="fw-bold text-white mb-3">💎 TOP 10 Najcenniejszych Pozycji na Stanie (PLN)</h5>
-          <div style="height: 320px; position: relative;">
-            <canvas id="chartTopWartosc"></canvas>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="modern-card p-3 mb-0">
-          <h5 class="fw-bold text-white mb-3">📦 Struktura Wartości Sektorów ABCD</h5>
-          <div style="height: 320px; position: relative;">
-            <canvas id="chartSektory"></canvas>
-          </div>
-        </div>
-      </div>
-    </div>
-
+    <!-- MAIN GRID (SIATKA DWUKOLUMNOWA Z ZRZUTU MAKIETY) -->
     <div class="row g-4">
-      <div class="col-md-6">
-        <div class="modern-card p-3">
-          <h5 class="fw-bold text-info mb-3">📋 Stany Fizyczne i Wycena Magazynu</h5>
-          <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+      
+      <!-- LEWA KOLUMNA: TOP ITEMS & ROTACJA ABCD -->
+      <div class="col-12 col-lg-6">
+        
+        <!-- TOP 5 BAR CHART -->
+        <div class="modern-card p-3 mb-4">
+          <h5 class="fw-bold text-white mb-3" style="font-size: 0.95rem;">💎 TOP 5 Najcenniejszych Pozycji na Stanie (PLN)</h5>
+          <div id="container-top-bars">
+            <div class="text-center text-muted py-3">Ładowanie danych...</div>
+          </div>
+        </div>
+
+        <!-- STRUKTURA ROTACJI ABCD TABLE -->
+        <div class="modern-card p-3 mb-0">
+          <h5 class="fw-bold text-white mb-3" style="font-size: 0.95rem;">📦 Struktura Rotacji ABCD (Udział Wartościowy)</h5>
+          <div class="table-responsive">
             <table class="table-dash">
               <thead>
                 <tr>
-                  <th>TOWAR</th>
-                  <th>NAZWA</th>
-                  <th>STAN</th>
-                  <th>CENA</th>
-                  <th>WARTOŚĆ</th>
+                  <th>SEKTOR</th>
+                  <th>KATEGORIA</th>
+                  <th>LICZBA POZYCJI</th>
+                  <th>WARTOŚĆ (PLN)</th>
+                  <th>UDZIAŁ %</th>
                 </tr>
               </thead>
-              <tbody id="tbody-stany">
-                <tr><td colspan="5" class="text-center text-muted py-4">Ładowanie danych...</td></tr>
+              <tbody id="tbody-sektory">
+                <tr><td colspan="5" class="text-center text-muted py-3">Ładowanie danych...</td></tr>
               </tbody>
             </table>
           </div>
         </div>
+
       </div>
 
-      <div class="col-md-6">
-        <div class="modern-card p-3">
-          <h5 class="fw-bold text-warning mb-3">⚠️ Braki Magazynowe i Sugestie Zakupowe</h5>
-          <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+      <!-- PRAWA KOLUMNA: PILNE BRAKI MAGAZYNOWE TABLE -->
+      <div class="col-12 col-lg-6">
+        <div class="modern-card p-3 h-100">
+          <h5 class="fw-bold text-warning mb-3" style="font-size: 0.95rem;">⚠️ Pilne Braki Magazynowe (Sugestie Zakupowe)</h5>
+          <div class="table-responsive" style="max-height: 520px; overflow-y: auto;">
             <table class="table-dash">
               <thead>
                 <tr>
-                  <th>TOWAR</th>
-                  <th>NAZWA</th>
+                  <th>KOD</th>
+                  <th>NAZWA TOWARU</th>
                   <th>STAN</th>
+                  <th>MIN / MAX</th>
                   <th>BRAK</th>
-                  <th>KOSZT ZAKUPU</th>
+                  <th>KOSZT (PLN)</th>
                 </tr>
               </thead>
               <tbody id="tbody-braki">
-                <tr><td colspan="5" class="text-center text-muted py-4">Ładowanie danych...</td></tr>
+                <tr><td colspan="6" class="text-center text-muted py-4">Ładowanie danych...</td></tr>
               </tbody>
             </table>
           </div>
         </div>
       </div>
+
     </div>
+
   </div>
 
 </div>
@@ -434,9 +430,6 @@
   const hasNativeBarcodeDetector = ('BarcodeDetector' in window);
 
   let printLoopInterval = null;
-
-  let chartTopInstance = null;
-  let chartSektoryInstance = null;
 
   window.onload = function() {
     const zapamietanyEmail = localStorage.getItem('wms_user_email');
@@ -477,7 +470,6 @@
       sekcjaSzukaj.style.display = 'block';
       setTimeout(() => { aktywujSkanowanie('search-towar-kod'); }, 100);
     } else if (modul === 'Raporty') {
-      // PRZEŁĄCZAMY NA PEŁNĄ SZEROKOŚĆ DLA KOMPUTERA
       mainWrapper.className = "container-fluid py-3 px-2 px-md-4 app-viewport mode-desktop";
       sekcjaRaporty.style.display = 'block';
       zaladujDaneDashboardu();
@@ -497,125 +489,111 @@
     .then(res => res.json())
     .then(data => {
       if(data.status === "SUCCESS") {
-        renderujKpiIWyresy(data.stany || [], data.braki || []);
+        renderujMakietaDashboard(data.stany || [], data.braki || []);
       } else { alert("Błąd pobierania raportów."); }
     })
     .catch(err => console.error("Błąd połączenia z BQ:", err));
   }
 
-  function renderujKpiIWyresy(stany, braki) {
+  function renderujMakietaDashboard(stany, braki) {
     let sumaWartosci = 0;
     let sumaSztuk = 0;
-    let sektory = {};
-
-    let tbodyStany = document.getElementById('tbody-stany');
-    tbodyStany.innerHTML = "";
+    let sektoryStats = {};
 
     stany.sort((a, b) => (parseFloat(b.wartosc_magazynowa) || 0) - (parseFloat(a.wartosc_magazynowa) || 0));
 
     stany.forEach(s => {
       let val = parseFloat(s.wartosc_magazynowa) || 0;
       let il = parseInt(s.BIEZACY_STAN_MAGAZYNU) || 0;
-      let cena = parseFloat(s.cena_jednostkowa) || 0;
-      let sek = s.Sektor_ABCD || "BRAK";
+      let sek = (s.Sektor_ABCD || "C").toUpperCase().trim();
+      let kat = s.Kategoria || "Inne";
 
       sumaWartosci += val;
       sumaSztuk += il;
-      sektory[sek] = (sektory[sek] || 0) + val;
+
+      if (!sektoryStats[sek]) {
+        sektoryStats[sek] = { ilosc: 0, wartosc: 0, kategoria: kat };
+      }
+      sektoryStats[sek].ilosc += 1;
+      sektoryStats[sek].wartosc += val;
+    });
+
+    document.getElementById('kpi-wartosc').innerText = sumaWartosci.toLocaleString('pl-PL', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + " zł";
+    document.getElementById('kpi-sztuki').innerText = sumaSztuk.toLocaleString('pl-PL') + " szt.";
+
+    // TOP 5 PROGRESS BARS
+    let containerTop = document.getElementById('container-top-bars');
+    containerTop.innerHTML = "";
+    
+    let top5 = stany.slice(0, 5);
+    let maxVal = top5.length > 0 ? (parseFloat(top5[0].wartosc_magazynowa) || 1) : 1;
+
+    top5.forEach(item => {
+      let v = parseFloat(item.wartosc_magazynowa) || 0;
+      let pct = Math.min(Math.round((v / maxVal) * 100), 100);
+      let nazwaFull = item.nazwa_towaru || item.Kod_enova || item.towar;
+
+      let htmlRow = `
+        <div class="bar-row">
+          <div class="bar-meta">
+            <span class="bar-name"><b>${item.towar}</b> - ${nazwaFull}</span>
+            <span class="bar-val">${v.toLocaleString('pl-PL', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} zł</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width: ${pct}%;"></div>
+          </div>
+        </div>
+      `;
+      containerTop.innerHTML += htmlRow;
+    });
+
+    // SEKTORY ABCD TABLE
+    let tbodySektory = document.getElementById('tbody-sektory');
+    tbodySektory.innerHTML = "";
+
+    let klucze = Object.keys(sektoryStats).sort();
+    klucze.forEach(k => {
+      let st = sektoryStats[k];
+      let udzial = sumaWartosci > 0 ? ((st.wartosc / sumaWartosci) * 100).toFixed(1) : "0.0";
+      let badgeClass = k === "A" ? "bg-sec-a" : (k === "B" ? "bg-sec-b" : "bg-sec-c");
 
       let tr = document.createElement('tr');
       tr.innerHTML = `
-        <td class="fw-bold text-info">${s.towar || "---"}</td>
-        <td class="small">${s.nazwa_towaru || s.Kod_enova || "---"}</td>
-        <td>${il} szt.</td>
-        <td>${cena.toFixed(2)} zł</td>
-        <td class="fw-bold text-white">${val.toFixed(2)} zł</td>
+        <td><span class="badge-sec ${badgeClass}">SEKTOR ${k}</span></td>
+        <td class="small">${st.kategoria}</td>
+        <td>${st.ilosc}</td>
+        <td class="fw-bold">${st.wartosc.toLocaleString('pl-PL', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} zł</td>
+        <td class="fw-bold text-info">${udzial}%</td>
       `;
-      tbodyStany.appendChild(tr);
+      tbodySektory.appendChild(tr);
     });
 
-    document.getElementById('kpi-wartosc').innerText = sumaWartosci.toLocaleString('pl-PL', { minimumFractionDigits: 2 }) + " zł";
-    document.getElementById('kpi-sztuki').innerText = sumaSztuk.toLocaleString('pl-PL') + " szt.";
-
+    // BRAKI MAGAZYNOWE TABLE
     let sumaBrakiKoszt = 0;
     let tbodyBraki = document.getElementById('tbody-braki');
     tbodyBraki.innerHTML = "";
 
     braki.forEach(b => {
       let koszt = parseFloat(b.wartosc_do_domowienia) || 0;
-      let ileFaktycznie = parseInt(b.ilosc_do_domowienia) || 0;
+      let ileBrak = parseInt(b.ilosc_do_domowienia) || 0;
+      let stMin = b.stan_minimalny || b.Stany_minimalne || "--";
+      let stMax = b.stan_maksymalny || b.Stan_maksymalny || "--";
       sumaBrakiKoszt += koszt;
 
       let tr = document.createElement('tr');
       tr.innerHTML = `
-        <td class="fw-bold text-warning">${b.towar || "---"}</td>
-        <td class="small">${b.nazwa_towaru || "---"}</td>
+        <td class="fw-bold text-info">${b.towar || "---"}</td>
+        <td class="small">${b.nazwa_towaru || b.Kod_enova || "---"}</td>
         <td class="text-danger fw-bold">${b.BIEZACY_STAN_MAGAZYNU || 0}</td>
-        <td>${ileFaktycznie} szt.</td>
-        <td class="fw-bold text-warning">${koszt.toFixed(2)} zł</td>
+        <td class="text-muted small">${stMin} / ${stMax}</td>
+        <td class="fw-bold text-white">${ileBrak}</td>
+        <td class="fw-bold text-warning">${koszt.toLocaleString('pl-PL', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} zł</td>
       `;
       tbodyBraki.appendChild(tr);
     });
 
-    document.getElementById('kpi-braki-ilosc').innerText = braki.length + " poz.";
-    document.getElementById('kpi-braki-koszt').innerText = sumaBrakiKoszt.toLocaleString('pl-PL', { minimumFractionDigits: 2 }) + " zł";
-
-    renderujWykresTop(stany.slice(0, 8));
-    renderujWykresSektory(sektory);
-  }
-
-  function renderujWykresTop(topStany) {
-    let ctx = document.getElementById('chartTopWartosc').getContext('2d');
-    if (chartTopInstance) chartTopInstance.destroy();
-
-    let labels = topStany.map(x => x.towar);
-    let values = topStany.map(x => parseFloat(x.wartosc_magazynowa) || 0);
-
-    chartTopInstance = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: 'Wartość magazynowa (PLN)',
-          data: values,
-          backgroundColor: '#38bdf8',
-          borderRadius: 8
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { ticks: { color: '#94a3b8' }, grid: { display: false } },
-          y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } }
-        }
-      }
-    });
-  }
-
-  function renderujWykresSektory(sektory) {
-    let ctx = document.getElementById('chartSektory').getContext('2d');
-    if (chartSektoryInstance) chartSektoryInstance.destroy();
-
-    let labels = Object.keys(sektory);
-    let values = Object.values(sektory);
-
-    chartSektoryInstance = new Chart(ctx, {
-      type: 'doughnut',
-      data: {
-        labels: labels,
-        datasets: [{
-          data: values,
-          backgroundColor: ['#34d399', '#fbbf24', '#f43f5e', '#a855f7', '#38bdf8']
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { position: 'bottom', labels: { color: '#f8fafc' } } }
-      }
-    });
+    document.getElementById('kpi-braki-ilosc').innerText = braki.length + " pozycji";
+    document.getElementById('kpi-braki-koszt').innerText = sumaBrakiKoszt.toLocaleString('pl-PL', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + " zł";
   }
 
   function sprawdzLokalizacjeTowaru() {
