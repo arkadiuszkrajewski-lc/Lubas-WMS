@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>LUBAS WMS v5.44 Suite</title>
+  <title>LUBAS WMS Dashboard Suite</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
@@ -67,7 +67,7 @@
     .naglowek-operatora { display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; width: 100%; padding-bottom: 15px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
     .karta-lokalizacji { background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 14px 18px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
 
-    /* DASHBOARD EXCLUSIVE STYLES */
+    /* DASHBOARD STYLES */
     .dash-kpi-row {
       display: flex !important; flex-direction: row !important;
       gap: 15px !important; width: 100% !important; margin-bottom: 20px !important;
@@ -115,10 +115,6 @@
     .app-viewport { width: 100%; margin: 0 auto; transition: max-width 0.3s ease; }
     .mode-mobile { max-width: 680px; }
     .mode-desktop { max-width: 1400px; }
-
-    .sub-nav-dash { display: flex; gap: 8px; margin-bottom: 20px; }
-    .sub-nav-dash .btn { font-size: 0.8rem; font-weight: 800; border-radius: 10px; padding: 10px 16px; border-color: rgba(255,255,255,0.1); color: #94a3b8; }
-    .sub-nav-dash .btn-check:checked + .btn { background-color: var(--accent-blue); border-color: var(--accent-blue); color: #0b0f19; }
   </style>
 </head>
 <body>
@@ -154,7 +150,7 @@
 
 <div class="container-fluid py-3 px-2 px-md-4 app-viewport mode-mobile" id="main-wrapper">
   <div class="naglowek-operatora">
-    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.44</span></h4>
+    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.45</span></h4>
     <div class="d-flex align-items-center gap-2">
       <span class="small text-secondary fw-bold">Operator:</span>
       <span id="user-badge" class="badge bg-success p-2" style="font-size: 0.75rem;">---</span>
@@ -328,7 +324,7 @@
     </div>
   </div>
 
-  <!-- 💡 MULTI-DASHBOARD SUITE (POPRAWIONE PRZEŁĄCZANIE) -->
+  <!-- 💡 SEKCJA PEŁNEGO DASHBOARDU (JEDEN SPÓJNY PEŁNY WIDOK BEZ POD-PRZYCISKÓW) -->
   <div id="sekcja-raporty" style="display: none;">
     
     <!-- HEADER -->
@@ -342,19 +338,7 @@
       </div>
     </div>
 
-    <!-- POD-TABSY DO PRZEŁĄCZANIA WIDOKÓW -->
-    <div class="sub-nav-dash">
-      <input type="radio" class="btn-check" name="dash-sub" id="dash-tab-ogolny" checked onclick="przelaczPodDash('ogolny')">
-      <label class="btn btn-outline-secondary" for="dash-tab-ogolny">📌 PRZEGLĄD OGÓLNY</label>
-
-      <input type="radio" class="btn-check" name="dash-sub" id="dash-tab-finanse" onclick="przelaczPodDash('finanse')">
-      <label class="btn btn-outline-secondary" for="dash-tab-finanse">💰 ANALIZA FINANSOWA</label>
-
-      <input type="radio" class="btn-check" name="dash-sub" id="dash-tab-obrot" onclick="przelaczPodDash('obrot')">
-      <label class="btn btn-outline-secondary" for="dash-tab-obrot">🔄 ANALIZA OBROTU I POBRAŃ</label>
-    </div>
-
-    <!-- 4 KARTY KPI (WSPÓLNE DLA WSZYSTKICH) -->
+    <!-- 4 KARTY KPI -->
     <div class="dash-kpi-row">
       <div class="kpi-card-dash">
         <div class="kpi-title-dash">Wartość Magazynu (PLN)</div>
@@ -378,8 +362,10 @@
       </div>
     </div>
 
-    <!-- 1. POD-DASHBOARD OGÓLNY -->
-    <div id="sub-dash-ogolny" class="dash-main-grid">
+    <!-- PEŁNY DASHBOARD DWUKOLUMNOWY Z WSZYSTKIMI SEKCJA -->
+    <div class="dash-main-grid">
+      
+      <!-- LEWA STRONA: TOP 5 + ROTACJA ABCD + OBSZARY -->
       <div>
         <div class="modern-card p-3 mb-4">
           <h5 class="fw-bold text-white mb-3" style="font-size: 0.95rem;">💎 TOP 5 Najcenniejszych Pozycji na Stanie (PLN)</h5>
@@ -387,34 +373,7 @@
             <div class="text-center text-muted py-3">Ładowanie danych...</div>
           </div>
         </div>
-      </div>
-      <div>
-        <div class="modern-card p-3">
-          <h5 class="fw-bold text-danger mb-3" style="font-size: 0.95rem;">⚠️ Pilne Braki Magazynowe (Sugestie Zakupowe)</h5>
-          <div class="table-responsive" style="max-height: 420px; overflow-y: auto;">
-            <table class="table-dash">
-              <thead>
-                <tr>
-                  <th>KOD</th>
-                  <th>NAZWA TOWARU</th>
-                  <th>STAN</th>
-                  <th>MIN / MAX</th>
-                  <th>BRAK</th>
-                  <th>KOSZT (PLN)</th>
-                </tr>
-              </thead>
-              <tbody id="tbody-braki-ogolny">
-                <tr><td colspan="6" class="text-center text-muted py-4">Ładowanie danych...</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
 
-    <!-- 2. POD-DASHBOARD FINANSOWY -->
-    <div id="sub-dash-finanse" class="dash-main-grid d-none">
-      <div>
         <div class="modern-card p-3 mb-4">
           <h5 class="fw-bold text-white mb-3" style="font-size: 0.95rem;">📦 Struktura Rotacji ABCD (Udział Wartościowy)</h5>
           <div class="table-responsive">
@@ -434,33 +393,8 @@
             </table>
           </div>
         </div>
-      </div>
-      <div>
-        <div class="modern-card p-3">
-          <h5 class="fw-bold text-info mb-3" style="font-size: 0.95rem;">📋 Pełna Wycena Stanów Fizycznych</h5>
-          <div class="table-responsive" style="max-height: 420px; overflow-y: auto;">
-            <table class="table-dash">
-              <thead>
-                <tr>
-                  <th>TOWAR</th>
-                  <th>NAZWA</th>
-                  <th>STAN</th>
-                  <th>WARTOŚĆ (PLN)</th>
-                </tr>
-              </thead>
-              <tbody id="tbody-stany-finanse">
-                <tr><td colspan="4" class="text-center text-muted py-4">Ładowanie danych...</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
 
-    <!-- 3. POD-DASHBOARD OBROTOWY -->
-    <div id="sub-dash-obrot" class="dash-main-grid d-none">
-      <div>
-        <div class="modern-card p-3 mb-4">
+        <div class="modern-card p-3 mb-0">
           <h5 class="fw-bold text-info mb-3" style="font-size: 0.95rem;">🏢 Pobrania i Zużycie wg Obszarów / Działów</h5>
           <div class="table-responsive">
             <table class="table-dash">
@@ -478,8 +412,50 @@
           </div>
         </div>
       </div>
+
+      <!-- PRAWA STRONA: BRAKI + STANY FIZYCZNE + TOP PRACOWNICY -->
       <div>
-        <div class="modern-card p-3">
+        <div class="modern-card p-3 mb-4">
+          <h5 class="fw-bold text-danger mb-3" style="font-size: 0.95rem;">⚠️ Pilne Braki Magazynowe (Sugestie Zakupowe)</h5>
+          <div class="table-responsive" style="max-height: 280px; overflow-y: auto;">
+            <table class="table-dash">
+              <thead>
+                <tr>
+                  <th>KOD</th>
+                  <th>NAZWA TOWARU</th>
+                  <th>STAN</th>
+                  <th>MIN / MAX</th>
+                  <th>BRAK</th>
+                  <th>KOSZT (PLN)</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-braki-ogolny">
+                <tr><td colspan="6" class="text-center text-muted py-4">Ładowanie danych...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="modern-card p-3 mb-4">
+          <h5 class="fw-bold text-info mb-3" style="font-size: 0.95rem;">📋 Pełna Wycena Stanów Fizycznych</h5>
+          <div class="table-responsive" style="max-height: 280px; overflow-y: auto;">
+            <table class="table-dash">
+              <thead>
+                <tr>
+                  <th>TOWAR</th>
+                  <th>NAZWA</th>
+                  <th>STAN</th>
+                  <th>WARTOŚĆ (PLN)</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-stany-finanse">
+                <tr><td colspan="4" class="text-center text-muted py-4">Ładowanie danych...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="modern-card p-3 mb-0">
           <h5 class="fw-bold text-success mb-3" style="font-size: 0.95rem;">👷 Top Pracownicy Pobierający Materiały</h5>
           <div class="table-responsive">
             <table class="table-dash">
@@ -497,6 +473,7 @@
           </div>
         </div>
       </div>
+
     </div>
 
   </div>
@@ -544,6 +521,7 @@
     const sekcjaRaporty = document.getElementById('sekcja-raporty');
     const mainWrapper = document.getElementById('main-wrapper');
     const btnTorch = document.getElementById('btn-torch');
+    const instrukcjaSkanu = document.getElementById('instrukcja-skanu');
     
     sekcjaOperacji.style.display = 'none';
     sekcjaDruku.style.display = 'none';
@@ -558,7 +536,10 @@
       sekcjaSzukaj.style.display = 'block';
       setTimeout(() => { aktywujSkanowanie('search-towar-kod'); }, 100);
     } else if (modul === 'Raporty') {
+      // CAŁKOWICIE CHOWAMY PASEK SKANOWANIA ORAZ PRZYCISK LATARKI W RAPORTACH
       if(btnTorch) btnTorch.classList.add('d-none');
+      if(instrukcjaSkanu) instrukcjaSkanu.classList.add('d-none');
+      
       mainWrapper.className = "container-fluid py-3 px-2 px-md-4 app-viewport mode-desktop";
       sekcjaRaporty.style.display = 'block';
       zaladujDaneDashboardu();
@@ -567,21 +548,6 @@
       sekcjaOperacji.style.display = 'block';
       ustawTryb(modul);
     }
-  }
-
-  // PORZĄDNE PRZEŁĄCZANIE POD-DASHBOARDÓW Z UŻYCIEM D-NONE
-  function przelaczPodDash(sub) {
-    const ogolny = document.getElementById('sub-dash-ogolny');
-    const finanse = document.getElementById('sub-dash-finanse');
-    const obrot = document.getElementById('sub-dash-obrot');
-
-    ogolny.classList.add('d-none');
-    finanse.classList.add('d-none');
-    obrot.classList.add('d-none');
-
-    if (sub === 'ogolny') ogolny.classList.remove('d-none');
-    if (sub === 'finanse') finanse.classList.remove('d-none');
-    if (sub === 'obrot') obrot.classList.remove('d-none');
   }
 
   function zaladujDaneDashboardu() {
