@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>LUBAS WMS Dashboard Suite</title>
+  <title>LUBAS WMS v5.47 Suite</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
@@ -150,7 +150,7 @@
 
 <div class="container-fluid py-3 px-2 px-md-4 app-viewport mode-mobile" id="main-wrapper">
   <div class="naglowek-operatora">
-    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.45</span></h4>
+    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.47</span></h4>
     <div class="d-flex align-items-center gap-2">
       <span class="small text-secondary fw-bold">Operator:</span>
       <span id="user-badge" class="badge bg-success p-2" style="font-size: 0.75rem;">---</span>
@@ -324,7 +324,7 @@
     </div>
   </div>
 
-  <!-- 💡 SEKCJA PEŁNEGO DASHBOARDU (JEDEN SPÓJNY PEŁNY WIDOK BEZ POD-PRZYCISKÓW) -->
+  <!-- 💡 PEŁNY DASHBOARD DWUKOLUMNOWY Z WYCENĄ WARTOŚCI POBRAŃ -->
   <div id="sekcja-raporty" style="display: none;">
     
     <!-- HEADER -->
@@ -362,10 +362,10 @@
       </div>
     </div>
 
-    <!-- PEŁNY DASHBOARD DWUKOLUMNOWY Z WSZYSTKIMI SEKCJA -->
+    <!-- PEŁNA SIATKA DWUKOLUMNOWA -->
     <div class="dash-main-grid">
       
-      <!-- LEWA STRONA: TOP 5 + ROTACJA ABCD + OBSZARY -->
+      <!-- LEWA STRONA: TOP 5 + ROTACJA ABCD + OBSZARY Z WYCENĄ -->
       <div>
         <div class="modern-card p-3 mb-4">
           <h5 class="fw-bold text-white mb-3" style="font-size: 0.95rem;">💎 TOP 5 Najcenniejszych Pozycji na Stanie (PLN)</h5>
@@ -401,19 +401,20 @@
               <thead>
                 <tr>
                   <th>OBSZAR / DZIAŁ</th>
-                  <th>ILOŚĆ SZTUK</th>
-                  <th>LICZBA WYDAŃ</th>
+                  <th>SZTUK</th>
+                  <th>WYDAŃ</th>
+                  <th>WARTOŚĆ (PLN)</th>
                 </tr>
               </thead>
               <tbody id="tbody-obszary">
-                <tr><td colspan="3" class="text-center text-muted py-3">Ładowanie danych...</td></tr>
+                <tr><td colspan="4" class="text-center text-muted py-3">Ładowanie danych...</td></tr>
               </tbody>
             </table>
           </div>
         </div>
       </div>
 
-      <!-- PRAWA STRONA: BRAKI + STANY FIZYCZNE + TOP PRACOWNICY -->
+      <!-- PRAWA STRONA: BRAKI + STANY FIZYCZNE + PRACOWNICY Z WYCENĄ PLN -->
       <div>
         <div class="modern-card p-3 mb-4">
           <h5 class="fw-bold text-danger mb-3" style="font-size: 0.95rem;">⚠️ Pilne Braki Magazynowe (Sugestie Zakupowe)</h5>
@@ -462,12 +463,13 @@
               <thead>
                 <tr>
                   <th>PRACOWNIK</th>
-                  <th>POBRANE SZTUKI</th>
-                  <th>LICZBA OPERACJI</th>
+                  <th>SZTUKI</th>
+                  <th>OPERACJI</th>
+                  <th>WARTOŚĆ (PLN)</th>
                 </tr>
               </thead>
               <tbody id="tbody-pracownicy">
-                <tr><td colspan="3" class="text-center text-muted py-3">Ładowanie danych...</td></tr>
+                <tr><td colspan="4" class="text-center text-muted py-3">Ładowanie danych...</td></tr>
               </tbody>
             </table>
           </div>
@@ -536,7 +538,6 @@
       sekcjaSzukaj.style.display = 'block';
       setTimeout(() => { aktywujSkanowanie('search-towar-kod'); }, 100);
     } else if (modul === 'Raporty') {
-      // CAŁKOWICIE CHOWAMY PASEK SKANOWANIA ORAZ PRZYCISK LATARKI W RAPORTACH
       if(btnTorch) btnTorch.classList.add('d-none');
       if(instrukcjaSkanu) instrukcjaSkanu.classList.add('d-none');
       
@@ -635,39 +636,43 @@
       containerTop.innerHTML += htmlRow;
     });
 
-    // OBSZARY TABLE
+    // OBSZARY TABLE Z WARTOŚCIĄ PLN
     let tbodyObszary = document.getElementById('tbody-obszary');
     tbodyObszary.innerHTML = "";
     if (obszary && obszary.length > 0) {
       obszary.forEach(o => {
         let nameObs = o.obszar || o.Do_Lokalizacji || "INNY OBSZAR";
+        let valPln = parseFloat(o.wartosc_pln || 0) || 0;
         let tr = document.createElement('tr');
         tr.innerHTML = `
           <td class="fw-bold text-info">${nameObs}</td>
-          <td class="fw-bold">${parseInt(o.suma_sztuk || o.ilosc || 0).toLocaleString('pl-PL')} szt.</td>
-          <td class="text-secondary">${o.ilosc_operacji || 1} wydań</td>
+          <td class="fw-bold">${parseInt(o.suma_sztuk || 0).toLocaleString('pl-PL')} szt.</td>
+          <td class="text-secondary">${o.ilosc_operacji || 1}</td>
+          <td class="fw-bold text-warning">${valPln.toLocaleString('pl-PL', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} zł</td>
         `;
         tbodyObszary.appendChild(tr);
       });
     } else {
-      tbodyObszary.innerHTML = `<tr><td colspan="3" class="text-center text-muted py-3">Brak zarejestrowanych wydań na obszary.</td></tr>`;
+      tbodyObszary.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-3">Brak zarejestrowanych wydań na obszary.</td></tr>`;
     }
 
-   // PRACOWNICI TABLE
+    // PRACOWNICY TABLE Z WARTOŚCIĄ PLN
     let tbodyPracownicy = document.getElementById('tbody-pracownicy');
     tbodyPracownicy.innerHTML = "";
     if (pracownicy && pracownicy.length > 0) {
       pracownicy.forEach(p => {
+        let valPln = parseFloat(p.wartosc_pln || 0) || 0;
         let tr = document.createElement('tr');
         tr.innerHTML = `
           <td class="fw-bold text-success">${p.pracownik}</td>
           <td class="fw-bold">${parseInt(p.suma_pobrano || 0).toLocaleString('pl-PL')} szt.</td>
-          <td class="text-secondary">${p.ilosc_wydan || p.ilosc_wydań || 1} operacji</td>
+          <td class="text-secondary">${p.ilosc_wydan || 1}</td>
+          <td class="fw-bold text-warning">${valPln.toLocaleString('pl-PL', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} zł</td>
         `;
         tbodyPracownicy.appendChild(tr);
       });
     } else {
-      tbodyPracownicy.innerHTML = `<tr><td colspan="3" class="text-center text-muted py-3">Brak danych pracowników.</td></tr>`;
+      tbodyPracownicy.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-3">Brak danych pracowników.</td></tr>`;
     }
 
     // SEKTORY ABCD TABLE
