@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>LUBAS WMS v5.36</title>
+  <title>LUBAS WMS v5.37</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
@@ -40,9 +40,13 @@
     
     .btn-modern { border-radius: 14px; padding: 16px; font-weight: 700; transition: all 0.2s; letter-spacing: 0.5px; }
     
+    /* ELASTYCZNA SIATKA KAFELKÓW NAWI */
     .menu-grid-container { display: grid; grid-template-columns: 1fr; gap: 12px; width: 100%; }
-    @media (min-width: 480px) {
-      .menu-grid-container { grid-template-columns: 1fr 1fr; }
+    @media (min-width: 576px) {
+      .menu-grid-container { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (min-width: 992px) {
+      .menu-grid-container { grid-template-columns: repeat(3, 1fr); }
     }
     
     .btn-check { position: absolute; clip: rect(0, 0, 0, 0); pointer-events: none; }
@@ -82,12 +86,18 @@
     .naglowek-operatora { display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; width: 100%; padding-bottom: 15px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
     .karta-lokalizacji { background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 14px 18px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
 
+    /* DASHBOARD STYLES */
     .kpi-card-dash { background: #1e293b; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 20px; }
     .kpi-title-dash { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.5px; }
     .kpi-val-dash { font-size: 1.8rem; font-weight: 800; margin-top: 4px; }
     .table-dash { width: 100%; font-size: 0.85rem; color: #e2e8f0; border-collapse: collapse; }
     .table-dash th { background: #0f172a; padding: 12px; color: #94a3b8; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); }
     .table-dash td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+
+    /* DYNAMICZNY KONTENER GLÓWNY: WĄSKI NA TELEFONIE / DLA MODUŁÓW, SZEROKI DLA DASHBOARDU */
+    .app-viewport { width: 100%; margin: 0 auto; transition: max-width 0.3s ease; }
+    .mode-mobile { max-width: 520px; }
+    .mode-desktop { max-width: 1400px; }
   </style>
 </head>
 <body>
@@ -121,9 +131,9 @@
   </div>
 </div>
 
-<div class="container py-3" id="app-container" style="max-width: 500px;">
+<div class="container-fluid py-3 px-2 px-md-4 app-viewport mode-mobile" id="main-wrapper">
   <div class="naglowek-operatora">
-    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.36</span></h4>
+    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.37</span></h4>
     <div class="d-flex align-items-center gap-2">
       <span class="small text-secondary fw-bold">Operator:</span>
       <span id="user-badge" class="badge bg-success p-2" style="font-size: 0.75rem;">---</span>
@@ -131,7 +141,7 @@
     </div>
   </div>
 
-  <!-- Przycisk menu z dodaną opcją Raporty -->
+  <!-- Nawigacja kafelkowa -->
   <div class="modern-card p-3 mb-4">
     <div class="menu-grid-container">
       <div>
@@ -301,113 +311,113 @@
     </div>
   </div>
 
-</div>
+  <!-- SEKCJA EXCLUSIVE DASHBOARDU (AUTOMATYCZNIE ROZSZERZA RAMKĘ NA KOMPUTERZE) -->
+  <div id="sekcja-raporty" style="display: none;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h3 class="fw-bold text-info m-0">📊 LUBAS WMS Executive Dashboard</h3>
+        <p class="text-secondary small m-0">Analityka finansowa i operacyjna w czasie rzeczywistym z BigQuery</p>
+      </div>
+      <button onclick="zaladujDaneDashboardu()" class="btn btn-outline-info fw-bold py-2 px-3" style="border-radius: 12px;">🔄 Odśwież Raport</button>
+    </div>
 
-<!-- OSOBNA SEKCJA DASHBOARDU TABLEAU NA PEŁNY EKRAN KOMPUTERA -->
-<div class="container-fluid py-3 px-md-4" id="dashboard-container" style="display: none; max-width: 1400px;">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-      <h3 class="fw-bold text-info m-0">📊 LUBAS WMS Executive Dashboard</h3>
-      <p class="text-secondary small m-0">Analityka finansowa i operacyjna w czasie rzeczywistym z BigQuery</p>
-    </div>
-    <button onclick="zaladujDaneDashboardu()" class="btn btn-outline-info fw-bold py-2 px-3" style="border-radius: 12px;">🔄 Odśwież Raport</button>
-  </div>
-
-  <div class="row g-3 mb-4">
-    <div class="col-md-3">
-      <div class="kpi-card-dash">
-        <div class="kpi-title-dash">Wartość Magazynu (PLN)</div>
-        <div id="kpi-wartosc" class="kpi-val-dash text-info">0,00 zł</div>
-        <div class="small text-muted mt-1">Wycena stanu na fizycznych półkach</div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="kpi-card-dash">
-        <div class="kpi-title-dash">Sztuk na Stanie Magazynu</div>
-        <div id="kpi-sztuki" class="kpi-val-dash text-success">0 szt.</div>
-        <div class="small text-muted mt-1">Sumaryczny stan w lokalizacjach</div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="kpi-card-dash">
-        <div class="kpi-title-dash">Pozycje Poniżej Minimum</div>
-        <div id="kpi-braki-ilosc" class="kpi-val-dash text-danger">0 poz.</div>
-        <div class="small text-muted mt-1">Status z v_aktualne_braki_magazynowe</div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="kpi-card-dash">
-        <div class="kpi-title-dash">Szacowany Koszt Dokupienia</div>
-        <div id="kpi-braki-koszt" class="kpi-val-dash text-warning">0,00 zł</div>
-        <div class="small text-muted mt-1">Wartość brakujących sztuk do MAX</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="row g-4 mb-4">
-    <div class="col-md-8">
-      <div class="modern-card p-3 mb-0">
-        <h5 class="fw-bold text-white mb-3">💎 TOP 10 Najcenniejszych Pozycji na Stanie (PLN)</h5>
-        <div style="height: 320px; position: relative;">
-          <canvas id="chartTopWartosc"></canvas>
+    <div class="row g-3 mb-4">
+      <div class="col-md-3">
+        <div class="kpi-card-dash">
+          <div class="kpi-title-dash">Wartość Magazynu (PLN)</div>
+          <div id="kpi-wartosc" class="kpi-val-dash text-info">0,00 zł</div>
+          <div class="small text-muted mt-1">Wycena stanu na fizycznych półkach</div>
         </div>
       </div>
-    </div>
-    <div class="col-md-4">
-      <div class="modern-card p-3 mb-0">
-        <h5 class="fw-bold text-white mb-3">📦 Struktura Wartości Sektorów ABCD</h5>
-        <div style="height: 320px; position: relative;">
-          <canvas id="chartSektory"></canvas>
+      <div class="col-md-3">
+        <div class="kpi-card-dash">
+          <div class="kpi-title-dash">Sztuk na Stanie Magazynu</div>
+          <div id="kpi-sztuki" class="kpi-val-dash text-success">0 szt.</div>
+          <div class="small text-muted mt-1">Sumaryczny stan w lokalizacjach</div>
         </div>
       </div>
-    </div>
-  </div>
-
-  <div class="row g-4">
-    <div class="col-md-6">
-      <div class="modern-card p-3">
-        <h5 class="fw-bold text-info mb-3">📋 Stany Fizyczne i Wycena Magazynu</h5>
-        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-          <table class="table-dash">
-            <thead>
-              <tr>
-                <th>TOWAR</th>
-                <th>NAZWA</th>
-                <th>STAN</th>
-                <th>CENA</th>
-                <th>WARTOŚĆ</th>
-              </tr>
-            </thead>
-            <tbody id="tbody-stany">
-              <tr><td colspan="5" class="text-center text-muted py-4">Ładowanie danych...</td></tr>
-            </tbody>
-          </table>
+      <div class="col-md-3">
+        <div class="kpi-card-dash">
+          <div class="kpi-title-dash">Pozycje Poniżej Minimum</div>
+          <div id="kpi-braki-ilosc" class="kpi-val-dash text-danger">0 poz.</div>
+          <div class="small text-muted mt-1">Status z v_aktualne_braki_magazynowe</div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="kpi-card-dash">
+          <div class="kpi-title-dash">Szacowany Koszt Dokupienia</div>
+          <div id="kpi-braki-koszt" class="kpi-val-dash text-warning">0,00 zł</div>
+          <div class="small text-muted mt-1">Wartość brakujących sztuk do MAX</div>
         </div>
       </div>
     </div>
 
-    <div class="col-md-6">
-      <div class="modern-card p-3">
-        <h5 class="fw-bold text-warning mb-3">⚠️ Braki Magazynowe i Sugestie Zakupowe</h5>
-        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-          <table class="table-dash">
-            <thead>
-              <tr>
-                <th>TOWAR</th>
-                <th>NAZWA</th>
-                <th>STAN</th>
-                <th>BRAK</th>
-                <th>KOSZT ZAKUPU</th>
-              </tr>
-            </thead>
-            <tbody id="tbody-braki">
-              <tr><td colspan="5" class="text-center text-muted py-4">Ładowanie danych...</td></tr>
-            </tbody>
-          </table>
+    <div class="row g-4 mb-4">
+      <div class="col-md-8">
+        <div class="modern-card p-3 mb-0">
+          <h5 class="fw-bold text-white mb-3">💎 TOP 10 Najcenniejszych Pozycji na Stanie (PLN)</h5>
+          <div style="height: 320px; position: relative;">
+            <canvas id="chartTopWartosc"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="modern-card p-3 mb-0">
+          <h5 class="fw-bold text-white mb-3">📦 Struktura Wartości Sektorów ABCD</h5>
+          <div style="height: 320px; position: relative;">
+            <canvas id="chartSektory"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-md-6">
+        <div class="modern-card p-3">
+          <h5 class="fw-bold text-info mb-3">📋 Stany Fizyczne i Wycena Magazynu</h5>
+          <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+            <table class="table-dash">
+              <thead>
+                <tr>
+                  <th>TOWAR</th>
+                  <th>NAZWA</th>
+                  <th>STAN</th>
+                  <th>CENA</th>
+                  <th>WARTOŚĆ</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-stany">
+                <tr><td colspan="5" class="text-center text-muted py-4">Ładowanie danych...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="modern-card p-3">
+          <h5 class="fw-bold text-warning mb-3">⚠️ Braki Magazynowe i Sugestie Zakupowe</h5>
+          <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+            <table class="table-dash">
+              <thead>
+                <tr>
+                  <th>TOWAR</th>
+                  <th>NAZWA</th>
+                  <th>STAN</th>
+                  <th>BRAK</th>
+                  <th>KOSZT ZAKUPU</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-braki">
+                <tr><td colspan="5" class="text-center text-muted py-4">Ładowanie danych...</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
   </div>
+
 </div>
 
 <script>
@@ -451,24 +461,28 @@
     const sekcjaOperacji = document.getElementById('sekcja-operacji');
     const sekcjaDruku = document.getElementById('sekcja-druku');
     const sekcjaSzukaj = document.getElementById('sekcja-szukaj');
-    const appContainer = document.getElementById('app-container');
-    const dashContainer = document.getElementById('dashboard-container');
+    const sekcjaRaporty = document.getElementById('sekcja-raporty');
+    const mainWrapper = document.getElementById('main-wrapper');
     
     sekcjaOperacji.style.display = 'none';
     sekcjaDruku.style.display = 'none';
     sekcjaSzukaj.style.display = 'none';
-    dashContainer.style.display = 'none';
-    appContainer.style.display = 'block';
+    sekcjaRaporty.style.display = 'none';
 
     if (modul === 'Wydruki') {
+      mainWrapper.className = "container-fluid py-3 px-2 px-md-4 app-viewport mode-mobile";
       sekcjaDruku.style.display = 'block';
     } else if (modul === 'Szukaj') {
+      mainWrapper.className = "container-fluid py-3 px-2 px-md-4 app-viewport mode-mobile";
       sekcjaSzukaj.style.display = 'block';
       setTimeout(() => { aktywujSkanowanie('search-towar-kod'); }, 100);
     } else if (modul === 'Raporty') {
-      dashContainer.style.display = 'block';
+      // PRZEŁĄCZAMY NA PEŁNĄ SZEROKOŚĆ DLA KOMPUTERA
+      mainWrapper.className = "container-fluid py-3 px-2 px-md-4 app-viewport mode-desktop";
+      sekcjaRaporty.style.display = 'block';
       zaladujDaneDashboardu();
     } else {
+      mainWrapper.className = "container-fluid py-3 px-2 px-md-4 app-viewport mode-mobile";
       sekcjaOperacji.style.display = 'block';
       ustawTryb(modul);
     }
