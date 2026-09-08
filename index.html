@@ -653,7 +653,7 @@
       tbodyObszary.innerHTML = `<tr><td colspan="3" class="text-center text-muted py-3">Brak zarejestrowanych wydań na obszary.</td></tr>`;
     }
 
-    // PRACOWNICI TABLE
+   // PRACOWNICI TABLE
     let tbodyPracownicy = document.getElementById('tbody-pracownicy');
     tbodyPracownicy.innerHTML = "";
     if (pracownicy && pracownicy.length > 0) {
@@ -661,8 +661,8 @@
         let tr = document.createElement('tr');
         tr.innerHTML = `
           <td class="fw-bold text-success">${p.pracownik}</td>
-          <td class="fw-bold">${parseInt(p.suma_pobrano || p.ilosc || 0).toLocaleString('pl-PL')} szt.</td>
-          <td class="text-secondary">${p.ilosc_wydań || 1} operacji</td>
+          <td class="fw-bold">${parseInt(p.suma_pobrano || 0).toLocaleString('pl-PL')} szt.</td>
+          <td class="text-secondary">${p.ilosc_wydan || p.ilosc_wydań || 1} operacji</td>
         `;
         tbodyPracownicy.appendChild(tr);
       });
