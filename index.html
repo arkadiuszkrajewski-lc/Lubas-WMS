@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>LUBAS WMS v5.30</title>
+  <title>LUBAS WMS v5.31</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
@@ -24,31 +24,45 @@
       --accent-danger: #ef4444;
       --accent-success: #10b981;
       --accent-purple: #a855f7;
+      --accent-amber: #f59e0b;
       --text-main: #f8fafc;
     }
     body { background-color: var(--bg-dark); color: var(--text-main); font-family: 'Inter', sans-serif; -webkit-user-select: none; user-select: none; line-height: 1.6; }
-    .modern-card { background: var(--card-dark); border-radius: 20px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 10px 30px rgba(0,0,0,0.3); margin-bottom: 30px; padding: 22px !important; }
-    .SkanerOkno { background: #000; border-radius: 16px; overflow: hidden; width: 100%; margin: 0 auto; display: none; aspect-ratio: 4/3; border: 2px solid rgba(255,255,255,0.15); margin-bottom: 30px; position: relative; }
+    
+    .modern-card { background: var(--card-dark); border-radius: 20px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 10px 30px rgba(0,0,0,0.3); margin-bottom: 28px; padding: 22px !important; }
+    .SkanerOkno { background: #000; border-radius: 16px; overflow: hidden; width: 100%; margin: 0 auto; display: none; aspect-ratio: 4/3; border: 2px solid rgba(255,255,255,0.15); margin-bottom: 28px; position: relative; }
     .SkanerOkno video { width: 100%; height: 100%; object-fit: cover; }
-    .wielki-input { font-size: 1.15rem; padding: 16px; background-color: #0f172a !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; }
-    .wielki-input:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3); }
-    .skan-aktywny { border: 2px solid var(--accent-danger) !important; box-shadow: 0 0 18px rgba(239, 68, 68, 0.35) !important; }
+    
+    /* Rozsunięte pola z przestrzenią na aktywne obramowanie */
+    .wielki-input { font-size: 1.1rem; padding: 16px; background-color: #0f172a !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.18); border-radius: 12px; }
+    .wielki-input:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.35); outline: none; }
+    .skan-aktywny { border: 2px solid var(--accent-danger) !important; box-shadow: 0 0 20px rgba(239, 68, 68, 0.4) !important; outline: none; }
+    
     .btn-modern { border-radius: 14px; padding: 16px; font-weight: 700; transition: all 0.2s; letter-spacing: 0.5px; }
     
-    .glowny-przelacznik-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
+    /* Poprawka nakładających się przycisków w menu mobilnym */
+    .glowny-przelacznik-grid { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+    @media (min-width: 480px) {
+      .glowny-przelacznik-grid { display: grid; grid-template-columns: 1fr 1fr; }
+    }
+    
     .glowny-przelacznik-grid .btn-check:checked + .btn { background-color: var(--accent-blue); border-color: var(--accent-blue); color: white; box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35); }
-    .glowny-przelacznik-grid .btn { font-size: 0.82rem; letter-spacing: 0.5px; padding: 14px 6px; font-weight: 800; border-color: rgba(255,255,255,0.15); color: #94a3b8; border-radius: 12px !important; text-transform: uppercase; }
+    .glowny-przelacznik-grid .btn { font-size: 0.85rem; letter-spacing: 0.5px; padding: 14px 10px; font-weight: 800; border-color: rgba(255,255,255,0.15); color: #94a3b8; border-radius: 12px !important; text-transform: uppercase; white-space: normal; word-break: break-word; text-align: center; }
     
     .mini-przelacznik .btn-check:checked + .btn { background-color: var(--accent-blue); border-color: var(--accent-blue); color: #fff; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
     .mini-przelacznik .btn { font-size: 0.85rem; font-weight: 700; color: #a6b5cc; border-color: rgba(255,255,255,0.15); border-radius: 10px !important; padding: 12px; }
 
-    .form-group-custom { margin-bottom: 25px; }
+    /* Rozsunięte grupy formularzy */
+    .form-group-custom { margin-bottom: 26px; }
     .label-custom { font-size: 0.92rem; letter-spacing: 0.5px; margin-bottom: 12px; display: block; }
     #login-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg-dark); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-    .login-scanner-box { background: #000; border-radius: 12px; overflow: hidden; width: 100%; max-width: 280px; display: none; aspect-ratio: 1/1; margin-bottom: 25px; border: 2px solid var(--accent-blue); position: relative; }
+    .login-scanner-box { background: #000; border-radius: 12px; overflow: hidden; width: 100%; max-width: 280px; display: none; aspect-ratio: 1/1; margin-bottom: 28px; border: 2px solid var(--accent-blue); position: relative; }
     .login-scanner-box video { width: 100%; height: 100%; object-fit: cover; }
     
-    .naglowek-operatora { display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; width: 100%; padding-bottom: 15px; margin-bottom: 15px; }
+    .naglowek-operatora { display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; width: 100%; padding-bottom: 15px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    
+    /* Styl wyników sprawdzania lokalizacji */
+    .karta-lokalizacji { background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 14px 18px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
   </style>
 </head>
 <body>
@@ -82,9 +96,9 @@
   </div>
 </div>
 
-<div class="container py-3" style="max-width: 480px;">
+<div class="container py-3" style="max-width: 500px;">
   <div class="naglowek-operatora">
-    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.30</span></h4>
+    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.31</span></h4>
     <div class="d-flex align-items-center gap-2">
       <span class="small text-secondary fw-bold">Operator:</span>
       <span id="user-badge" class="badge bg-success p-2" style="font-size: 0.75rem;">---</span>
@@ -92,6 +106,7 @@
     </div>
   </div>
 
+  <!-- Nawigacja główna: Odstępy i elastyczny układ mobilny -->
   <div class="modern-card p-3 mb-4">
     <div class="glowny-przelacznik-grid mb-3">
       <div>
@@ -113,9 +128,15 @@
         <label class="btn btn-outline-light w-100" for="tab-przesuniecie">🟡 PRZESUNIĘCIE</label>
       </div>
     </div>
-    <div>
-      <input type="radio" class="btn-check" name="main-nav" id="tab-wydruki" onclick="przelaczGlownyModul('Wydruki')">
-      <label class="btn btn-outline-light w-100" for="tab-wydruki">🖨️ PANEL WYDRUKÓW</label>
+    <div class="glowny-przelacznik-grid mb-3">
+      <div>
+        <input type="radio" class="btn-check" name="main-nav" id="tab-szukaj" onclick="przelaczGlownyModul('Szukaj')">
+        <label class="btn btn-outline-warning w-100 text-warning" for="tab-szukaj" style="border-color: rgba(245, 158, 11, 0.4);">🔍 SPRAWDŹ LOKALIZACJE</label>
+      </div>
+      <div>
+        <input type="radio" class="btn-check" name="main-nav" id="tab-wydruki" onclick="przelaczGlownyModul('Wydruki')">
+        <label class="btn btn-outline-light w-100" for="tab-wydruki">🖨️ PANEL WYDRUKÓW</label>
+      </div>
     </div>
   </div>
 
@@ -123,7 +144,7 @@
   <button id="btn-torch" type="button" onclick="przelaczLatarke()" class="btn btn-warning w-100 mb-3 fw-bold d-none" style="border-radius: 12px; padding: 12px;">🔦 Włącz latarkę</button>
   <div id="reader" class="SkanerOkno"></div>
 
-  <!-- SEKCJA OPERACJI SKANOWANIA -->
+  <!-- 1. SEKCJA OPERACJI SKANOWANIA -->
   <div id="sekcja-operacji" class="card modern-card p-3 shadow-sm border-0">
     <form id="wmsForm" onsubmit="wyslijDane(event)">
       <input type="hidden" id="operacja" value="Wydanie Osoba">
@@ -181,14 +202,43 @@
         <input type="number" id="ilosc" class="form-control wielki-input" value="1" min="1" placeholder="Wpisz ilość sztuk" required onfocus="schowajAparat()">
       </div>
 
-      <button type="submit" id="btn-submit" class="btn btn-primary w-100 py-3 fw-bold fs-5 btn-modern mt-2">ZAPISZ OPERACJĘ (Enter)</button>
+      <button type="submit" id="btn-submit" class="btn btn-primary w-100 py-3 fw-bold fs-5 btn-modern mt-3">ZAPISZ OPERACJĘ (Enter)</button>
     </form>
     <div id="status" class="alert alert-success mt-3 d-none text-center fw-bold" style="border-radius:12px;"></div>
   </div>
 
-  <!-- SEKCJA PANELU WYDRUKÓW -->
-  <div id="sekcja-druku" class="modern-card p-3" style="display: none; border: 1px solid rgba(59, 130, 246, 0.3);">
+  <!-- 2. SEKCJA SPRAWDZANIA LOKALIZACJI TOWARU -->
+  <div id="sekcja-szukaj" class="modern-card p-3" style="display: none; border: 1px solid rgba(245, 158, 11, 0.3);">
+    <h5 class="fw-bold text-warning mb-3">🔍 Podgląd stref i lokalizacji towaru</h5>
     
+    <div class="form-group-custom">
+      <label class="small text-secondary fw-bold mb-2">ZESKANUJ LUB WPISZ KOD TOWARU:</label>
+      <div class="input-group">
+        <input type="text" id="search-towar-kod" class="form-control wielki-input text-uppercase" placeholder="np. A12345" onclick="aktywujSkanowanie('search-towar-kod')">
+        <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('search-towar-kod')">❌</button>
+      </div>
+    </div>
+    
+    <button type="button" id="btn-szukaj-submit" onclick="sprawdzLokalizacjeTowaru()" class="btn btn-warning w-100 py-3 fw-bold btn-modern text-dark mb-4">Sprawdź gdzie leży towar</button>
+
+    <div id="szukaj-wyniki" class="d-none">
+      <div class="p-3 mb-3 rounded-3" style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255,255,255,0.12);">
+        <div class="text-secondary small fw-bold mb-1">PRODUKT:</div>
+        <div id="res-kod-nazwa" class="fw-bold text-white fs-5 mb-2">---</div>
+        <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary">
+          <span class="fw-bold text-secondary">ŁĄCZNIE NA MAGAZYNIE:</span>
+          <span id="res-suma" class="badge bg-success fs-6">0 szt.</span>
+        </div>
+      </div>
+
+      <div id="res-lista-polki">
+        <!-- Półki pojawią się dynamicznie -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. SEKCJA PANELU WYDRUKÓW -->
+  <div id="sekcja-druku" class="modern-card p-3" style="display: none; border: 1px solid rgba(59, 130, 246, 0.3);">
     <div class="p-3 mb-4 rounded-3" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.12);">
       <div class="form-check form-switch d-flex align-items-center justify-content-between p-0">
         <label class="form-check-label fw-bold text-info" for="check-agent-usb" style="cursor: pointer;">
@@ -223,11 +273,9 @@
           <input type="text" id="p-duplikat-kod" class="form-control wielki-input text-uppercase" placeholder="Skanuj towar, półkę lub pracownika" onclick="aktywujSkanowanie('p-duplikat-kod')">
           <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('p-duplikat-kod')">❌</button>
         </div>
-        <div class="small text-muted mt-2">Pobiera pełną nazwę towaru z BigQuery (`Nazwa_WMS`) przy skanowaniu towaru.</div>
       </div>
       <button type="button" id="btn-duplikat-submit" onclick="drukujDuplikatEtykiety()" class="btn btn-warning w-100 py-3 fw-bold btn-modern text-dark mt-2">Drukuj Duplikat Etykiety</button>
     </div>
-
   </div>
 
 </div>
@@ -265,6 +313,77 @@
     }
   };
 
+  function przelaczGlownyModul(modul) {
+    schowajAparat();
+    const sekcjaOperacji = document.getElementById('sekcja-operacji');
+    const sekcjaDruku = document.getElementById('sekcja-druku');
+    const sekcjaSzukaj = document.getElementById('sekcja-szukaj');
+    
+    if (modul === 'Wydruki') {
+      sekcjaOperacji.style.display = 'none';
+      sekcjaSzukaj.style.display = 'none';
+      sekcjaDruku.style.display = 'block';
+    } else if (modul === 'Szukaj') {
+      sekcjaOperacji.style.display = 'none';
+      sekcjaDruku.style.display = 'none';
+      sekcjaSzukaj.style.display = 'block';
+      setTimeout(() => { aktywujSkanowanie('search-towar-kod'); }, 100);
+    } else {
+      sekcjaOperacji.style.display = 'block';
+      sekcjaDruku.style.display = 'none';
+      sekcjaSzukaj.style.display = 'none';
+      ustawTryb(modul);
+    }
+  }
+
+  // LOGIKA SPRAWDZANIA LOKALIZACJI TOWARU
+  function sprawdzLokalizacjeTowaru() {
+    let kod = document.getElementById('search-towar-kod').value.trim().toUpperCase();
+    if(!kod) { alert("Wpisz lub zeskanuj kod towaru!"); return; }
+
+    const btn = document.getElementById('btn-szukaj-submit');
+    const boxWyniki = document.getElementById('szukaj-wyniki');
+    const listContainer = document.getElementById('res-lista-polki');
+    
+    btn.disabled = true;
+    btn.innerText = "Szukam w BigQuery...";
+
+    fetch(GOOGLE_SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ akcja: "sprawdz_lokalizacje_towaru", kod_towaru: kod }).toString()
+    })
+    .then(res => res.json())
+    .then(data => {
+      btn.disabled = false;
+      btn.innerText = "Sprawdź gdzie leży towar";
+
+      if(data.status === "SUCCESS") {
+        boxWyniki.classList.remove('d-none');
+        document.getElementById('res-kod-nazwa').innerText = data.kod + " - " + data.nazwa;
+        document.getElementById('res-suma').innerText = data.suma + " szt.";
+
+        listContainer.innerHTML = "";
+
+        if(data.lokalizacje && data.lokalizacje.length > 0) {
+          data.lokalizacje.forEach(item => {
+            let el = document.createElement('div');
+            el.className = "karta-lokalizacji";
+            el.innerHTML = `<span class="fw-bold text-info">📍 ${item.polka}</span><span class="badge bg-primary fs-6">${item.ilosc} szt.</span>`;
+            listContainer.appendChild(el);
+          });
+        } else {
+          listContainer.innerHTML = `<div class="alert alert-warning text-center fw-bold mt-2">⚠️ Brak towaru na fizycznych półkach magazynu.</div>`;
+        }
+      } else { alert("Błąd pobierania danych."); }
+    })
+    .catch(err => {
+      btn.disabled = false;
+      btn.innerText = "Sprawdź gdzie leży towar";
+      alert("Błąd połączenia z bazą.");
+    });
+  }
+
   function zapiszStanAgenta(wlaczony) {
     localStorage.setItem('wms_agent_usb', wlaczony);
     const badge = document.getElementById('agent-status-badge');
@@ -291,23 +410,8 @@
           wyslijDoBezposredniejZebry(data.zpl);
         }
       })
-      .catch(e => console.warn("Błąd sprawdzania kolejki:", e));
+      .catch(e => console.warn("Błąd kolejki:", e));
     }, 1200);
-  }
-
-  function przelaczGlownyModul(modul) {
-    schowajAparat();
-    const sekcjaOperacji = document.getElementById('sekcja-operacji');
-    const sekcjaDruku = document.getElementById('sekcja-druku');
-    
-    if (modul === 'Wydruki') {
-      sekcjaOperacji.style.display = 'none';
-      sekcjaDruku.style.display = 'block';
-    } else {
-      sekcjaOperacji.style.display = 'block';
-      sekcjaDruku.style.display = 'none';
-      ustawTryb(modul);
-    }
   }
 
   function przelaczPodpanelDruku(typ) {
@@ -322,11 +426,11 @@
         let urzadzenie = null;
         if (lista && lista.printer && lista.printer.length > 0) urzadzenie = lista.printer[0];
         if (urzadzenie) {
-          ZebraBrowserPrint.sendThroughPrintService(zplKod, urzadzenie, function() {}, function(e) { console.error(e); });
+          ZebraBrowserPrint.sendThroughPrintService(zplKod, urzadzenie, function() {}, function(e) {});
         } else {
           ZebraBrowserPrint.getDefaultDevice("printer", function(domyslne) {
             if(domyslne && domyslne.name) {
-              ZebraBrowserPrint.sendThroughPrintService(zplKod, domyslne, function() {}, function(e) { console.error(e); });
+              ZebraBrowserPrint.sendThroughPrintService(zplKod, domyslne, function() {}, function(e) {});
             }
           }, function(err) {});
         }
@@ -372,7 +476,6 @@
     document.getElementById('p-user-nazwa').value = "";
   }
 
-  // AUTO-DETEKCJA ORAZ DOCIĄGANIE NAZWY Z BQ DLA TOWARU
   function drukujDuplikatEtykiety() {
     let kod = document.getElementById('p-duplikat-kod').value.trim().toUpperCase();
     if(!kod) { alert("Skanuj lub wpisz kod!"); return; }
@@ -381,7 +484,6 @@
     let towarRegex = /^[A-Za-z]\d{5}$/; 
 
     if (polkaRegex.test(kod)) {
-      // PÓŁKA / LOKALIZACJA
       let czesci = kod.split('-');
       let m = czesci[0] || "--";
       let r = czesci[1] || "--";
@@ -402,7 +504,6 @@
       document.getElementById('p-duplikat-kod').value = "";
 
     } else if (towarRegex.test(kod)) {
-      // TOWAR - POBIERAMY Nazwa_WMS Z BIGQUERY
       const btn = document.getElementById('btn-duplikat-submit');
       btn.disabled = true;
       btn.innerText = "Pobieranie nazwy z BQ...";
@@ -436,15 +537,12 @@
       .catch(err => {
         btn.disabled = false;
         btn.innerText = "Drukuj Duplikat Etykiety";
-        alert("Błąd połączenia z BQ. Drukuję z samym kodem.");
-        
         let zpl = "^XA^CI28^FO20,60^BQN,2,4^FDQA," + kod + "^FS^FO150,50^A0N,18,16^FDKOD TOWARU:^FS^FO150,75^A0N,28,26^FD" + kod + "^FS^FO330,30^A0N,110,90^FDT^FS^XZ";
         przetworzIZlecdruk(zpl);
         document.getElementById('p-duplikat-kod').value = "";
       });
 
     } else {
-      // PRACOWNIK / INNE
       let pelneDane = kod.replace(/\s+/g, ' ');
       let zpl = "^XA^CI28" +
                 "^FO20,40^BQN,2,4^FDQA," + pelneDane + "^FS" + 
@@ -629,8 +727,12 @@
     document.getElementById('polka').classList.remove('skan-aktywny');
     document.getElementById('polka-do').classList.remove('skan-aktywny');
     document.getElementById('pracownik').classList.remove('skan-aktywny');
+    
     const inputDuplikat = document.getElementById('p-duplikat-kod');
     if(inputDuplikat) inputDuplikat.classList.remove('skan-aktywny');
+
+    const inputSearch = document.getElementById('search-towar-kod');
+    if(inputSearch) inputSearch.classList.remove('skan-aktywny');
 
     const el = document.getElementById(poleId);
     if(el) el.classList.add('skan-aktywny');
@@ -651,6 +753,9 @@
       document.getElementById('instrukcja-skanu').className = "alert alert-primary text-center fw-bold small text-white bg-primary";
     } else if(poleId === 'p-duplikat-kod') {
       document.getElementById('instrukcja-skanu').innerText = "📋 Zeskanuj dowolną etykietę do duplikatu";
+      document.getElementById('instrukcja-skanu').className = "alert alert-warning text-center fw-bold small text-dark";
+    } else if(poleId === 'search-towar-kod') {
+      document.getElementById('instrukcja-skanu').innerText = "🔍 Zeskanuj kod QR towaru do sprawdzania stref";
       document.getElementById('instrukcja-skanu').className = "alert alert-warning text-center fw-bold small text-dark";
     } else {
       document.getElementById('instrukcja-skanu').innerText = "🪪 KROK 3: Zeskanuj kod QR PRACOWNIKA";
@@ -673,6 +778,9 @@
         
         if (celInput === 'p-duplikat-kod') {
           schowajAparat();
+        } else if (celInput === 'search-towar-kod') {
+          schowajAparat();
+          sprawdzLokalizacjeTowaru();
         } else if (celInput === 'kod-towaru') {
           aktywujSkanowanie('polka');
         } else if (celInput === 'polka' && tryb === 'Przesunięcie') {
@@ -710,8 +818,12 @@
       document.getElementById('polka').classList.remove('skan-aktywny'); 
       document.getElementById('polka-do').classList.remove('skan-aktywny'); 
       document.getElementById('pracownik').classList.remove('skan-aktywny'); 
+      
       const inputDuplikat = document.getElementById('p-duplikat-kod');
       if(inputDuplikat) inputDuplikat.classList.remove('skan-aktywny');
+
+      const inputSearch = document.getElementById('search-towar-kod');
+      if(inputSearch) inputSearch.classList.remove('skan-aktywny');
     }); 
   }
 
