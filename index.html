@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>LUBAS WMS v5.38</title>
+  <title>LUBAS WMS v5.39</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
@@ -28,7 +28,7 @@
     }
     body { background-color: var(--bg-dark); color: var(--text-main); font-family: 'Inter', sans-serif; -webkit-user-select: none; user-select: none; line-height: 1.6; }
     
-    .modern-card { background: var(--card-dark); border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 10px 30px rgba(0,0,0,0.4); margin-bottom: 24px; padding: 22px !important; }
+    .modern-card { background: var(--card-dark); border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 10px 30px rgba(0,0,0,0.4); margin-bottom: 20px; padding: 20px !important; }
     .SkanerOkno { background: #000; border-radius: 16px; overflow: hidden; width: 100%; margin: 0 auto; display: none; aspect-ratio: 4/3; border: 2px solid rgba(255,255,255,0.15); margin-bottom: 28px; position: relative; }
     .SkanerOkno video { width: 100%; height: 100%; object-fit: cover; }
     
@@ -68,12 +68,39 @@
     .naglowek-operatora { display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; width: 100%; padding-bottom: 15px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
     .karta-lokalizacji { background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 14px 18px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
 
-    /* PURE MAKIETA EXECUTIVE DASHBOARD STYLES */
-    .kpi-card-dash { background: #1e293b; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px 20px; }
+    /* --- SZTYWNE WYMUSZENIE SIATKI DOKŁADNIE JAK NA MAKIECIE --- */
+    .dash-kpi-row {
+      display: flex !important;
+      flex-direction: row !important;
+      gap: 15px !important;
+      width: 100% !important;
+      margin-bottom: 20px !important;
+    }
+    .kpi-card-dash { 
+      flex: 1 1 0px !important;
+      background: #1e293b; 
+      border: 1px solid rgba(255,255,255,0.08); 
+      border-radius: 12px; 
+      padding: 16px 20px; 
+      min-width: 0;
+    }
     .kpi-title-dash { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.5px; }
     .kpi-val-dash { font-size: 1.8rem; font-weight: 800; margin-top: 2px; line-height: 1.2; }
 
-    /* Custom horizontal progress bars for Top Items */
+    .dash-main-grid {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr !important;
+      gap: 20px !important;
+      width: 100% !important;
+      align-items: start;
+    }
+
+    @media (max-width: 991px) {
+      .dash-kpi-row { flex-wrap: wrap !important; }
+      .kpi-card-dash { flex: 1 1 45% !important; }
+      .dash-main-grid { grid-template-columns: 1fr !important; }
+    }
+
     .bar-row { margin-bottom: 12px; }
     .bar-meta { display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 4px; }
     .bar-name { color: #cbd5e1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 75%; }
@@ -81,7 +108,6 @@
     .bar-track { height: 8px; background: #0f172a; border-radius: 4px; overflow: hidden; }
     .bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #38bdf8, #818cf8); }
 
-    /* Table styles matching PDF mockup */
     .table-dash { width: 100%; font-size: 0.82rem; color: #e2e8f0; border-collapse: collapse; }
     .table-dash th { background: #0f172a; padding: 8px 12px; color: #94a3b8; text-align: left; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.1); }
     .table-dash td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
@@ -129,7 +155,7 @@
 
 <div class="container-fluid py-3 px-2 px-md-4 app-viewport mode-mobile" id="main-wrapper">
   <div class="naglowek-operatora">
-    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.38</span></h4>
+    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.39</span></h4>
     <div class="d-flex align-items-center gap-2">
       <span class="small text-secondary fw-bold">Operator:</span>
       <span id="user-badge" class="badge bg-success p-2" style="font-size: 0.75rem;">---</span>
@@ -303,7 +329,7 @@
     </div>
   </div>
 
-  <!-- 💡 PERFEKCYJNIE ZMAPOWANA SEKCJA MAKIETY EXECUTIVE DASHBOARD -->
+  <!-- 💡 SEKCJA DASHBOARDU POŁĄCZONA ŚCIŚLE Z MAKIETĄ (POZIOMO + 2 KOLUMNY) -->
   <div id="sekcja-raporty" style="display: none;">
     
     <!-- HEADER -->
@@ -317,45 +343,35 @@
       </div>
     </div>
 
-    <!-- KPI GRID (4 KARTY W POZIOMYM RZĄDKU) -->
-    <div class="row g-3 mb-4">
-      <div class="col-12 col-sm-6 col-lg-3">
-        <div class="kpi-card-dash">
-          <div class="kpi-title-dash">Wartość Magazynu (PLN)</div>
-          <div id="kpi-wartosc" class="kpi-val-dash text-info">0,00 zł</div>
-          <div class="small text-muted" style="font-size:0.75rem;">Wycena wg bazy Enova/BigQuery</div>
-        </div>
+    <!-- 4 KARTY KPI W JEDNYM POZIOMYM POLE -->
+    <div class="dash-kpi-row">
+      <div class="kpi-card-dash">
+        <div class="kpi-title-dash">Wartość Magazynu (PLN)</div>
+        <div id="kpi-wartosc" class="kpi-val-dash text-info">0,00 zł</div>
+        <div class="small text-muted" style="font-size:0.75rem;">Wycena wg bazy Enova/BigQuery</div>
       </div>
-      <div class="col-12 col-sm-6 col-lg-3">
-        <div class="kpi-card-dash">
-          <div class="kpi-title-dash">Łączny Stan Towarów</div>
-          <div id="kpi-sztuki" class="kpi-val-dash text-success">0 szt.</div>
-          <div class="small text-muted" style="font-size:0.75rem;">Obsługiwane lokalizacje fizyczne</div>
-        </div>
+      <div class="kpi-card-dash">
+        <div class="kpi-title-dash">Łączny Stan Towarów</div>
+        <div id="kpi-sztuki" class="kpi-val-dash text-success">0 szt.</div>
+        <div class="small text-muted" style="font-size:0.75rem;">Obsługiwane lokalizacje fizyczne</div>
       </div>
-      <div class="col-12 col-sm-6 col-lg-3">
-        <div class="kpi-card-dash">
-          <div class="kpi-title-dash">Pozycje Poniżej Min.</div>
-          <div id="kpi-braki-ilosc" class="kpi-val-dash text-danger">0 pozycji</div>
-          <div class="small text-muted" style="font-size:0.75rem;">Wymagają pilnego uzupełnienia</div>
-        </div>
+      <div class="kpi-card-dash">
+        <div class="kpi-title-dash">Pozycje Poniżej Min.</div>
+        <div id="kpi-braki-ilosc" class="kpi-val-dash text-danger">0 pozycji</div>
+        <div class="small text-muted" style="font-size:0.75rem;">Wymagają pilnego uzupełnienia</div>
       </div>
-      <div class="col-12 col-sm-6 col-lg-3">
-        <div class="kpi-card-dash">
-          <div class="kpi-title-dash">Koszt Dokupienia (PLN)</div>
-          <div id="kpi-braki-koszt" class="kpi-val-dash text-warning">0,00 zł</div>
-          <div class="small text-muted" style="font-size:0.75rem;">Suma wg v_aktualne_braki_magazynowe</div>
-        </div>
+      <div class="kpi-card-dash">
+        <div class="kpi-title-dash">Koszt Dokupienia (PLN)</div>
+        <div id="kpi-braki-koszt" class="kpi-val-dash text-warning">0,00 zł</div>
+        <div class="small text-muted" style="font-size:0.75rem;">Suma wg v_aktualne_braki_magazynowe</div>
       </div>
     </div>
 
-    <!-- MAIN GRID (SIATKA DWUKOLUMNOWA Z ZRZUTU MAKIETY) -->
-    <div class="row g-4">
+    <!-- SIATKA DWUKOLUMNOWA OBOK SIEBIE -->
+    <div class="dash-main-grid">
       
-      <!-- LEWA KOLUMNA: TOP ITEMS & ROTACJA ABCD -->
-      <div class="col-12 col-lg-6">
-        
-        <!-- TOP 5 BAR CHART -->
+      <!-- LEWA STRONA: TOP 5 + ROTACJA ABCD -->
+      <div>
         <div class="modern-card p-3 mb-4">
           <h5 class="fw-bold text-white mb-3" style="font-size: 0.95rem;">💎 TOP 5 Najcenniejszych Pozycji na Stanie (PLN)</h5>
           <div id="container-top-bars">
@@ -363,7 +379,6 @@
           </div>
         </div>
 
-        <!-- STRUKTURA ROTACJI ABCD TABLE -->
         <div class="modern-card p-3 mb-0">
           <h5 class="fw-bold text-white mb-3" style="font-size: 0.95rem;">📦 Struktura Rotacji ABCD (Udział Wartościowy)</h5>
           <div class="table-responsive">
@@ -383,12 +398,11 @@
             </table>
           </div>
         </div>
-
       </div>
 
-      <!-- PRAWA KOLUMNA: PILNE BRAKI MAGAZYNOWE TABLE -->
-      <div class="col-12 col-lg-6">
-        <div class="modern-card p-3 h-100">
+      <!-- PRAWA STRONA: PILNE BRAKI MAGAZYNOWE -->
+      <div>
+        <div class="modern-card p-3" style="min-height: 100%;">
           <h5 class="fw-bold text-warning mb-3" style="font-size: 0.95rem;">⚠️ Pilne Braki Magazynowe (Sugestie Zakupowe)</h5>
           <div class="table-responsive" style="max-height: 520px; overflow-y: auto;">
             <table class="table-dash">
