@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>LUBAS WMS v5.42 Dashboard Suite</title>
+  <title>LUBAS WMS v5.43 Suite</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
@@ -67,7 +67,7 @@
     .naglowek-operatora { display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; width: 100%; padding-bottom: 15px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
     .karta-lokalizacji { background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 14px 18px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
 
-    /* DASHBOARD STRUCTURE & ALERTS */
+    /* DASHBOARD EXCLUSIVE STYLES */
     .dash-kpi-row {
       display: flex !important; flex-direction: row !important;
       gap: 15px !important; width: 100% !important; margin-bottom: 20px !important;
@@ -116,7 +116,6 @@
     .mode-mobile { max-width: 680px; }
     .mode-desktop { max-width: 1400px; }
 
-    /* DASHBOARD SUB-TABS */
     .sub-nav-dash { display: flex; gap: 8px; margin-bottom: 20px; }
     .sub-nav-dash .btn { font-size: 0.8rem; font-weight: 800; border-radius: 10px; padding: 10px 16px; border-color: rgba(255,255,255,0.1); color: #94a3b8; }
     .sub-nav-dash .btn-check:checked + .btn { background-color: var(--accent-blue); border-color: var(--accent-blue); color: #0b0f19; }
@@ -155,7 +154,7 @@
 
 <div class="container-fluid py-3 px-2 px-md-4 app-viewport mode-mobile" id="main-wrapper">
   <div class="naglowek-operatora">
-    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.42</span></h4>
+    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.43</span></h4>
     <div class="d-flex align-items-center gap-2">
       <span class="small text-secondary fw-bold">Operator:</span>
       <span id="user-badge" class="badge bg-success p-2" style="font-size: 0.75rem;">---</span>
@@ -329,7 +328,7 @@
     </div>
   </div>
 
-  <!-- 💡 SUITE MULTI-DASHBOARD (PRZEŁĄCZALNE DANE) -->
+  <!-- 💡 SUITE MULTI-DASHBOARD (PRZEŁĄCZALNE POD-WIDOKI) -->
   <div id="sekcja-raporty" style="display: none;">
     
     <!-- HEADER -->
@@ -343,7 +342,7 @@
       </div>
     </div>
 
-    <!-- SUB-TABS DO PRZEŁĄCZANIA WIDOKÓW DASHBOARDU -->
+    <!-- POD-TABSY DO PRZEŁĄCZANIA WIDOKÓW DASHBOARDU -->
     <div class="sub-nav-dash">
       <input type="radio" class="btn-check" name="dash-sub" id="dash-tab-ogolny" checked onclick="przelaczPodDash('ogolny')">
       <label class="btn btn-outline-secondary" for="dash-tab-ogolny">📌 PRZEGLĄD OGÓLNY</label>
@@ -355,7 +354,7 @@
       <label class="btn btn-outline-secondary" for="dash-tab-obrot">🔄 ANALIZA OBROTU I POBRAŃ</label>
     </div>
 
-    <!-- 4 KARTY KPI (WSPÓLNE DLA WIDOKÓW) -->
+    <!-- 4 KARTY KPI (Z CZERWONYM ALARMEM DLA BRAKÓW) -->
     <div class="dash-kpi-row">
       <div class="kpi-card-dash">
         <div class="kpi-title-dash">Wartość Magazynu (PLN)</div>
@@ -559,9 +558,7 @@
       sekcjaSzukaj.style.display = 'block';
       setTimeout(() => { aktywujSkanowanie('search-towar-kod'); }, 100);
     } else if (modul === 'Raporty') {
-      // UKRYWAMY PRZYCISK LATARKI NA RAPORTACH DLA CZYSTOŚCI WIDOKU
       if(btnTorch) btnTorch.classList.add('d-none');
-      
       mainWrapper.className = "container-fluid py-3 px-2 px-md-4 app-viewport mode-desktop";
       sekcjaRaporty.style.display = 'block';
       zaladujDaneDashboardu();
@@ -600,16 +597,21 @@
     let sumaSztuk = 0;
     let sektoryStats = {};
 
-    stany.sort((a, b) => (parseFloat(b.wartosc_magazynowa) || 0) - (parseFloat(a.wartosc_magazynowa) || 0));
+    // BEZPIECZNE MAPOWANIE DANYCH FINANSOWYCH
+    stany.sort((a, b) => {
+      let valA = parseFloat(a.wartosc_magazynowa || a.wartosc_magazynu || 0) || 0;
+      let valB = parseFloat(b.wartosc_magazynowa || b.wartosc_magazynu || 0) || 0;
+      return valB - valA;
+    });
 
     let tbodyStanyFin = document.getElementById('tbody-stany-finanse');
     tbodyStanyFin.innerHTML = "";
 
     stany.forEach(s => {
-      let val = parseFloat(s.wartosc_magazynowa) || 0;
-      let il = parseInt(s.BIEZACY_STAN_MAGAZYNU) || 0;
-      let sek = (s.Sektor_ABCD || "C").toUpperCase().trim();
-      let kat = s.Kategoria || "Inne";
+      let val = parseFloat(s.wartosc_magazynowa || s.wartosc_magazynu || 0) || 0;
+      let il = parseInt(s.BIEZACY_STAN_MAGAZYNU || s.biezacy_stan_magazynu || s.stan || 0) || 0;
+      let sek = (s.Sektor_ABCD || s.sektor || "C").toUpperCase().trim();
+      let kat = s.Kategoria || s.kategoria || "Materiały";
 
       sumaWartosci += val;
       sumaSztuk += il;
@@ -622,7 +624,7 @@
 
       let trS = document.createElement('tr');
       trS.innerHTML = `
-        <td class="fw-bold text-info">${s.towar || "---"}</td>
+        <td class="fw-bold text-info">${s.towar || s.kod || "---"}</td>
         <td class="small">${s.nazwa_towaru || s.Kod_enova || "---"}</td>
         <td>${il} szt.</td>
         <td class="fw-bold text-white">${val.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł</td>
@@ -638,10 +640,10 @@
     containerTop.innerHTML = "";
     
     let top5 = stany.slice(0, 5);
-    let maxVal = top5.length > 0 ? (parseFloat(top5[0].wartosc_magazynowa) || 1) : 1;
+    let maxVal = top5.length > 0 ? (parseFloat(top5[0].wartosc_magazynowa || top5[0].wartosc_magazynu || 1) || 1) : 1;
 
     top5.forEach(item => {
-      let v = parseFloat(item.wartosc_magazynowa) || 0;
+      let v = parseFloat(item.wartosc_magazynowa || item.wartosc_magazynu || 0) || 0;
       let pct = Math.min(Math.round((v / maxVal) * 100), 100);
       let nazwaFull = item.nazwa_towaru || item.Kod_enova || item.towar;
 
@@ -659,31 +661,40 @@
       containerTop.innerHTML += htmlRow;
     });
 
-    // OBSZARY TABLE
+    // OBSZARY TABLE (DOCIĄGANIE OBSZARÓW)
     let tbodyObszary = document.getElementById('tbody-obszary');
     tbodyObszary.innerHTML = "";
-    obszary.forEach(o => {
-      let tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td class="fw-bold text-info">${o.obszar || "INNY / NIEPRZYPISANY"}</td>
-        <td class="fw-bold">${parseInt(o.suma_sztuk || 0).toLocaleString('pl-PL')} szt.</td>
-        <td class="text-secondary">${o.ilosc_operacji || 0} wydań</td>
-      `;
-      tbodyObszary.appendChild(tr);
-    });
+    if (obszary && obszary.length > 0) {
+      obszary.forEach(o => {
+        let nameObs = o.obszar || o.Do_Lokalizacji || "INNY OBSZAR";
+        let tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="fw-bold text-info">${nameObs}</td>
+          <td class="fw-bold">${parseInt(o.suma_sztuk || o.ilosc || 0).toLocaleString('pl-PL')} szt.</td>
+          <td class="text-secondary">${o.ilosc_operacji || 1} wydań</td>
+        `;
+        tbodyObszary.appendChild(tr);
+      });
+    } else {
+      tbodyObszary.innerHTML = `<tr><td colspan="3" class="text-center text-muted py-3">Brak zarejestrowanych wydań na obszary.</td></tr>`;
+    }
 
-    // PRACOWNICY TABLE
+    // PRACOWNICI TABLE
     let tbodyPracownicy = document.getElementById('tbody-pracownicy');
     tbodyPracownicy.innerHTML = "";
-    pracownicy.forEach(p => {
-      let tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td class="fw-bold text-success">${p.pracownik}</td>
-        <td class="fw-bold">${parseInt(p.suma_pobrano || 0).toLocaleString('pl-PL')} szt.</td>
-        <td class="text-secondary">${p.ilosc_wydań || 0} operacji</td>
-      `;
-      tbodyPracownicy.appendChild(tr);
-    });
+    if (pracownicy && pracownicy.length > 0) {
+      pracownicy.forEach(p => {
+        let tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="fw-bold text-success">${p.pracownik}</td>
+          <td class="fw-bold">${parseInt(p.suma_pobrano || p.ilosc || 0).toLocaleString('pl-PL')} szt.</td>
+          <td class="text-secondary">${p.ilosc_wydań || 1} operacji</td>
+        `;
+        tbodyPracownicy.appendChild(tr);
+      });
+    } else {
+      tbodyPracownicy.innerHTML = `<tr><td colspan="3" class="text-center text-muted py-3">Brak danych pracowników.</td></tr>`;
+    }
 
     // SEKTORY ABCD TABLE
     let tbodySektory = document.getElementById('tbody-sektory');
@@ -706,14 +717,14 @@
       tbodySektory.appendChild(tr);
     });
 
-    // BRAKI MAGAZYNOWE TABLE
+    // BRAKI MAGAZYNOWE TABLE & ALARM CARD
     let sumaBrakiKoszt = 0;
     let tbodyBraki = document.getElementById('tbody-braki-ogolny');
     tbodyBraki.innerHTML = "";
 
     braki.forEach(b => {
-      let koszt = parseFloat(b.wartosc_do_domowienia) || 0;
-      let ileBrak = parseInt(b.ilosc_do_domowienia) || 0;
+      let koszt = parseFloat(b.wartosc_do_domowienia || 0) || 0;
+      let ileBrak = parseInt(b.ilosc_do_domowienia || 0) || 0;
       let stMin = b.stan_minimalny || b.Stany_minimalne || "--";
       let stMax = b.stan_maksymalny || b.Stan_maksymalny || "--";
       sumaBrakiKoszt += koszt;
