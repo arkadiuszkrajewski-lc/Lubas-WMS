@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>LUBAS WMS v5.49 Suite</title>
+  <title>LUBAS WMS v5.50 Suite</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
@@ -115,6 +115,20 @@
     .app-viewport { width: 100%; margin: 0 auto; transition: max-width 0.3s ease; }
     .mode-mobile { max-width: 680px; }
     .mode-desktop { max-width: 1400px; }
+
+    /* STYL SUFIKSU JEDNOSTKI BEZPOŚREDNIO ZA POLEM */
+    .input-group-text-jm {
+      background-color: #0f172a;
+      border: 1px solid rgba(255,255,255,0.18);
+      border-left: none;
+      color: var(--accent-blue);
+      font-weight: 800;
+      font-size: 1.05rem;
+      padding-left: 16px;
+      padding-right: 18px;
+      border-top-right-radius: 12px;
+      border-bottom-right-radius: 12px;
+    }
   </style>
 </head>
 <body>
@@ -150,7 +164,7 @@
 
 <div class="container-fluid py-3 px-2 px-md-4 app-viewport mode-mobile" id="main-wrapper">
   <div class="naglowek-operatora">
-    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.49</span></h4>
+    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.50</span></h4>
     <div class="d-flex align-items-center gap-2">
       <span class="small text-secondary fw-bold">Operator:</span>
       <span id="user-badge" class="badge bg-success p-2" style="font-size: 0.75rem;">---</span>
@@ -249,10 +263,13 @@
         </div>
       </div>
 
-      <!-- 💡 ELYTYKIETA ILOŚCI AKTUALIZOWANA DYNAMICZNIE POD DANY TOWAR -->
+      <!-- 💡 JEDNOSTKA WYŚWIETLANA DOKŁADNIE ZA POLEM ILOŚĆ -->
       <div class="form-group-custom">
-        <label id="label-ilosc-tekst" class="form-label fw-bold small text-secondary mb-2">4. ILOŚĆ (szt.):</label>
-        <input type="number" id="ilosc" class="form-control wielki-input" value="1" min="0.01" step="any" placeholder="Wpisz ilość" required onfocus="schowajAparat()">
+        <label class="form-label fw-bold small text-secondary mb-2">4. ILOŚĆ:</label>
+        <div class="input-group">
+          <input type="number" id="ilosc" class="form-control wielki-input" value="1" min="0.01" step="any" placeholder="Wpisz ilość" style="border-top-right-radius:0; border-bottom-right-radius:0;" required onfocus="schowajAparat()">
+          <span class="input-group-text input-group-text-jm" id="badge-jednostka-miary">szt.</span>
+        </div>
       </div>
 
       <button type="submit" id="btn-submit" class="btn btn-primary w-100 py-3 fw-bold fs-5 btn-modern mt-3">ZAPISZ OPERACJĘ (Enter)</button>
@@ -325,7 +342,7 @@
     </div>
   </div>
 
-  <!-- 💡 PEŁNY DASHBOARD DWUKOLUMNOWY Z ROTACJĄ TOWARÓW -->
+  <!-- 💡 PEŁNY DASHBOARD DWUKOLUMNOWY -->
   <div id="sekcja-raporty" style="display: none;">
     
     <!-- HEADER -->
@@ -515,15 +532,25 @@
       zapiszStanAgenta(stanAgenta);
     }
 
-    // NASŁUCHIWACZ ZMIANY KODU TOWARU DLA DOCIĄGANIA JEDNOSTKI
+    // NASŁUCHIWACZ WPISYWANIA I OPUSZCZENIA POLA KOD TOWARU
     const inputKod = document.getElementById('kod-towaru');
     if (inputKod) {
+      inputKod.addEventListener('input', function() {
+        let val = this.value.trim().toUpperCase();
+        if (val.length >= 5) {
+          sprawdzJednostkeTowaru(val);
+        }
+      });
       inputKod.addEventListener('blur', function() {
-        sprawdzJednostkeTowaru(this.value.trim().toUpperCase());
+        let val = this.value.trim().toUpperCase();
+        if (val.length >= 3) {
+          sprawdzJednostkeTowaru(val);
+        }
       });
     }
   };
 
+  // POBIERANIE JEDNOSTKI I USTAWIANIE BADGE'A PO PRAWEJ STRONIE INPUTU
   function sprawdzJednostkeTowaru(kod) {
     if (!kod || kod.length < 3) return;
     
@@ -535,8 +562,8 @@
     .then(res => res.json())
     .then(data => {
       let jm = (data && data.jednostka) ? data.jednostka : "szt.";
-      const elLabel = document.getElementById('label-ilosc-tekst');
-      if (elLabel) elLabel.innerText = "4. ILOŚĆ (" + jm + "):";
+      const badgeJm = document.getElementById('badge-jednostka-miary');
+      if (badgeJm) badgeJm.innerText = jm;
       
       const inputIlosc = document.getElementById('ilosc');
       if (inputIlosc) inputIlosc.placeholder = "Wpisz ilość w " + jm;
@@ -1382,8 +1409,8 @@
         document.getElementById('ilosc').value = '1';
         
         // Reset nazwy jednostki na domyślną
-        const elLabel = document.getElementById('label-ilosc-tekst');
-        if (elLabel) elLabel.innerText = "4. ILOŚĆ (szt.):";
+        const badgeJm = document.getElementById('badge-jednostka-miary');
+        if (badgeJm) badgeJm.innerText = "szt.";
 
         setTimeout(() => { 
           statusBox.classList.add('d-none'); 
