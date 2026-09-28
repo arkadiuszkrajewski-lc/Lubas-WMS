@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>LUBAS WMS v5.48 Suite</title>
+  <title>LUBAS WMS v5.49 Suite</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
@@ -150,7 +150,7 @@
 
 <div class="container-fluid py-3 px-2 px-md-4 app-viewport mode-mobile" id="main-wrapper">
   <div class="naglowek-operatora">
-    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.48</span></h4>
+    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.49</span></h4>
     <div class="d-flex align-items-center gap-2">
       <span class="small text-secondary fw-bold">Operator:</span>
       <span id="user-badge" class="badge bg-success p-2" style="font-size: 0.75rem;">---</span>
@@ -249,9 +249,10 @@
         </div>
       </div>
 
+      <!-- 💡 ELYTYKIETA ILOŚCI AKTUALIZOWANA DYNAMICZNIE POD DANY TOWAR -->
       <div class="form-group-custom">
-        <label class="form-label fw-bold small text-secondary mb-2">4. ILOŚĆ SZTUK:</label>
-        <input type="number" id="ilosc" class="form-control wielki-input" value="1" min="1" placeholder="Wpisz ilość sztuk" required onfocus="schowajAparat()">
+        <label id="label-ilosc-tekst" class="form-label fw-bold small text-secondary mb-2">4. ILOŚĆ (szt.):</label>
+        <input type="number" id="ilosc" class="form-control wielki-input" value="1" min="0.01" step="any" placeholder="Wpisz ilość" required onfocus="schowajAparat()">
       </div>
 
       <button type="submit" id="btn-submit" class="btn btn-primary w-100 py-3 fw-bold fs-5 btn-modern mt-3">ZAPISZ OPERACJĘ (Enter)</button>
@@ -365,7 +366,7 @@
     <!-- PEŁNA SIATKA DWUKOLUMNOWA -->
     <div class="dash-main-grid">
       
-      <!-- LEWA STRONA: TOP 5 + ROTACJA ABCD + OBSZARY -->
+      <!-- LEWA STRONA -->
       <div>
         <div class="modern-card p-3 mb-4">
           <h5 class="fw-bold text-white mb-3" style="font-size: 0.95rem;">💎 TOP 5 Najcenniejszych Pozycji na Stanie (PLN)</h5>
@@ -401,7 +402,7 @@
               <thead>
                 <tr>
                   <th>OBSZAR / DZIAŁ</th>
-                  <th>SZTUK</th>
+                  <th>ILOŚĆ</th>
                   <th>WYDAŃ</th>
                   <th>WARTOŚĆ (PLN)</th>
                 </tr>
@@ -414,7 +415,7 @@
         </div>
       </div>
 
-      <!-- PRAWA STRONA: BRAKI + TOP ROTACJA + PRACOWNICI -->
+      <!-- PRAWA STRONA -->
       <div>
         <div class="modern-card p-3 mb-4">
           <h5 class="fw-bold text-danger mb-3" style="font-size: 0.95rem;">⚠️ Pilne Braki Magazynowe (Sugestie Zakupowe)</h5>
@@ -437,7 +438,6 @@
           </div>
         </div>
 
-        <!-- 🔥 NOWA KARTA: TOP ROTUJĄCE TOWARY -->
         <div class="modern-card p-3 mb-4">
           <h5 class="fw-bold text-amber mb-3" style="font-size: 0.95rem;">🔥 Top Najbardziej Rotujące Towary</h5>
           <div class="table-responsive" style="max-height: 260px; overflow-y: auto;">
@@ -446,7 +446,7 @@
                 <tr>
                   <th>TOWAR</th>
                   <th>POBRAŃ</th>
-                  <th>SZTUK</th>
+                  <th>ILOŚĆ</th>
                   <th>WARTOŚĆ (PLN)</th>
                 </tr>
               </thead>
@@ -464,7 +464,7 @@
               <thead>
                 <tr>
                   <th>PRACOWNIK</th>
-                  <th>SZTUKI</th>
+                  <th>ILOŚĆ</th>
                   <th>OPERACJI</th>
                   <th>WARTOŚĆ (PLN)</th>
                 </tr>
@@ -514,7 +514,35 @@
       chk.checked = stanAgenta;
       zapiszStanAgenta(stanAgenta);
     }
+
+    // NASŁUCHIWACZ ZMIANY KODU TOWARU DLA DOCIĄGANIA JEDNOSTKI
+    const inputKod = document.getElementById('kod-towaru');
+    if (inputKod) {
+      inputKod.addEventListener('blur', function() {
+        sprawdzJednostkeTowaru(this.value.trim().toUpperCase());
+      });
+    }
   };
+
+  function sprawdzJednostkeTowaru(kod) {
+    if (!kod || kod.length < 3) return;
+    
+    fetch(GOOGLE_SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ akcja: "pobierz_nazwe_towaru", kod_towaru: kod }).toString()
+    })
+    .then(res => res.json())
+    .then(data => {
+      let jm = (data && data.jednostka) ? data.jednostka : "szt.";
+      const elLabel = document.getElementById('label-ilosc-tekst');
+      if (elLabel) elLabel.innerText = "4. ILOŚĆ (" + jm + "):";
+      
+      const inputIlosc = document.getElementById('ilosc');
+      if (inputIlosc) inputIlosc.placeholder = "Wpisz ilość w " + jm;
+    })
+    .catch(e => console.warn("Błąd pobierania JM:", e));
+  }
 
   function przelaczGlownyModul(modul) {
     schowajAparat();
@@ -582,7 +610,7 @@
 
     stany.forEach(s => {
       let val = parseFloat(s.wartosc_magazynowa || s.wartosc_magazynu || 0) || 0;
-      let il = parseInt(s.BIEZACY_STAN_MAGAZYNU || s.biezacy_stan_magazynu || s.stan || 0) || 0;
+      let il = parseFloat(s.BIEZACY_STAN_MAGAZYNU || s.biezacy_stan_magazynu || s.stan || 0) || 0;
       let sek = (s.Sektor_ABCD || s.sektor || "C").toUpperCase().trim();
       let kat = s.Kategoria || s.kategoria || "Materiały";
 
@@ -597,7 +625,7 @@
     });
 
     document.getElementById('kpi-wartosc').innerText = sumaWartosci.toLocaleString('pl-PL', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + " zł";
-    document.getElementById('kpi-sztuki').innerText = sumaSztuk.toLocaleString('pl-PL') + " szt.";
+    document.getElementById('kpi-sztuki').innerText = sumaSztuk.toLocaleString('pl-PL');
 
     // TOP 5 PROGRESS BARS
     let containerTop = document.getElementById('container-top-bars');
@@ -635,7 +663,7 @@
         let tr = document.createElement('tr');
         tr.innerHTML = `
           <td class="fw-bold text-info">${nameObs}</td>
-          <td class="fw-bold">${parseInt(o.suma_sztuk || 0).toLocaleString('pl-PL')} szt.</td>
+          <td class="fw-bold">${parseFloat(o.suma_sztuk || 0).toLocaleString('pl-PL')}</td>
           <td class="text-secondary">${o.ilosc_operacji || 1}</td>
           <td class="fw-bold text-warning">${valPln.toLocaleString('pl-PL', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} zł</td>
         `;
@@ -645,7 +673,7 @@
       tbodyObszary.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-3">Brak zarejestrowanych wydań na obszary.</td></tr>`;
     }
 
-    // TOP ROTACJA TABLE (NOWOŚĆ)
+    // TOP ROTACJA TABLE
     let tbodyRotacja = document.getElementById('tbody-rotacja');
     tbodyRotacja.innerHTML = "";
     if (rotacja && rotacja.length > 0) {
@@ -655,7 +683,7 @@
         tr.innerHTML = `
           <td class="fw-bold text-amber">${r.kod} <span class="text-muted fw-normal small">(${r.nazwa || ''})</span></td>
           <td class="text-secondary">${r.ilosc_pobran || 0}x</td>
-          <td class="fw-bold text-white">${parseInt(r.suma_sztuk || 0).toLocaleString('pl-PL')} szt.</td>
+          <td class="fw-bold text-white">${parseFloat(r.suma_sztuk || 0).toLocaleString('pl-PL')}</td>
           <td class="fw-bold text-warning">${valPln.toLocaleString('pl-PL', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} zł</td>
         `;
         tbodyRotacja.appendChild(tr);
@@ -673,7 +701,7 @@
         let tr = document.createElement('tr');
         tr.innerHTML = `
           <td class="fw-bold text-success">${p.pracownik}</td>
-          <td class="fw-bold">${parseInt(p.suma_pobrano || 0).toLocaleString('pl-PL')} szt.</td>
+          <td class="fw-bold">${parseFloat(p.suma_pobrano || 0).toLocaleString('pl-PL')}</td>
           <td class="text-secondary">${p.ilosc_wydan || 1}</td>
           <td class="fw-bold text-warning">${valPln.toLocaleString('pl-PL', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} zł</td>
         `;
@@ -711,7 +739,7 @@
 
     braki.forEach(b => {
       let koszt = parseFloat(b.wartosc_do_domowienia || 0) || 0;
-      let ileBrak = parseInt(b.ilosc_do_domowienia || 0) || 0;
+      let ileBrak = parseFloat(b.ilosc_do_domowienia || 0) || 0;
       let stMin = b.stan_minimalny || b.Stany_minimalne || "--";
       let stMax = b.stan_maksymalny || b.Stan_maksymalny || "--";
       sumaBrakiKoszt += koszt;
@@ -763,7 +791,7 @@
       if(data.status === "SUCCESS") {
         boxWyniki.classList.remove('d-none');
         document.getElementById('res-kod-nazwa').innerText = data.kod + " - " + data.nazwa;
-        document.getElementById('res-suma').innerText = data.suma + " szt.";
+        document.getElementById('res-suma').innerText = data.suma;
 
         listContainer.innerHTML = "";
 
@@ -771,7 +799,7 @@
           data.lokalizacje.forEach(item => {
             let el = document.createElement('div');
             el.className = "karta-lokalizacji";
-            el.innerHTML = `<span class="fw-bold text-info">📍 ${item.polka}</span><span class="badge bg-primary fs-6">${item.ilosc} szt.</span>`;
+            el.innerHTML = `<span class="fw-bold text-info">📍 ${item.polka}</span><span class="badge bg-primary fs-6">${item.ilosc}</span>`;
             listContainer.appendChild(el);
           });
         } else {
@@ -1173,6 +1201,10 @@
         inputTarget.value = decodedText;
         inputTarget.classList.remove('skan-aktywny');
       }
+
+      if (celInput === 'kod-towaru') {
+        sprawdzJednostkeTowaru(decodedText.trim().toUpperCase());
+      }
       
       wstrzymajAparat().then(() => {
         setTimeout(() => { blokadaSkanera = false; }, 1500); 
@@ -1349,6 +1381,10 @@
         document.getElementById('strefa-select').value = "";
         document.getElementById('ilosc').value = '1';
         
+        // Reset nazwy jednostki na domyślną
+        const elLabel = document.getElementById('label-ilosc-tekst');
+        if (elLabel) elLabel.innerText = "4. ILOŚĆ (szt.):";
+
         setTimeout(() => { 
           statusBox.classList.add('d-none'); 
           wstrzymajAparat().then(() => { aktywujSkanowanie('kod-towaru'); }); 
