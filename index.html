@@ -1,485 +1,3 @@
-// =========================================================================
-// LUBAS WMS v5.50 - BACKEND SYSTEM & DASHBOARD SUITE
-// Baza danych: BigQuery (lubas-prod-erp-enovoapi-0.Lubas_WMS_2)
-// =========================================================================
-
-var BQ_PROJECT_ID = 'lubas-prod-erp-enovoapi-0';
-var BQ_DATASET_ID = 'Lubas_WMS_2';
-var BQ_TABLE_ID   = 'wms_dataset'; 
-
-function doGet(e) {
-  try {
-    if (e.parameter && e.parameter.akcja === "pobierz_stan") {
-      var kodTowaru = (e.parameter.kod_towaru || "").trim();
-      var polka = (e.parameter.polka || "").trim().toUpperCase();
-      var stan = pobierzAktualnyStan(kodTowaru, polka);
-      return ContentService.createTextOutput(JSON.stringify({ status: "SUCCESS", stan: stan })).setMimeType(ContentService.MimeType.JSON);
-    }
-    return ContentService.createTextOutput(JSON.stringify({ status: "ERROR", message: "Brak parametrów." })).setMimeType(ContentService.MimeType.JSON);
-  } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ status: "ERROR", message: err.toString() })).setMimeType(ContentService.MimeType.JSON);
-  }
-}
-
-function doPost(e) {
-  try {
-    zapiszLogDoArkusza("INFO", "Odebrano żądanie POST", e.postData.contents);
-    var data = {};
-    var surowyTekst = e.postData.contents;
-    
-    if (surowyTekst.indexOf("{") === 0) {
-      data = JSON.parse(surowyTekst);
-    } else {
-      var pary = surowyTekst.split("&");
-      for (var i = 0; i < pary.length; i++) {
-        var k_v = pary[i].split("=");
-        var klucz = decodeURIComponent(k_v[0]);
-        var wartosc = k_v.length > 1 ? decodeURIComponent(k_v[1].replace(/\+/g, " ")) : "";
-        data[klucz] = wartosc;
-      }
-    }
-
-    // ==========================================
-    // 1. DANE DLA DASHBOARDÓW
-    // ==========================================
-    if (data.akcja === "pobierz_dane_dashboardu") {
-      var wynikFinalny = {
-        status: "SUCCESS",
-        stany: [],
-        braki: [],
-        obszary: [],
-        pracownicy: [],
-        rotacja: []
-      };
-
-      try {
-        // A. Stany i wycena
-        try {
-          var sqlStan = `SELECT * FROM \`lubas-prod-erp-enovoapi-0.Lubas_WMS_2.v_pelny_stan_magazynu\` LIMIT 2000`;
-          var resStan = BigQuery.Jobs.query({ query: sqlStan, useLegacySql: false }, BQ_PROJECT_ID);
-          wynikFinalny.stany = parsujWynikiBQ(resStan);
-        } catch(eA) { zapiszLogDoArkusza("ERROR", "Błąd pobierania stanów BQ", eA.toString()); }
-
-        // B. Braki
-        try {
-          var sqlBraki = `SELECT * FROM \`lubas-prod-erp-enovoapi-0.Lubas_WMS_2.v_aktualne_braki_magazynowe\` LIMIT 1000`;
-          var resBraki = BigQuery.Jobs.query({ query: sqlBraki, useLegacySql: false }, BQ_PROJECT_ID);
-          wynikFinalny.braki = parsujWynikiBQ(resBraki);
-        } catch(eB) { zapiszLogDoArkusza("ERROR", "Błąd pobierania braków BQ", eB.toString()); }
-
-        // C. Obszary / Działy z wyceną PLN
-        try {
-          var sqlObszary = `
-            SELECT 
-              w.do_lokalizacji AS obszar, 
-              SUM(w.ilosc) AS suma_sztuk, 
-              COUNT(1) AS ilosc_operacji,
-              SUM(w.ilosc * COALESCE(s.cena_jednostkowa, 0)) AS wartosc_pln
-            FROM \`lubas-prod-erp-enovoapi-0.Lubas_WMS_2.wms_dataset\` w
-            LEFT JOIN \`lubas-prod-erp-enovoapi-0.Lubas_WMS_2.v_pelny_stan_magazynu\` s 
-              ON UPPER(TRIM(w.towar)) = UPPER(TRIM(s.towar))
-            WHERE UPPER(TRIM(w.typ)) LIKE '%WYDANIE%' OR UPPER(TRIM(w.typ)) LIKE '%REGAŁ%'
-            GROUP BY obszar
-            ORDER BY wartosc_pln DESC
-            LIMIT 15
-          `;
-          var resObszary = BigQuery.Jobs.query({ query: sqlObszary, useLegacySql: false }, BQ_PROJECT_ID);
-          wynikFinalny.obszary = parsujWynikiBQ(resObszary);
-        } catch(eC) { zapiszLogDoArkusza("ERROR", "Błąd pobierania obszarów BQ", eC.toString()); }
-
-        // D. Top Pracownicy Pobierający z wyceną PLN (WYDANIE OSOBA)
-        try {
-          var sqlPracownicy = `
-            SELECT 
-              TRIM(w.pracownik) AS pracownik, 
-              SUM(w.ilosc) AS suma_pobrano, 
-              COUNT(1) AS ilosc_wydan,
-              SUM(w.ilosc * COALESCE(s.cena_jednostkowa, 0)) AS wartosc_pln
-            FROM \`lubas-prod-erp-enovoapi-0.Lubas_WMS_2.wms_dataset\` w
-            LEFT JOIN \`lubas-prod-erp-enovoapi-0.Lubas_WMS_2.v_pelny_stan_magazynu\` s 
-              ON UPPER(TRIM(w.towar)) = UPPER(TRIM(s.towar))
-            WHERE UPPER(TRIM(w.typ)) = 'WYDANIE OSOBA'
-              AND w.pracownik IS NOT NULL 
-              AND TRIM(w.pracownik) != ''
-            GROUP BY pracownik
-            ORDER BY wartosc_pln DESC
-            LIMIT 15
-          `;
-          var resPracownicy = BigQuery.Jobs.query({ query: sqlPracownicy, useLegacySql: false }, BQ_PROJECT_ID);
-          wynikFinalny.pracownicy = parsujWynikiBQ(resPracownicy);
-        } catch(eD) { zapiszLogDoArkusza("ERROR", "Błąd pobierania pracowników BQ", eD.toString()); }
-
-        // E. Top Rotujące Towary
-        try {
-          var sqlRotacja = `
-            SELECT 
-              w.towar AS kod,
-              COALESCE(s.nazwa_towaru, s.Kod_enova, w.towar) AS nazwa,
-              COUNT(1) AS ilosc_pobran,
-              SUM(w.ilosc) AS suma_sztuk,
-              SUM(w.ilosc * COALESCE(s.cena_jednostkowa, 0)) AS wartosc_pln
-            FROM \`lubas-prod-erp-enovoapi-0.Lubas_WMS_2.wms_dataset\` w
-            LEFT JOIN \`lubas-prod-erp-enovoapi-0.Lubas_WMS_2.v_pelny_stan_magazynu\` s 
-              ON UPPER(TRIM(w.towar)) = UPPER(TRIM(s.towar))
-            WHERE UPPER(TRIM(w.typ)) LIKE '%WYDANIE%' OR UPPER(TRIM(w.typ)) LIKE '%REGAŁ%'
-            GROUP BY kod, nazwa
-            ORDER BY suma_sztuk DESC
-            LIMIT 15
-          `;
-          var resRotacja = BigQuery.Jobs.query({ query: sqlRotacja, useLegacySql: false }, BQ_PROJECT_ID);
-          wynikFinalny.rotacja = parsujWynikiBQ(resRotacja);
-        } catch(eE) { zapiszLogDoArkusza("ERROR", "Błąd pobierania rotacji BQ", eE.toString()); }
-
-        return ContentService.createTextOutput(JSON.stringify(wynikFinalny))
-                             .setMimeType(ContentService.MimeType.JSON);
-
-      } catch (errBQ) {
-        return ContentService.createTextOutput(JSON.stringify({
-          status: "ERROR",
-          message: "Błąd łączny BigQuery: " + errBQ.toString()
-        })).setMimeType(ContentService.MimeType.JSON);
-      }
-    }
-
-    // ==========================================
-    // 2. SPRAWDZANIE STANU TOWARU WE WSZYSTKICH LOKALIZACJACH
-    // ==========================================
-    if (data.akcja === "sprawdz_lokalizacje_towaru") {
-      var kodTowaruSearch = (data.kod_towaru || "").trim().toUpperCase();
-      
-      var sqlNazwa = `
-        SELECT Nazwa_WMS 
-        FROM \`lubas-prod-erp-enovoapi-0.Lubas_WMS_2.Towary_kod_P\`
-        WHERE UPPER(TRIM(Kod_WMS)) = '${kodTowaruSearch}'
-        LIMIT 1
-      `;
-      var resNazwa = BigQuery.Jobs.query({ query: sqlNazwa, useLegacySql: false }, BQ_PROJECT_ID);
-      var nazwa = (resNazwa.rows && resNazwa.rows.length > 0 && resNazwa.rows[0].f[0].v !== null) ? String(resNazwa.rows[0].f[0].v).trim() : "Brak opisu w bazie";
-
-      var sqlPolki = `
-        WITH Ruchy AS (
-          SELECT do_lokalizacji AS polka, ilosc AS zmiana FROM \`lubas-prod-erp-enovoapi-0.Lubas_WMS_2.wms_dataset\` WHERE UPPER(TRIM(towar)) = '${kodTowaruSearch}'
-          UNION ALL
-          SELECT z_lokalizacji AS polka, -ilosc AS zmiana FROM \`lubas-prod-erp-enovoapi-0.Lubas_WMS_2.wms_dataset\` WHERE UPPER(TRIM(towar)) = '${kodTowaruSearch}'
-        )
-        SELECT polka, SUM(zmiana) AS stan
-        FROM Ruchy
-        WHERE UPPER(polka) NOT IN ('DOSTAWCA', 'PRODUKCJA')
-        GROUP BY polka
-        HAVING stan > 0
-        ORDER BY stan DESC
-      `;
-      var resPolki = BigQuery.Jobs.query({ query: sqlPolki, useLegacySql: false }, BQ_PROJECT_ID);
-      
-      var lokalizacje = [];
-      var sumaOgolna = 0;
-      
-      if (resPolki.rows && resPolki.rows.length > 0) {
-        for (var i = 0; i < resPolki.rows.length; i++) {
-          var p = String(resPolki.rows[i].f[0].v);
-          var s = parseFloat(resPolki.rows[i].f[1].v) || 0;
-          lokalizacje.push({ polka: p, ilosc: s });
-          sumaOgolna += s;
-        }
-      }
-
-      return ContentService.createTextOutput(JSON.stringify({
-        status: "SUCCESS",
-        kod: kodTowaruSearch,
-        nazwa: nazwa,
-        suma: sumaOgolna,
-        lokalizacje: lokalizacje
-      })).setMimeType(ContentService.MimeType.JSON);
-    }
-
-    // ==========================================
-    // 3. POBIERANIE NAZWY I JEDNOSTKI MIARY (BŁYSKAWICZNY CACHE)
-    // ==========================================
-    if (data.akcja === "pobierz_nazwe_towaru") {
-      var kodTowaruSearch = (data.kod_towaru || "").trim().toUpperCase();
-      var cache = CacheService.getScriptCache();
-      var cacheKey = "JM_" + kodTowaruSearch;
-      var cachedData = cache.get(cacheKey);
-
-      if (cachedData !== null) {
-        var parsed = JSON.parse(cachedData);
-        return ContentService.createTextOutput(JSON.stringify({ 
-          status: "SUCCESS", 
-          nazwa: parsed.nazwa, 
-          jednostka: parsed.jednostka 
-        })).setMimeType(ContentService.MimeType.JSON);
-      }
-
-      var sqlQuery = `
-        SELECT 
-          Nazwa_WMS, 
-          COALESCE(Jednostka_miary, 'szt.') AS jm 
-        FROM \`lubas-prod-erp-enovoapi-0.Lubas_WMS_2.Towary_kod_P\`
-        WHERE UPPER(TRIM(Kod_WMS)) = '${kodTowaruSearch}'
-        LIMIT 1
-      `;
-      var res = BigQuery.Jobs.query({ query: sqlQuery, useLegacySql: false }, BQ_PROJECT_ID);
-      var rows = res.rows;
-      var nazwa = "";
-      var jednostka = "szt.";
-
-      if (rows && rows.length > 0) {
-        if (rows[0].f[0].v !== null) nazwa = String(rows[0].f[0].v).trim();
-        if (rows[0].f[1] && rows[0].f[1].v !== null && String(rows[0].f[1].v).trim() !== "") {
-          jednostka = String(rows[0].f[1].v).trim();
-        }
-      }
-
-      var payload = { nazwa: nazwa, jednostka: jednostka };
-      cache.put(cacheKey, JSON.stringify(payload), 21600);
-
-      return ContentService.createTextOutput(JSON.stringify({ 
-        status: "SUCCESS", 
-        nazwa: nazwa, 
-        jednostka: jednostka 
-      })).setMimeType(ContentService.MimeType.JSON);
-    }
-
-    // ==========================================
-    // 4. OBSŁUGA KOLEJKI DRUKU
-    // ==========================================
-    if (data.akcja === "dodaj_do_kolejki") {
-      var idZadania = dodajDoKolejkiDruku(data.zpl);
-      return ContentService.createTextOutput(JSON.stringify({ status: "SUCCESS", id: idZadania }))
-                           .setMimeType(ContentService.MimeType.JSON);
-    }
-
-    if (data.akcja === "pobierz_kolejke") {
-      var zplKod = pobierzINastepnyWydruk();
-      return ContentService.createTextOutput(JSON.stringify({ zpl: zplKod }))
-                           .setMimeType(ContentService.MimeType.JSON);
-    }
-
-    // ==========================================
-    // 5. WERYFIKACJA UŻYTKOWNIKA (LOGOWANIE)
-    // ==========================================
-    if (data.akcja === "weryfikuj_user") {
-      var emailWejsciowy = (data.email || "").trim().toLowerCase();
-      var hasloWejsciowe = (data.haslo || "").trim();
-
-      var sqlQueryUser = `
-        SELECT Email, \`has__o\`, Nazwisko_Imie 
-        FROM \`lubas-prod-erp-enovoapi-0.Lubas_WMS_2.wms_użytkownicy\`
-        WHERE LOWER(TRIM(Email)) = '${emailWejsciowy}'
-        LIMIT 1
-      `;
-
-      var resUser = BigQuery.Jobs.query({ query: sqlQueryUser, useLegacySql: false }, BQ_PROJECT_ID);
-      var rowsUser = resUser.rows;
-
-      if (rowsUser && rowsUser.length > 0) {
-        var dbHaslo = rowsUser[0].f[1].v ? String(rowsUser[0].f[1].v).trim() : "";
-        var dbNazwiskoImie = rowsUser[0].f[2].v ? String(rowsUser[0].f[2].v).trim() : "";
-
-        if (dbHaslo === hasloWejsciowe) {
-          return ContentService.createTextOutput("DOZWOLONY|" + dbNazwiskoImie).setMimeType(ContentService.MimeType.TEXT);
-        } else {
-          return ContentService.createTextOutput("ODRZUCONY|Błędne hasło.").setMimeType(ContentService.MimeType.TEXT);
-        }
-      } else {
-        return ContentService.createTextOutput("ODRZUCONY|Brak użytkownika w bazie.").setMimeType(ContentService.MimeType.TEXT);
-      }
-    }
-    
-    // ==========================================
-    // 6. OPERACJA ZAPISU RUCHU WMS
-    // ==========================================
-    var towarRaw = (data.towar || "").trim().toUpperCase();
-    if (!/^[A-Z]\d{5}$/.test(towarRaw)) {
-      throw new Error("Nieprawidłowy kod towaru: '" + towarRaw + "'. Wymagana litera + 5 cyfr.");
-    }
-    var towar = towarRaw;
-
-    var typOperacji = (data.typ || "PRZYJĘCIE").toUpperCase();
-    var zLokalizacji = (data.Z_Lokalizacji || "").trim();
-    var doLokalizacji = (data.Do_Lokalizacji || "").trim();
-    var lokalizacjaRegex = /^\d{2}-\d{2}-\d{2}-[A-Za-z]-\d{2}$/;
-
-    if (typOperacji !== "PRZYJĘCIE" && !lokalizacjaRegex.test(zLokalizacji)) {
-      throw new Error("Półka źródłowa musi mieć format: 00-00-00-A-00.");
-    }
-
-    if (typOperacji === "PRZYJĘCIE" || typOperacji === "PRZESUNIĘCIE") {
-      if (!lokalizacjaRegex.test(doLokalizacji)) {
-        throw new Error("Lokalizacja docelowa musi mieć format: 00-00-00-A-00.");
-      }
-    } else if (typOperacji === "WYDANIE REGAŁ" || typOperacji === "WYDANIE (REGAŁ)") {
-      if (!doLokalizacji || doLokalizacji.length < 2) {
-        throw new Error("Wymagane podanie nazwy regału/strefy docelowej.");
-      }
-    }
-
-    var pracownikSurowy = (data.pracownik || data.operator || "").trim();
-    if (pracownikSurowy.indexOf("@") !== -1) {
-      pracownikSurowy = pracownikSurowy.split("@")[0].replace(/\./g, " ");
-    }
-    pracownikSurowy = pracownikSurowy.replace(/[^a-zA-Zà-žÀ-Ž\s-]/g, "").replace(/\s+/g, " ").trim();
-    var czesciImienia = pracownikSurowy.split(" ");
-    if (czesciImienia.length < 2 || czesciImienia[0].length < 2 || czesciImienia[1].length < 2) {
-      throw new Error("Nieprawidłowe dane pracownika: Wymagane pełne imię i nazwisko.");
-    }
-    var pracownik = czesciImienia.map(function(slowo) {
-      return slowo.charAt(0).toUpperCase() + slowo.slice(1).toLowerCase();
-    }).join(" ");
-
-    var teraz = new Date(new Date().getTime() + (2 * 60 * 60 * 1000));
-    var isoZlokalizowany = teraz.toISOString().replace('T', ' ').substring(0, 19);
-
-    var idRuchu = "RUCH-" + Utilities.formatDate(teraz, "GMT", "yyyyMMdd-HHmmss");
-    var ilosc = parseFloat(data.ilosc) || 1.0;
-    var operator = data.operator || "";
-
-    var wiersz = {
-      insertId: idRuchu,
-      json: {
-        id_ruchu: String(idRuchu),
-        data_czas: isoZlokalizowany,
-        operator: String(operator),
-        typ: String(typOperacji).toUpperCase(),
-        towar: String(towar),
-        ilosc: ilosc,
-        z_lokalizacji: String(zLokalizacji).toUpperCase(),
-        do_lokalizacji: String(doLokalizacji).toUpperCase(),
-        pracownik: String(pracownik)
-      }
-    };
-
-    var polkaDoArkusza = (wiersz.json.typ === "PRZYJĘCIE") ? wiersz.json.do_lokalizacji : wiersz.json.z_lokalizacji;
-    if (wiersz.json.typ !== "PRZYJĘCIE") {
-      var aktualnyStan = pobierzAktualnyStan(wiersz.json.towar, polkaDoArkusza);
-      if (aktualnyStan < ilosc) {
-        throw new Error("Brak wystarczającej ilości towaru na półce " + polkaDoArkusza + ". Dostępne: " + aktualnyStan);
-      }
-    }
-
-    var dataLoad = { rows: [wiersz] };
-    var odpowiedzBQ = BigQuery.Tabledata.insertAll(dataLoad, BQ_PROJECT_ID, BQ_DATASET_ID, BQ_TABLE_ID);
-    
-    if (odpowiedzBQ.insertErrors && odpowiedzBQ.insertErrors.length > 0) {
-      throw new Error("BigQuery insert error: " + JSON.stringify(odpowiedzBQ.insertErrors));
-    }
-
-    aktualizujArkuszStanow(wiersz.json.towar, polkaDoArkusza, wiersz.json.typ, wiersz.json.ilosc);
-    
-    return ContentService.createTextOutput(JSON.stringify({ status: "SUCCESS", id_ruchu: idRuchu }))
-                         .setMimeType(ContentService.MimeType.JSON);
-                         
-  } catch (error) {
-    zapiszLogDoArkusza("ERROR", "Wyjątek w doPost", error.toString());
-    return ContentService.createTextOutput(JSON.stringify({ status: "ERROR", message: error.toString() }))
-                         .setMimeType(ContentService.MimeType.JSON);
-  }
-}
-
-function parsujWynikiBQ(queryResult) {
-  var wynik = [];
-  if (queryResult && queryResult.rows) {
-    var fields = queryResult.schema.fields;
-    for (var i = 0; i < queryResult.rows.length; i++) {
-      var obj = {};
-      for (var j = 0; j < queryResult.rows[i].f.length; j++) {
-        obj[fields[j].name] = queryResult.rows[i].f[j].v !== null ? queryResult.rows[i].f[j].v : "";
-      }
-      wynik.push(obj);
-    }
-  }
-  return wynik;
-}
-
-function dodajDoKolejkiDruku(zplKod) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName("KOLEJKA_DRUKU") || ss.insertSheet("KOLEJKA_DRUKU");
-  if (sheet.getLastRow() === 0) {
-    sheet.appendRow(["ID_ZADANIA", "DATA_CZAS", "ZPL", "STATUS"]);
-  }
-  var id = "PRN-" + Utilities.formatDate(new Date(), "GMT+2", "yyyyMMdd-HHmmss-SSS");
-  var dataCzas = Utilities.formatDate(new Date(), "GMT+2", "yyyy-MM-dd HH:mm:ss");
-  sheet.appendRow([id, dataCzas, zplKod, "OCZEKUJE"]);
-  return id;
-}
-
-function pobierzINastepnyWydruk() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName("KOLEJKA_DRUKU");
-  if (!sheet) return "";
-  var data = sheet.getDataRange().getValues();
-  for (var i = 1; i < data.length; i++) {
-    if (data[i][3] === "OCZEKUJE") {
-      var zplKod = data[i][2];
-      sheet.deleteRow(i + 1);
-      return zplKod;
-    }
-  }
-  return "";
-}
-
-function pobierzAktualnyStan(kod, polka) {
-  try {
-    var sqlQuery = `
-      WITH RuchyNaPolce AS (
-        SELECT ilosc AS zmiana FROM \`lubas-prod-erp-enovoapi-0.Lubas_WMS_2.wms_dataset\`
-        WHERE UPPER(TRIM(towar)) = '${kod}' AND UPPER(TRIM(do_lokalizacji)) = '${polka}'
-        UNION ALL
-        SELECT -ilosc AS zmiana FROM \`lubas-prod-erp-enovoapi-0.Lubas_WMS_2.wms_dataset\`
-        WHERE UPPER(TRIM(towar)) = '${kod}' AND UPPER(TRIM(z_lokalizacji)) = '${polka}'
-      )
-      SELECT COALESCE(SUM(zmiana), 0) AS stan FROM RuchyNaPolce
-    `;
-    var res = BigQuery.Jobs.query({ query: sqlQuery, useLegacySql: false }, BQ_PROJECT_ID);
-    if (res.rows && res.rows.length > 0 && res.rows[0].f[0].v !== null) {
-      return parseFloat(res.rows[0].f[0].v) || 0;
-    }
-    return 0;
-  } catch (err) {
-    return 0;
-  }
-}
-
-function zapiszLogDoArkusza(status, akcja, szczegoly) {
-  try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName("LOGI SCRIPTU") || ss.insertSheet("LOGI SCRIPTU");
-    if (sheet.getLastRow() === 0) {
-      sheet.appendRow(["DATA I GODZINA", "STATUS", "AKCJA", "SZCZEGÓŁY / DANE JSON"]);
-    }
-    sheet.appendRow([new Date(), status, akcja, szczegoly]);
-  } catch (e) {}
-}
-
-function aktualizujArkuszStanow(kod, polka, typ, ilosc) {
-  try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName("STAN AKTUALNY") || ss.insertSheet("STAN AKTUALNY");
-    if (sheet.getLastRow() === 0) {
-      sheet.appendRow(["KOD TOWARU", "PÓŁKA / LOKALIZACJA", "STAN AKTUALNY"]);
-    }
-    var dane = sheet.getDataRange().getValues();
-    var zmiana = (typ === "PRZYJĘCIE") ? parseFloat(ilosc) : -parseFloat(ilosc);
-    var znaleziono = false;
-    for (var i = 1; i < dane.length; i++) {
-      if (dane[i][0] == kod && dane[i][1] == polka) {
-        var staryStan = parseFloat(dane[i][2]) || 0;
-        var nowyStan = staryStan + zmiana;
-        if (nowyStan < 0) nowyStan = 0;
-        sheet.getRange(i + 1, 3).setValue(nowyStan);
-        znaleziono = true;
-        break;
-      }
-    }
-    if (!znaleziono && typ === "PRZYJĘCIE") {
-      sheet.appendRow([kod, polka, ilosc]);
-    }
-  } catch (err) {}
-}
-
-
-
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -520,8 +38,7 @@ function aktualizujArkuszStanow(kod, polka, typ, ilosc) {
     
     .btn-modern { border-radius: 14px; padding: 16px; font-weight: 700; transition: all 0.2s; letter-spacing: 0.5px; }
     
-    /* SIATKA KAFELKÓW W UKRYWANYM PANELU MENU */
-    .menu-grid-container { display: grid; grid-template-columns: 1fr; gap: 10px; width: 100%; }
+    .menu-grid-container { display: grid; grid-template-columns: 1fr; gap: 12px; width: 100%; }
     @media (min-width: 576px) { .menu-grid-container { grid-template-columns: repeat(2, 1fr); } }
     @media (min-width: 992px) { .menu-grid-container { grid-template-columns: repeat(3, 1fr); } }
     
@@ -529,9 +46,9 @@ function aktualizujArkuszStanow(kod, polka, typ, ilosc) {
     
     .kafelek-menu { 
       display: flex; align-items: center; justify-content: center; 
-      padding: 14px 10px; font-size: 0.85rem; font-weight: 800; 
+      padding: 16px 12px; font-size: 0.85rem; font-weight: 800; 
       color: #94a3b8; background-color: #0f172a; 
-      border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; 
+      border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; 
       cursor: pointer; transition: all 0.2s ease; text-transform: uppercase; 
       text-align: center; line-height: 1.3; width: 100%;
     }
@@ -547,7 +64,7 @@ function aktualizujArkuszStanow(kod, polka, typ, ilosc) {
     .login-scanner-box { background: #000; border-radius: 12px; overflow: hidden; width: 100%; max-width: 280px; display: none; aspect-ratio: 1/1; margin-bottom: 28px; border: 2px solid var(--accent-blue); position: relative; }
     .login-scanner-box video { width: 100%; height: 100%; object-fit: cover; }
     
-    .naglowek-operatora { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; width: 100%; padding-bottom: 12px; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .naglowek-operatora { display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; width: 100%; padding-bottom: 15px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
     .karta-lokalizacji { background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 14px 18px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
 
     /* DASHBOARD STYLES */
@@ -599,6 +116,7 @@ function aktualizujArkuszStanow(kod, polka, typ, ilosc) {
     .mode-mobile { max-width: 680px; }
     .mode-desktop { max-width: 1400px; }
 
+    /* STYL SUFIKSU JEDNOSTKI BEZPOŚREDNIO ZA POLEM */
     .input-group-text-jm {
       background-color: #0f172a;
       border: 1px solid rgba(255,255,255,0.18);
@@ -645,59 +163,44 @@ function aktualizujArkuszStanow(kod, polka, typ, ilosc) {
 </div>
 
 <div class="container-fluid py-3 px-2 px-md-4 app-viewport mode-mobile" id="main-wrapper">
-  
-  <!-- ULEPSZONY NAGŁÓWEK Z PRZYCISKIEM MENU ORAZ ETYKIETĄ AKTUALNEGO TRYBU -->
   <div class="naglowek-operatora">
+    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.50</span></h4>
     <div class="d-flex align-items-center gap-2">
-      <button class="btn btn-outline-info py-2 px-3 fw-bold" type="button" onclick="przelaczWidocznoscMenu()" style="border-radius: 10px;">
-        ☰ MENU
-      </button>
-      <div class="d-flex flex-column ms-1">
-        <span class="fw-bold fs-6 leading-tight">LUBAS WMS <span class="text-info" style="font-size:0.75rem;">v5.50</span></span>
-        <span id="active-mode-badge" class="badge bg-danger mt-1 text-uppercase" style="font-size: 0.7rem; align-self: start;">🔴 WYDANIE (OSOBA)</span>
-      </div>
-    </div>
-    
-    <div class="d-flex align-items-center gap-2">
-      <span class="small text-secondary fw-bold d-none d-sm-inline">Operator:</span>
+      <span class="small text-secondary fw-bold">Operator:</span>
       <span id="user-badge" class="badge bg-success p-2" style="font-size: 0.75rem;">---</span>
       <button onclick="wylogujOperatora()" class="btn btn-sm btn-outline-secondary py-1 px-2" style="font-size: 0.75rem;">Zmień</button>
     </div>
   </div>
 
-  <!-- UKRYWANY PANEL Z OPCJAMI MENU (CHOWA SIĘ AUTOMATYCZNIE PO WYBORZE) -->
-  <div id="quick-menu-box" class="modern-card p-3 mb-4 d-none" style="border: 1px solid rgba(56, 189, 248, 0.3);">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <span class="fw-bold text-info small text-uppercase">Wybierz moduł operacji:</span>
-      <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="przelaczWidocznoscMenu()">✕ Zamknij</button>
-    </div>
+  <!-- NAWIGACJA KAFELKOWA -->
+  <div class="modern-card p-3 mb-4">
     <div class="menu-grid-container">
       <div>
-        <input type="radio" class="btn-check" name="main-nav" id="tab-wydanie-osoba" checked onclick="wybierzModul('Wydanie Osoba')">
+        <input type="radio" class="btn-check" name="main-nav" id="tab-wydanie-osoba" checked onclick="przelaczGlownyModul('Wydanie Osoba')">
         <label class="kafelek-menu" for="tab-wydanie-osoba">🔴 WYDANIE (OSOBA)</label>
       </div>
       <div>
-        <input type="radio" class="btn-check" name="main-nav" id="tab-wydanie-regal" onclick="wybierzModul('Wydanie Regał')">
+        <input type="radio" class="btn-check" name="main-nav" id="tab-wydanie-regal" onclick="przelaczGlownyModul('Wydanie Regał')">
         <label class="kafelek-menu" for="tab-wydanie-regal">📦 WYDANIE (REGAŁ)</label>
       </div>
       <div>
-        <input type="radio" class="btn-check" name="main-nav" id="tab-przyjecie" onclick="wybierzModul('Przyjęcie')">
+        <input type="radio" class="btn-check" name="main-nav" id="tab-przyjecie" onclick="przelaczGlownyModul('Przyjęcie')">
         <label class="kafelek-menu" for="tab-przyjecie">🟢 PRZYJĘCIE</label>
       </div>
       <div>
-        <input type="radio" class="btn-check" name="main-nav" id="tab-przesuniecie" onclick="wybierzModul('Przesunięcie')">
+        <input type="radio" class="btn-check" name="main-nav" id="tab-przesuniecie" onclick="przelaczGlownyModul('Przesunięcie')">
         <label class="kafelek-menu" for="tab-przesuniecie">🟡 PRZESUNIĘCIE</label>
       </div>
       <div>
-        <input type="radio" class="btn-check" name="main-nav" id="tab-szukaj" onclick="wybierzModul('Szukaj')">
+        <input type="radio" class="btn-check" name="main-nav" id="tab-szukaj" onclick="przelaczGlownyModul('Szukaj')">
         <label class="kafelek-menu text-warning" for="tab-szukaj" style="border-color: rgba(245, 158, 11, 0.3);">🔍 SPRAWDŹ LOKALIZACJE</label>
       </div>
       <div>
-        <input type="radio" class="btn-check" name="main-nav" id="tab-wydruki" onclick="wybierzModul('Wydruki')">
+        <input type="radio" class="btn-check" name="main-nav" id="tab-wydruki" onclick="przelaczGlownyModul('Wydruki')">
         <label class="kafelek-menu" for="tab-wydruki">🖨️ PANEL WYDRUKÓW</label>
       </div>
       <div style="grid-column: 1 / -1;">
-        <input type="radio" class="btn-check" name="main-nav" id="tab-raporty" onclick="wybierzModul('Raporty')">
+        <input type="radio" class="btn-check" name="main-nav" id="tab-raporty" onclick="przelaczGlownyModul('Raporty')">
         <label class="kafelek-menu text-info fw-bold" for="tab-raporty" style="border-color: rgba(56, 189, 248, 0.4); background: rgba(56, 189, 248, 0.08);">📊 RAPORTY & ANALITYKA (DESKTOP)</label>
       </div>
     </div>
@@ -760,6 +263,7 @@ function aktualizujArkuszStanow(kod, polka, typ, ilosc) {
         </div>
       </div>
 
+      <!-- 💡 JEDNOSTKA WYŚWIETLANA DOKŁADNIE ZA POLEM ILOŚĆ -->
       <div class="form-group-custom">
         <label class="form-label fw-bold small text-secondary mb-2">4. ILOŚĆ:</label>
         <div class="input-group">
@@ -838,8 +342,10 @@ function aktualizujArkuszStanow(kod, polka, typ, ilosc) {
     </div>
   </div>
 
-  <!-- DASHBOARD DWUKOLUMNOWY -->
+  <!-- 💡 PEŁNY DASHBOARD DWUKOLUMNOWY -->
   <div id="sekcja-raporty" style="display: none;">
+    
+    <!-- HEADER -->
     <div class="modern-card p-3 mb-3" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);">
       <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
         <div>
@@ -874,8 +380,10 @@ function aktualizujArkuszStanow(kod, polka, typ, ilosc) {
       </div>
     </div>
 
-    <!-- SIATKA DWUKOLUMNOWA -->
+    <!-- PEŁNA SIATKA DWUKOLUMNOWA -->
     <div class="dash-main-grid">
+      
+      <!-- LEWA STRONA -->
       <div>
         <div class="modern-card p-3 mb-4">
           <h5 class="fw-bold text-white mb-3" style="font-size: 0.95rem;">💎 TOP 5 Najcenniejszych Pozycji na Stanie (PLN)</h5>
@@ -924,6 +432,7 @@ function aktualizujArkuszStanow(kod, polka, typ, ilosc) {
         </div>
       </div>
 
+      <!-- PRAWA STRONA -->
       <div>
         <div class="modern-card p-3 mb-4">
           <h5 class="fw-bold text-danger mb-3" style="font-size: 0.95rem;">⚠️ Pilne Braki Magazynowe (Sugestie Zakupowe)</h5>
@@ -984,7 +493,9 @@ function aktualizujArkuszStanow(kod, polka, typ, ilosc) {
           </div>
         </div>
       </div>
+
     </div>
+
   </div>
 
 </div>
@@ -1021,35 +532,25 @@ function aktualizujArkuszStanow(kod, polka, typ, ilosc) {
       zapiszStanAgenta(stanAgenta);
     }
 
+    // NASŁUCHIWACZ WPISYWANIA I OPUSZCZENIA POLA KOD TOWARU (NA BIEŻĄCO DOCIĄGA JEDNOSTKĘ)
     const inputKod = document.getElementById('kod-towaru');
     if (inputKod) {
       inputKod.addEventListener('input', function() {
         let val = this.value.trim().toUpperCase();
-        if (val.length >= 5) { sprawdzJednostkeTowaru(val); }
+        if (val.length >= 5) {
+          sprawdzJednostkeTowaru(val);
+        }
       });
       inputKod.addEventListener('blur', function() {
         let val = this.value.trim().toUpperCase();
-        if (val.length >= 3) { sprawdzJednostkeTowaru(val); }
+        if (val.length >= 3) {
+          sprawdzJednostkeTowaru(val);
+        }
       });
     }
   };
 
-  // OBSŁUGA POJAWIANIA I UKRYWANIA MENU
-  function przelaczWidocznoscMenu() {
-    const box = document.getElementById('quick-menu-box');
-    if (box) {
-      box.classList.toggle('d-none');
-    }
-  }
-
-  function wybierzModul(modul) {
-    przelaczGlownyModul(modul);
-    const box = document.getElementById('quick-menu-box');
-    if (box) {
-      box.classList.add('d-none'); // Chowa menu od razu po wyborze!
-    }
-  }
-
+  // POBIERANIE JEDNOSTKI I USTAWIANIE BADGE'A PO PRAWEJ STRONIE INPUTU
   function sprawdzJednostkeTowaru(kod) {
     if (!kod || kod.length < 3) return;
     
@@ -1079,24 +580,11 @@ function aktualizujArkuszStanow(kod, polka, typ, ilosc) {
     const mainWrapper = document.getElementById('main-wrapper');
     const btnTorch = document.getElementById('btn-torch');
     const instrukcjaSkanu = document.getElementById('instrukcja-skanu');
-    const activeBadge = document.getElementById('active-mode-badge');
     
     sekcjaOperacji.style.display = 'none';
     sekcjaDruku.style.display = 'none';
     sekcjaSzukaj.style.display = 'none';
     sekcjaRaporty.style.display = 'none';
-
-    // Aktualizacja podświetlenia trybu w nagłówku
-    if (activeBadge) {
-      activeBadge.innerText = modul;
-      if (modul === 'Wydanie Osoba') activeBadge.className = "badge bg-danger mt-1 text-uppercase";
-      else if (modul === 'Wydanie Regał') activeBadge.className = "badge bg-secondary mt-1 text-uppercase";
-      else if (modul === 'Przyjęcie') activeBadge.className = "badge bg-success mt-1 text-uppercase";
-      else if (modul === 'Przesunięcie') activeBadge.className = "badge bg-warning text-dark mt-1 text-uppercase";
-      else if (modul === 'Szukaj') activeBadge.className = "badge bg-warning text-dark mt-1 text-uppercase";
-      else if (modul === 'Wydruki') activeBadge.className = "badge bg-info text-dark mt-1 text-uppercase";
-      else if (modul === 'Raporty') activeBadge.className = "badge bg-info text-dark mt-1 text-uppercase";
-    }
 
     if (modul === 'Wydruki') {
       mainWrapper.className = "container-fluid py-3 px-2 px-md-4 app-viewport mode-mobile";
@@ -1166,6 +654,7 @@ function aktualizujArkuszStanow(kod, polka, typ, ilosc) {
     document.getElementById('kpi-wartosc').innerText = sumaWartosci.toLocaleString('pl-PL', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + " zł";
     document.getElementById('kpi-sztuki').innerText = sumaSztuk.toLocaleString('pl-PL');
 
+    // TOP 5 PROGRESS BARS
     let containerTop = document.getElementById('container-top-bars');
     containerTop.innerHTML = "";
     
@@ -1191,6 +680,7 @@ function aktualizujArkuszStanow(kod, polka, typ, ilosc) {
       containerTop.innerHTML += htmlRow;
     });
 
+    // OBSZARY TABLE
     let tbodyObszary = document.getElementById('tbody-obszary');
     tbodyObszary.innerHTML = "";
     if (obszary && obszary.length > 0) {
@@ -1210,6 +700,7 @@ function aktualizujArkuszStanow(kod, polka, typ, ilosc) {
       tbodyObszary.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-3">Brak zarejestrowanych wydań na obszary.</td></tr>`;
     }
 
+    // TOP ROTACJA TABLE
     let tbodyRotacja = document.getElementById('tbody-rotacja');
     tbodyRotacja.innerHTML = "";
     if (rotacja && rotacja.length > 0) {
@@ -1228,6 +719,7 @@ function aktualizujArkuszStanow(kod, polka, typ, ilosc) {
       tbodyRotacja.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-3">Brak danych o rotacji.</td></tr>`;
     }
 
+    // PRACOWNICI TABLE
     let tbodyPracownicy = document.getElementById('tbody-pracownicy');
     tbodyPracownicy.innerHTML = "";
     if (pracownicy && pracownicy.length > 0) {
@@ -1246,6 +738,7 @@ function aktualizujArkuszStanow(kod, polka, typ, ilosc) {
       tbodyPracownicy.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-3">Brak danych pracowników.</td></tr>`;
     }
 
+    // SEKTORY ABCD TABLE
     let tbodySektory = document.getElementById('tbody-sektory');
     tbodySektory.innerHTML = "";
 
@@ -1266,6 +759,7 @@ function aktualizujArkuszStanow(kod, polka, typ, ilosc) {
       tbodySektory.appendChild(tr);
     });
 
+    // BRAKI MAGAZYNOWE TABLE
     let sumaBrakiKoszt = 0;
     let tbodyBraki = document.getElementById('tbody-braki-ogolny');
     tbodyBraki.innerHTML = "";
@@ -1914,6 +1408,7 @@ function aktualizujArkuszStanow(kod, polka, typ, ilosc) {
         document.getElementById('strefa-select').value = "";
         document.getElementById('ilosc').value = '1';
         
+        // Reset nazwy jednostki na domyślną
         const badgeJm = document.getElementById('badge-jednostka-miary');
         if (badgeJm) badgeJm.innerText = "szt.";
 
