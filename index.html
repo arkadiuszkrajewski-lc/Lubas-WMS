@@ -125,6 +125,11 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.2);
       cursor: pointer;
     }
+
+    .thumbs-container { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+    .thumb-box { position: relative; width: 80px; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.2); }
+    .thumb-box img { width: 100%; height: 100%; object-fit: cover; }
+    .thumb-del { position: absolute; top: 2px; right: 2px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 11px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
   </style>
 </head>
 <body>
@@ -162,7 +167,10 @@
   <div class="naglowek-operatora">
     <h5 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.8rem;">v5.54</span></h5>
     <div class="d-flex align-items-center gap-2">
-      <span class="small text-secondary fw-bold">Operator:</span>
+      <!-- DYNAMICZNY WYBÓR MAGAZYNU W NAGŁÓWKU -->
+      <select id="select-magazyn-operatora" class="form-select form-select-sm bg-dark text-info fw-bold border-secondary" style="font-size: 0.75rem; width: auto;" onchange="zmienAktywnyMagazyn(this.value)">
+        <option value="">Ładowanie...</option>
+      </select>
       <span id="user-badge" class="badge bg-success p-2" style="font-size: 0.75rem;">---</span>
       <button onclick="wylogujOperatora()" class="btn btn-sm btn-outline-secondary py-1 px-2" style="font-size: 0.75rem;">Zmień</button>
     </div>
@@ -194,6 +202,13 @@
             <input type="radio" class="btn-check" name="main-nav" id="tab-przesuniecie" onclick="przelaczGlownyModul('Przesunięcie', '🟡 TRYB: PRZESUNIĘCIE')">
             <label class="kafelek-menu" for="tab-przesuniecie">🟡 PRZESUNIĘCIE</label>
           </div>
+          
+          <!-- KAFELEK MWG FOTO (POJAWIA SIĘ GDY WYBRANY MWG) -->
+          <div id="box-kafelek-mwg" style="display: none;">
+            <input type="radio" class="btn-check" name="main-nav" id="tab-mwg-foto" onclick="przelaczGlownyModul('MWG Foto', '📸 FOTODOKUMENTACJA (MWG)')">
+            <label class="kafelek-menu text-info" for="tab-mwg-foto" style="border-color: rgba(56, 189, 248, 0.4);">📸 FOTODOKUMENTACJA</label>
+          </div>
+
           <div>
             <input type="radio" class="btn-check" name="main-nav" id="tab-szukaj" onclick="przelaczGlownyModul('Szukaj', '🔍 SPRAWDŹ LOKALIZACJE')">
             <label class="kafelek-menu text-warning" for="tab-szukaj" style="border-color: rgba(245, 158, 11, 0.3);">🔍 SPRAWDŹ LOKALIZACJE</label>
@@ -279,6 +294,34 @@
       <button type="submit" id="btn-submit" class="btn btn-primary w-100 py-3 fw-bold fs-5 btn-modern mt-2">ZAPISZ OPERACJĘ (Enter)</button>
     </form>
     <div id="status" class="alert alert-success mt-3 d-none text-center fw-bold" style="border-radius:12px;"></div>
+  </div>
+
+  <!-- SEKCJA FOTODOKUMENTACJI W WYGLĄDZIE V5.54 (MWG) -->
+  <div id="sekcja-mwg-foto" class="card modern-card p-3 shadow-sm border-0" style="display: none;">
+    <h5 class="fw-bold text-info mb-3">📸 Rejestracja Wysyłki Paletowej</h5>
+    
+    <div class="form-group-custom">
+      <label class="form-label fw-bold small text-secondary mb-1">1. NUMER ZAMÓWIENIA (np. ZO/012/1/01/26):</label>
+      <div class="input-group">
+        <input type="text" id="mwg-nr-zamowienia" class="form-control wielki-input text-uppercase input-form-field" placeholder="Wpisz lub skanuj ZO" onclick="aktywujSkanowanie('mwg-nr-zamowienia')">
+        <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('mwg-nr-zamowienia')">❌</button>
+      </div>
+    </div>
+
+    <div class="form-group-custom">
+      <label class="form-label fw-bold small text-secondary mb-1">2. ZDJĘCIA PALET (1 DO 5 ZDJĘĆ):</label>
+      <input type="file" id="mwg-input-foto" accept="image/*" multiple capture="environment" style="display: none;" onchange="obsluzWyborZdjec(event)">
+      
+      <button type="button" class="btn btn-outline-info w-100 py-3 fw-bold btn-modern mb-2" onclick="document.getElementById('mwg-input-foto').click()">
+        📷 Zrób / Wybierz Zdjęcia Palet
+      </button>
+    </div>
+
+    <div id="mwg-podglad-zdjec" class="thumbs-container mb-3"></div>
+
+    <button type="button" id="btn-wyslij-mwg" onclick="wyslijDokumentacjeMWG()" class="btn btn-primary w-100 py-3 fw-bold fs-5 btn-modern mt-2">
+      ZAPISZ I WYŚLIJ FOTODOKUMENTACJĘ
+    </button>
   </div>
 
   <!-- SEKCJA SPRAWDZANIA LOKALIZACJI -->
@@ -447,6 +490,7 @@
   let loginQrcode = null;
   let blokadaSkanera = false; 
   let zalogowanyUzytkownik = "";
+  let zgromadzoneZdjeciaBase64 = [];
 
   let activeStream = null;
   let activeVideoElement = null;
@@ -458,11 +502,15 @@
   window.onload = function() {
     const zapamietanyEmail = localStorage.getItem('wms_user_email');
     const zapamietanaNazwa = localStorage.getItem('wms_user_name');
+    const magazyny = localStorage.getItem('wms_user_warehouses');
+    const domyslnyMagazyn = localStorage.getItem('wms_default_warehouse');
+
     if (zapamietanyEmail && zapamietanaNazwa) {
       zalogowanyUzytkownik = zapamietanyEmail;
       document.getElementById('user-badge').innerText = zapamietanaNazwa;
       document.getElementById('login-overlay').style.display = 'none';
-      setTimeout(() => { aktywujSkanowanie('kod-towaru'); }, 600);
+      
+      odswiezSektorMagazynow(magazyny, domyslnyMagazyn);
     }
 
     const stanAgenta = localStorage.getItem('wms_agent_usb') === 'true';
@@ -494,6 +542,47 @@
       pole.addEventListener('focus', schowajMenu);
     });
   };
+
+  // OBSŁUGA SELEKTORA MAGAZYNÓW I WIDOKÓW
+  function odswiezSektorMagazynow(dostepneMagazyny, domyslnyMagazyn) {
+    const selectMag = document.getElementById('select-magazyn-operatora');
+    if (!selectMag) return;
+    
+    selectMag.innerHTML = "";
+    
+    let lista = String(dostepneMagazyny || "Magazyn pozostałe").split(",").map(m => m.trim());
+    let aktywny = localStorage.getItem('wms_default_warehouse') || domyslnyMagazyn || lista[0];
+
+    lista.forEach(m => {
+      let opt = document.createElement('option');
+      opt.value = m;
+      opt.innerText = "Magazyn: " + m;
+      if (m === aktywny) opt.selected = true;
+      selectMag.appendChild(opt);
+    });
+
+    zarzadzajWidokiemMagazynu(aktywny);
+  }
+
+  function zmienAktywnyMagazyn(nowyMagazyn) {
+    localStorage.setItem('wms_default_warehouse', nowyMagazyn);
+    zarzadzajWidokiemMagazynu(nowyMagazyn);
+  }
+
+  function zarzadzajWidokiemMagazynu(magazyn) {
+    const magLower = String(magazyn || "").toLowerCase();
+    const boxKafelekMWG = document.getElementById('box-kafelek-mwg');
+    
+    if (magLower.includes("wyrobów gotowych") || magLower.includes("mwg")) {
+      if (boxKafelekMWG) boxKafelekMWG.style.display = 'block';
+      document.getElementById('tab-mwg-foto').checked = true;
+      przelaczGlownyModul('MWG Foto', '📸 FOTODOKUMENTACJA (MWG)');
+    } else {
+      if (boxKafelekMWG) boxKafelekMWG.style.display = 'none';
+      document.getElementById('tab-wydanie-osoba').checked = true;
+      przelaczGlownyModul('Wydanie Osoba', '🔴 TRYB: WYDANIE (OSOBA)');
+    }
+  }
 
   function przelaczWidokMenu() {
     const menuBox = document.getElementById('box-menu-kafelki');
@@ -545,6 +634,7 @@
     const sekcjaDruku = document.getElementById('sekcja-druku');
     const sekcjaSzukaj = document.getElementById('sekcja-szukaj');
     const sekcjaRaporty = document.getElementById('sekcja-raporty');
+    const sekcjaFotoMWG = document.getElementById('sekcja-mwg-foto');
     const mainWrapper = document.getElementById('main-wrapper');
     const btnTorch = document.getElementById('btn-torch');
     const instrukcjaSkanu = document.getElementById('instrukcja-skanu');
@@ -553,8 +643,12 @@
     sekcjaDruku.style.display = 'none';
     sekcjaSzukaj.style.display = 'none';
     sekcjaRaporty.style.display = 'none';
+    if(sekcjaFotoMWG) sekcjaFotoMWG.style.display = 'none';
 
-    if (modul === 'Wydruki') {
+    if (modul === 'MWG Foto') {
+      mainWrapper.className = "container-fluid py-2 px-2 px-md-4 app-viewport mode-mobile";
+      if(sekcjaFotoMWG) sekcjaFotoMWG.style.display = 'block';
+    } else if (modul === 'Wydruki') {
       mainWrapper.className = "container-fluid py-2 px-2 px-md-4 app-viewport mode-mobile";
       sekcjaDruku.style.display = 'block';
     } else if (modul === 'Szukaj') {
@@ -1090,7 +1184,7 @@
     else { uruchomFallbackQrcode('login-reader', onLoginSuccess); }
   }
 
-  // PODPIĘCIE AUTORYZACJI DO ODPOWIEDZI JSON Z KOD.GS v5.54
+  // PODPIĘCIE AUTORYZACJI Z ZAPISEM MAGAZYNÓW OPERATORA
   function autoryzujZBazą() {
     const email = document.getElementById('auth-email').value.trim().toLowerCase();
     const haslo = document.getElementById('auth-password').value.trim();
@@ -1131,13 +1225,14 @@
         document.getElementById('login-overlay').style.display = 'none';
         
         schowajAparat();
-        setTimeout(() => { aktywujSkanowanie('kod-towaru'); }, 500);
+        odswiezSektorMagazynow(magazyny, domyslnyMagazyn);
       } else { 
         alert("❌ Błąd logowania: " + (data.message || "Niepoprawne dane")); 
       }
     })
     .catch(err => { alert("Błąd połączenia z serwerem weryfikacji."); btn.disabled = false; btn.innerText = "Zaloguj do systemu"; });
   }
+
   function wylogujOperatora() {
     localStorage.removeItem('wms_user_email');
     localStorage.removeItem('wms_user_name');
@@ -1167,6 +1262,9 @@
     const inputSearch = document.getElementById('search-towar-kod');
     if(inputSearch) inputSearch.classList.remove('skan-aktywny');
 
+    const inputMwg = document.getElementById('mwg-nr-zamowienia');
+    if(inputMwg) inputMwg.classList.remove('skan-aktywny');
+
     const el = document.getElementById(poleId);
     if(el) el.classList.add('skan-aktywny');
     
@@ -1178,6 +1276,9 @@
     if(poleId === 'kod-towaru') {
       document.getElementById('instrukcja-skanu').innerText = "📷 KROK 1: Zeskanuj kod QR PRODUKTU";
       document.getElementById('instrukcja-skanu').className = "alert alert-warning text-center fw-bold small text-dark";
+    } else if(poleId === 'mwg-nr-zamowienia') {
+      document.getElementById('instrukcja-skanu').innerText = "📦 Zeskanuj numer Zamówienia (ZO)";
+      document.getElementById('instrukcja-skanu').className = "alert alert-info text-center fw-bold small text-dark";
     } else if(poleId === 'polka') {
       document.getElementById('instrukcja-skanu').innerText = "📍 KROK 2: Zeskanuj kod QR PÓŁKI (ŹRÓDŁOWA)";
       document.getElementById('instrukcja-skanu').className = "alert alert-info text-center fw-bold small text-dark";
@@ -1213,7 +1314,7 @@
         setTimeout(() => { blokadaSkanera = false; }, 1500); 
         let tryb = document.getElementById('operacja').value;
         
-        if (celInput === 'p-duplikat-kod') {
+        if (celInput === 'mwg-nr-zamowienia' || celInput === 'p-duplikat-kod') {
           schowajAparat();
         } else if (celInput === 'search-towar-kod') {
           schowajAparat();
@@ -1261,6 +1362,9 @@
 
       const inputSearch = document.getElementById('search-towar-kod');
       if(inputSearch) inputSearch.classList.remove('skan-aktywny');
+
+      const inputMwg = document.getElementById('mwg-nr-zamowienia');
+      if(inputMwg) inputMwg.classList.remove('skan-aktywny');
     }); 
   }
 
@@ -1401,6 +1505,95 @@
       alert("Błąd połączenia z bazą danych."); 
       btn.disabled = false; 
       btn.innerText = "ZAPISZ OPERACJĘ (Enter)";
+    });
+  }
+
+  // FOTODOKUMENTACJA MWG (ZAPIS NA DRIVE I LOG W BQ)
+  function obsluzWyborZdjec(event) {
+    const pliki = event.target.files;
+    if (!pliki || pliki.length === 0) return;
+
+    if (zgromadzoneZdjeciaBase64.length + pliki.length > 5) {
+      alert("Możesz dodać maksymalnie 5 zdjęć do jednej wysyłki.");
+      return;
+    }
+
+    Array.from(pliki).forEach(plik => {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        zgromadzoneZdjeciaBase64.push(e.target.result);
+        odswiezPodgladMiniatur();
+      };
+      reader.readAsDataURL(plik);
+    });
+  }
+
+  function odswiezPodgladMiniatur() {
+    const kontener = document.getElementById('mwg-podglad-zdjec');
+    if(!kontener) return;
+    kontener.innerHTML = '';
+    
+    zgromadzoneZdjeciaBase64.forEach((imgBase64, idx) => {
+      const box = document.createElement('div');
+      box.className = 'thumb-box';
+      
+      const img = document.createElement('img');
+      img.src = imgBase64;
+
+      const btnUsun = document.createElement('button');
+      btnUsun.className = 'thumb-del';
+      btnUsun.innerHTML = '✕';
+      btnUsun.onclick = function() {
+        zgromadzoneZdjeciaBase64.splice(idx, 1);
+        odswiezPodgladMiniatur();
+      };
+
+      box.appendChild(img);
+      box.appendChild(btnUsun);
+      kontener.appendChild(box);
+    });
+  }
+
+  function wyslijDokumentacjeMWG() {
+    const nrZamowienia = document.getElementById('mwg-nr-zamowienia').value.trim();
+    const btn = document.getElementById('btn-wyslij-mwg');
+
+    if (!nrZamowienia) { alert("Wpisz numer zamówienia!"); return; }
+    if (zgromadzoneZdjeciaBase64.length === 0) { alert("Dodaj przynajmniej 1 zdjęcie!"); return; }
+
+    btn.disabled = true;
+    btn.innerText = "Wysyłanie zdjęć na Dysk Google...";
+
+    fetch(GOOGLE_SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        akcja: "zapisz_foto_wysylke",
+        numer_zamowienia: nrZamowienia,
+        zdjecia: JSON.stringify(zgromadzoneZdjeciaBase64),
+        operator: localStorage.getItem('wms_user_email') || '',
+        pracownik: localStorage.getItem('wms_user_name') || '',
+        magazyn: localStorage.getItem('wms_default_warehouse') || 'Magazyn Wyrobów Gotowych'
+      }).toString()
+    })
+    .then(res => res.json())
+    .then(data => {
+      btn.disabled = false;
+      btn.innerText = "ZAPISZ I WYŚLIJ FOTODOKUMENTACJĘ";
+
+      if (data && data.status === "SUCCESS") {
+        alert("✅ Dokumentacja zapisana pomyślnie!\nZapisano zdjęć: " + data.ilosc);
+        document.getElementById('mwg-nr-zamowienia').value = '';
+        zgromadzoneZdjeciaBase64 = [];
+        odswiezPodgladMiniatur();
+      } else {
+        alert("❌ Błąd zapisu: " + (data.message || "Nieznany błąd"));
+      }
+    })
+    .catch(err => {
+      btn.disabled = false;
+      btn.innerText = "ZAPISZ I WYŚLIJ FOTODOKUMENTACJĘ";
+      alert("Błąd połączenia z serwerem.");
     });
   }
 </script>
