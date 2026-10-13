@@ -6,6 +6,7 @@
   <title>LUBAS WMS v5.50 Suite</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
   
   <script type="text/javascript">
@@ -38,19 +39,18 @@
     
     .btn-modern { border-radius: 14px; padding: 16px; font-weight: 700; transition: all 0.2s; letter-spacing: 0.5px; }
     
-    .menu-grid-container { display: grid; grid-template-columns: 1fr; gap: 12px; width: 100%; }
-    @media (min-width: 576px) { .menu-grid-container { grid-template-columns: repeat(2, 1fr); } }
-    @media (min-width: 992px) { .menu-grid-container { grid-template-columns: repeat(3, 1fr); } }
-    
+    /* STYLE DLA MENU BOCZNEGO (OFFCANVAS) */
+    .offcanvas-custom { background-color: #0f172a !important; color: var(--text-main) !important; border-right: 1px solid rgba(255,255,255,0.12) !important; }
+    .menu-side-container { display: flex; flex-direction: column; gap: 10px; width: 100%; }
     .btn-check { position: absolute; clip: rect(0, 0, 0, 0); pointer-events: none; }
     
     .kafelek-menu { 
-      display: flex; align-items: center; justify-content: center; 
-      padding: 16px 12px; font-size: 0.85rem; font-weight: 800; 
-      color: #94a3b8; background-color: #0f172a; 
+      display: flex; align-items: center; justify-content: flex-start; 
+      padding: 16px 18px; font-size: 0.9rem; font-weight: 800; 
+      color: #94a3b8; background-color: #1e293b; 
       border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; 
       cursor: pointer; transition: all 0.2s ease; text-transform: uppercase; 
-      text-align: center; line-height: 1.3; width: 100%;
+      line-height: 1.3; width: 100%; text-align: left;
     }
     
     .btn-check:checked + .kafelek-menu { 
@@ -64,7 +64,7 @@
     .login-scanner-box { background: #000; border-radius: 12px; overflow: hidden; width: 100%; max-width: 280px; display: none; aspect-ratio: 1/1; margin-bottom: 28px; border: 2px solid var(--accent-blue); position: relative; }
     .login-scanner-box video { width: 100%; height: 100%; object-fit: cover; }
     
-    .naglowek-operatora { display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; width: 100%; padding-bottom: 15px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .naglowek-operatora { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; width: 100%; padding-bottom: 15px; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.08); }
     .karta-lokalizacji { background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 14px 18px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
 
     /* DASHBOARD STYLES */
@@ -116,7 +116,6 @@
     .mode-mobile { max-width: 680px; }
     .mode-desktop { max-width: 1400px; }
 
-    /* STYL SUFIKSU JEDNOSTKI BEZPOŚREDNIO ZA POLEM */
     .input-group-text-jm {
       background-color: #0f172a;
       border: 1px solid rgba(255,255,255,0.18);
@@ -162,47 +161,66 @@
   </div>
 </div>
 
-<div class="container-fluid py-3 px-2 px-md-4 app-viewport mode-mobile" id="main-wrapper">
-  <div class="naglowek-operatora">
-    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.50</span></h4>
-    <div class="d-flex align-items-center gap-2">
-      <span class="small text-secondary fw-bold">Operator:</span>
-      <span id="user-badge" class="badge bg-success p-2" style="font-size: 0.75rem;">---</span>
-      <button onclick="wylogujOperatora()" class="btn btn-sm btn-outline-secondary py-1 px-2" style="font-size: 0.75rem;">Zmień</button>
-    </div>
+<!-- ========================================== -->
+<!-- BOOTSTRAP OFFCANVAS (BOCZNE MENU NAVIGACJI) -->
+<!-- ========================================== -->
+<div class="offcanvas offcanvas-start offcanvas-custom" tabindex="-1" id="sideMenu" aria-labelledby="sideMenuLabel">
+  <div class="offcanvas-header border-bottom border-secondary">
+    <h5 class="offcanvas-title fw-bold text-info" id="sideMenuLabel">📋 MENU SYSTEMU</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
   </div>
-
-  <!-- NAWIGACJA KAFELKOWA -->
-  <div class="modern-card p-3 mb-4">
-    <div class="menu-grid-container">
+  <div class="offcanvas-body">
+    <div class="menu-side-container">
       <div>
-        <input type="radio" class="btn-check" name="main-nav" id="tab-wydanie-osoba" checked onclick="przelaczGlownyModul('Wydanie Osoba')">
+        <input type="radio" class="btn-check" name="main-nav" id="tab-wydanie-osoba" checked onclick="wybierzIZamknijMenu('Wydanie Osoba')">
         <label class="kafelek-menu" for="tab-wydanie-osoba">🔴 WYDANIE (OSOBA)</label>
       </div>
       <div>
-        <input type="radio" class="btn-check" name="main-nav" id="tab-wydanie-regal" onclick="przelaczGlownyModul('Wydanie Regał')">
+        <input type="radio" class="btn-check" name="main-nav" id="tab-wydanie-regal" onclick="wybierzIZamknijMenu('Wydanie Regał')">
         <label class="kafelek-menu" for="tab-wydanie-regal">📦 WYDANIE (REGAŁ)</label>
       </div>
       <div>
-        <input type="radio" class="btn-check" name="main-nav" id="tab-przyjecie" onclick="przelaczGlownyModul('Przyjęcie')">
+        <input type="radio" class="btn-check" name="main-nav" id="tab-przyjecie" onclick="wybierzIZamknijMenu('Przyjęcie')">
         <label class="kafelek-menu" for="tab-przyjecie">🟢 PRZYJĘCIE</label>
       </div>
       <div>
-        <input type="radio" class="btn-check" name="main-nav" id="tab-przesuniecie" onclick="przelaczGlownyModul('Przesunięcie')">
+        <input type="radio" class="btn-check" name="main-nav" id="tab-przesuniecie" onclick="wybierzIZamknijMenu('Przesunięcie')">
         <label class="kafelek-menu" for="tab-przesuniecie">🟡 PRZESUNIĘCIE</label>
       </div>
       <div>
-        <input type="radio" class="btn-check" name="main-nav" id="tab-szukaj" onclick="przelaczGlownyModul('Szukaj')">
+        <input type="radio" class="btn-check" name="main-nav" id="tab-szukaj" onclick="wybierzIZamknijMenu('Szukaj')">
         <label class="kafelek-menu text-warning" for="tab-szukaj" style="border-color: rgba(245, 158, 11, 0.3);">🔍 SPRAWDŹ LOKALIZACJE</label>
       </div>
       <div>
-        <input type="radio" class="btn-check" name="main-nav" id="tab-wydruki" onclick="przelaczGlownyModul('Wydruki')">
+        <input type="radio" class="btn-check" name="main-nav" id="tab-wydruki" onclick="wybierzIZamknijMenu('Wydruki')">
         <label class="kafelek-menu" for="tab-wydruki">🖨️ PANEL WYDRUKÓW</label>
       </div>
-      <div style="grid-column: 1 / -1;">
-        <input type="radio" class="btn-check" name="main-nav" id="tab-raporty" onclick="przelaczGlownyModul('Raporty')">
+      <div style="margin-top: 15px;">
+        <input type="radio" class="btn-check" name="main-nav" id="tab-raporty" onclick="wybierzIZamknijMenu('Raporty')">
         <label class="kafelek-menu text-info fw-bold" for="tab-raporty" style="border-color: rgba(56, 189, 248, 0.4); background: rgba(56, 189, 248, 0.08);">📊 RAPORTY & ANALITYKA (DESKTOP)</label>
       </div>
+    </div>
+  </div>
+</div>
+
+<div class="container-fluid py-3 px-2 px-md-4 app-viewport mode-mobile" id="main-wrapper">
+  
+  <!-- ZMODYFIKOWANY NAGŁÓWEK Z PRZYCISKIEM MENU ORAZ WSKAŹNIKIEM TRYBU -->
+  <div class="naglowek-operatora">
+    <div class="d-flex align-items-center gap-2">
+      <button class="btn btn-outline-info py-2 px-3 fw-bold" type="button" data-bs-toggle="offcanvas" data-bs-target="#sideMenu" style="border-radius: 10px;">
+        ☰ MENU
+      </button>
+      <div class="d-flex flex-column ms-1">
+        <span class="fw-bold fs-6 leading-tight">LUBAS WMS <span class="text-info" style="font-size:0.75rem;">v5.50</span></span>
+        <span id="active-mode-badge" class="badge bg-danger mt-1 text-uppercase" style="font-size: 0.7rem; align-self: start;">🔴 WYDANIE (OSOBA)</span>
+      </div>
+    </div>
+    
+    <div class="d-flex align-items-center gap-2">
+      <span class="small text-secondary fw-bold d-none d-sm-inline">Operator:</span>
+      <span id="user-badge" class="badge bg-success p-2" style="font-size: 0.75rem;">---</span>
+      <button onclick="wylogujOperatora()" class="btn btn-sm btn-outline-secondary py-1 px-2" style="font-size: 0.75rem;">Zmień</button>
     </div>
   </div>
 
@@ -263,7 +281,6 @@
         </div>
       </div>
 
-      <!-- 💡 JEDNOSTKA WYŚWIETLANA DOKŁADNIE ZA POLEM ILOŚĆ -->
       <div class="form-group-custom">
         <label class="form-label fw-bold small text-secondary mb-2">4. ILOŚĆ:</label>
         <div class="input-group">
@@ -342,10 +359,8 @@
     </div>
   </div>
 
-  <!-- 💡 PEŁNY DASHBOARD DWUKOLUMNOWY -->
+  <!-- DASHBOARD DWUKOLUMNOWY -->
   <div id="sekcja-raporty" style="display: none;">
-    
-    <!-- HEADER -->
     <div class="modern-card p-3 mb-3" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);">
       <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
         <div>
@@ -380,10 +395,8 @@
       </div>
     </div>
 
-    <!-- PEŁNA SIATKA DWUKOLUMNOWA -->
+    <!-- SIATKA DWUKOLUMNOWA -->
     <div class="dash-main-grid">
-      
-      <!-- LEWA STRONA -->
       <div>
         <div class="modern-card p-3 mb-4">
           <h5 class="fw-bold text-white mb-3" style="font-size: 0.95rem;">💎 TOP 5 Najcenniejszych Pozycji na Stanie (PLN)</h5>
@@ -432,7 +445,6 @@
         </div>
       </div>
 
-      <!-- PRAWA STRONA -->
       <div>
         <div class="modern-card p-3 mb-4">
           <h5 class="fw-bold text-danger mb-3" style="font-size: 0.95rem;">⚠️ Pilne Braki Magazynowe (Sugestie Zakupowe)</h5>
@@ -493,9 +505,7 @@
           </div>
         </div>
       </div>
-
     </div>
-
   </div>
 
 </div>
@@ -532,25 +542,29 @@
       zapiszStanAgenta(stanAgenta);
     }
 
-    // NASŁUCHIWACZ WPISYWANIA I OPUSZCZENIA POLA KOD TOWARU (NA BIEŻĄCO DOCIĄGA JEDNOSTKĘ)
     const inputKod = document.getElementById('kod-towaru');
     if (inputKod) {
       inputKod.addEventListener('input', function() {
         let val = this.value.trim().toUpperCase();
-        if (val.length >= 5) {
-          sprawdzJednostkeTowaru(val);
-        }
+        if (val.length >= 5) { sprawdzJednostkeTowaru(val); }
       });
       inputKod.addEventListener('blur', function() {
         let val = this.value.trim().toUpperCase();
-        if (val.length >= 3) {
-          sprawdzJednostkeTowaru(val);
-        }
+        if (val.length >= 3) { sprawdzJednostkeTowaru(val); }
       });
     }
   };
 
-  // POBIERANIE JEDNOSTKI I USTAWIANIE BADGE'A PO PRAWEJ STRONIE INPUTU
+  // POMOCNICZA FUNKCJA ZAMYKAJĄCA MENU PO WYBORZE
+  function wybierzIZamknijMenu(modul) {
+    przelaczGlownyModul(modul);
+    const sideMenuEl = document.getElementById('sideMenu');
+    const bsOffcanvas = bootstrap.Offcanvas.getInstance(sideMenuEl);
+    if (bsOffcanvas) {
+      bsOffcanvas.hide();
+    }
+  }
+
   function sprawdzJednostkeTowaru(kod) {
     if (!kod || kod.length < 3) return;
     
@@ -580,11 +594,24 @@
     const mainWrapper = document.getElementById('main-wrapper');
     const btnTorch = document.getElementById('btn-torch');
     const instrukcjaSkanu = document.getElementById('instrukcja-skanu');
+    const activeBadge = document.getElementById('active-mode-badge');
     
     sekcjaOperacji.style.display = 'none';
     sekcjaDruku.style.display = 'none';
     sekcjaSzukaj.style.display = 'none';
     sekcjaRaporty.style.display = 'none';
+
+    // Aktualizacja plakietki z nazwą aktywnego modułu w nagłówku
+    if (activeBadge) {
+      activeBadge.innerText = modul;
+      if (modul === 'Wydanie Osoba') activeBadge.className = "badge bg-danger mt-1 text-uppercase";
+      else if (modul === 'Wydanie Regał') activeBadge.className = "badge bg-secondary mt-1 text-uppercase";
+      else if (modul === 'Przyjęcie') activeBadge.className = "badge bg-success mt-1 text-uppercase";
+      else if (modul === 'Przesunięcie') activeBadge.className = "badge bg-warning text-dark mt-1 text-uppercase";
+      else if (modul === 'Szukaj') activeBadge.className = "badge bg-warning text-dark mt-1 text-uppercase";
+      else if (modul === 'Wydruki') activeBadge.className = "badge bg-info text-dark mt-1 text-uppercase";
+      else if (modul === 'Raporty') activeBadge.className = "badge bg-info text-dark mt-1 text-uppercase";
+    }
 
     if (modul === 'Wydruki') {
       mainWrapper.className = "container-fluid py-3 px-2 px-md-4 app-viewport mode-mobile";
@@ -654,7 +681,6 @@
     document.getElementById('kpi-wartosc').innerText = sumaWartosci.toLocaleString('pl-PL', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + " zł";
     document.getElementById('kpi-sztuki').innerText = sumaSztuk.toLocaleString('pl-PL');
 
-    // TOP 5 PROGRESS BARS
     let containerTop = document.getElementById('container-top-bars');
     containerTop.innerHTML = "";
     
@@ -680,7 +706,6 @@
       containerTop.innerHTML += htmlRow;
     });
 
-    // OBSZARY TABLE
     let tbodyObszary = document.getElementById('tbody-obszary');
     tbodyObszary.innerHTML = "";
     if (obszary && obszary.length > 0) {
@@ -700,7 +725,6 @@
       tbodyObszary.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-3">Brak zarejestrowanych wydań na obszary.</td></tr>`;
     }
 
-    // TOP ROTACJA TABLE
     let tbodyRotacja = document.getElementById('tbody-rotacja');
     tbodyRotacja.innerHTML = "";
     if (rotacja && rotacja.length > 0) {
@@ -719,7 +743,6 @@
       tbodyRotacja.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-3">Brak danych o rotacji.</td></tr>`;
     }
 
-    // PRACOWNICI TABLE
     let tbodyPracownicy = document.getElementById('tbody-pracownicy');
     tbodyPracownicy.innerHTML = "";
     if (pracownicy && pracownicy.length > 0) {
@@ -738,7 +761,6 @@
       tbodyPracownicy.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-3">Brak danych pracowników.</td></tr>`;
     }
 
-    // SEKTORY ABCD TABLE
     let tbodySektory = document.getElementById('tbody-sektory');
     tbodySektory.innerHTML = "";
 
@@ -759,7 +781,6 @@
       tbodySektory.appendChild(tr);
     });
 
-    // BRAKI MAGAZYNOWE TABLE
     let sumaBrakiKoszt = 0;
     let tbodyBraki = document.getElementById('tbody-braki-ogolny');
     tbodyBraki.innerHTML = "";
@@ -1408,7 +1429,6 @@
         document.getElementById('strefa-select').value = "";
         document.getElementById('ilosc').value = '1';
         
-        // Reset nazwy jednostki na domyślną
         const badgeJm = document.getElementById('badge-jednostka-miary');
         if (badgeJm) badgeJm.innerText = "szt.";
 
