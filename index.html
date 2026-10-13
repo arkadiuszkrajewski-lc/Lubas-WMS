@@ -1133,12 +1133,11 @@
         schowajAparat();
         setTimeout(() => { aktywujSkanowanie('kod-towaru'); }, 500);
       } else { 
-        alert("❌ Błąd: Niepoprawny e-mail lub hasło!"); 
+        alert("❌ Błąd logowania: " + (data.message || "Niepoprawne dane")); 
       }
     })
     .catch(err => { alert("Błąd połączenia z serwerem weryfikacji."); btn.disabled = false; btn.innerText = "Zaloguj do systemu"; });
   }
-
   function wylogujOperatora() {
     localStorage.removeItem('wms_user_email');
     localStorage.removeItem('wms_user_name');
