@@ -167,7 +167,6 @@
   <div class="naglowek-operatora">
     <h5 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.8rem;">v5.54</span></h5>
     <div class="d-flex align-items-center gap-2">
-      <!-- DYNAMICZNY WYBÓR MAGAZYNU W NAGŁÓWKU -->
       <select id="select-magazyn-operatora" class="form-select form-select-sm bg-dark text-info fw-bold border-secondary" style="font-size: 0.75rem; width: auto;" onchange="zmienAktywnyMagazyn(this.value)">
         <option value="">Ładowanie...</option>
       </select>
@@ -176,7 +175,6 @@
     </div>
   </div>
 
-  <!-- ZWIJANA SEKCJA NAWIGACJI -->
   <div class="mb-3">
     <button class="btn-toggle-nav" type="button" onclick="przelaczWidokMenu()">
       <span id="label-aktywny-tryb">🔴 TRYB: WYDANIE (OSOBA)</span>
@@ -203,7 +201,6 @@
             <label class="kafelek-menu" for="tab-przesuniecie">🟡 PRZESUNIĘCIE</label>
           </div>
           
-          <!-- KAFELEK MWG FOTO (POJAWIA SIĘ GDY WYBRANY MWG) -->
           <div id="box-kafelek-mwg" style="display: none;">
             <input type="radio" class="btn-check" name="main-nav" id="tab-mwg-foto" onclick="przelaczGlownyModul('MWG Foto', '📸 FOTODOKUMENTACJA (MWG)')">
             <label class="kafelek-menu text-info" for="tab-mwg-foto" style="border-color: rgba(56, 189, 248, 0.4);">📸 FOTODOKUMENTACJA</label>
@@ -230,7 +227,6 @@
   <button id="btn-torch" type="button" onclick="przelaczLatarke()" class="btn btn-warning w-100 mb-2 fw-bold d-none" style="border-radius: 12px; padding: 10px;">🔦 Włącz latarkę</button>
   <div id="reader" class="SkanerOkno"></div>
 
-  <!-- SEKCJA OPERACJI SKANOWANIA -->
   <div id="sekcja-operacji" class="card modern-card p-3 shadow-sm border-0">
     <form id="wmsForm" onsubmit="wyslijDane(event)">
       <input type="hidden" id="operacja" value="Wydanie Osoba">
@@ -296,7 +292,6 @@
     <div id="status" class="alert alert-success mt-3 d-none text-center fw-bold" style="border-radius:12px;"></div>
   </div>
 
-  <!-- SEKCJA FOTODOKUMENTACJI W WYGLĄDZIE V5.54 (MWG) -->
   <div id="sekcja-mwg-foto" class="card modern-card p-3 shadow-sm border-0" style="display: none;">
     <h5 class="fw-bold text-info mb-3">📸 Rejestracja Wysyłki Paletowej</h5>
     
@@ -324,7 +319,6 @@
     </button>
   </div>
 
-  <!-- SEKCJA SPRAWDZANIA LOKALIZACJI -->
   <div id="sekcja-szukaj" class="modern-card p-3" style="display: none; border: 1px solid rgba(245, 158, 11, 0.3);">
     <h5 class="fw-bold text-warning mb-3">🔍 Podgląd stref i lokalizacji towaru</h5>
     <div class="form-group-custom">
@@ -349,7 +343,6 @@
     </div>
   </div>
 
-  <!-- SEKCJA PANELU WYDRUKÓW -->
   <div id="sekcja-druku" class="modern-card p-3" style="display: none; border: 1px solid rgba(56, 189, 248, 0.3);">
     <div class="p-3 mb-4 rounded-3" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.12);">
       <div class="form-check form-switch d-flex align-items-center justify-content-between p-0">
@@ -389,7 +382,6 @@
     </div>
   </div>
 
-  <!-- PEŁNY DASHBOARD DWUKOLUMNOWY -->
   <div id="sekcja-raporty" style="display: none;">
     <div class="modern-card p-3 mb-3" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);">
       <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -543,7 +535,6 @@
     });
   };
 
-  // OBSŁUGA SELEKTORA MAGAZYNÓW I WIDOKÓW
   function odswiezSektorMagazynow(dostepneMagazyny, domyslnyMagazyn) {
     const selectMag = document.getElementById('select-magazyn-operatora');
     if (!selectMag) return;
@@ -1184,7 +1175,6 @@
     else { uruchomFallbackQrcode('login-reader', onLoginSuccess); }
   }
 
-  // PODPIĘCIE AUTORYZACJI Z ZAPISEM MAGAZYNÓW OPERATORA
   function autoryzujZBazą() {
     const email = document.getElementById('auth-email').value.trim().toLowerCase();
     const haslo = document.getElementById('auth-password').value.trim();
@@ -1508,7 +1498,7 @@
     });
   }
 
-  // FOTODOKUMENTACJA MWG (ZAPIS NA DRIVE I LOG W BQ)
+  // CZYSTY TRANSFER DANYCH DLA FOTODOKUMENTACJI MWG
   function obsluzWyborZdjec(event) {
     const pliki = event.target.files;
     if (!pliki || pliki.length === 0) return;
@@ -1564,22 +1554,28 @@
     btn.disabled = true;
     btn.innerText = "Wysyłanie zdjęć na Dysk Google...";
 
+    console.log("📸 [FOTO MWG] Wysyłanie ZO:", nrZamowienia, "| Zdjecia:", zgromadzoneZdjeciaBase64.length);
+
+    const payload = {
+      akcja: "zapisz_foto_wysylke",
+      numer_zamowienia: nrZamowienia,
+      zdjecia: zgromadzoneZdjeciaBase64,
+      operator: localStorage.getItem('wms_user_email') || '',
+      pracownik: localStorage.getItem('wms_user_name') || '',
+      magazyn: localStorage.getItem('wms_default_warehouse') || 'Magazyn Wyrobów Gotowych'
+    };
+
     fetch(GOOGLE_SCRIPT_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        akcja: "zapisz_foto_wysylke",
-        numer_zamowienia: nrZamowienia,
-        zdjecia: JSON.stringify(zgromadzoneZdjeciaBase64),
-        operator: localStorage.getItem('wms_user_email') || '',
-        pracownik: localStorage.getItem('wms_user_name') || '',
-        magazyn: localStorage.getItem('wms_default_warehouse') || 'Magazyn Wyrobów Gotowych'
-      }).toString()
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify(payload)
     })
     .then(res => res.json())
     .then(data => {
       btn.disabled = false;
       btn.innerText = "ZAPISZ I WYŚLIJ FOTODOKUMENTACJĘ";
+
+      console.log("📸 [FOTO MWG] Odpowiedź:", data);
 
       if (data && data.status === "SUCCESS") {
         alert("✅ Dokumentacja zapisana pomyślnie!\nZapisano zdjęć: " + data.ilosc);
@@ -1593,7 +1589,8 @@
     .catch(err => {
       btn.disabled = false;
       btn.innerText = "ZAPISZ I WYŚLIJ FOTODOKUMENTACJĘ";
-      alert("Błąd połączenia z serwerem.");
+      console.error("❌ Błąd połączenia:", err);
+      alert("Błąd połączenia z serwerem: " + err.toString());
     });
   }
 </script>
