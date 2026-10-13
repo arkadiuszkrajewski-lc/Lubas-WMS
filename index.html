@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>LUBAS WMS v5.50 Suite</title>
+  <title>LUBAS WMS v5.52 Suite</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
@@ -28,17 +28,17 @@
     }
     body { background-color: var(--bg-dark); color: var(--text-main); font-family: 'Inter', sans-serif; -webkit-user-select: none; user-select: none; line-height: 1.6; }
     
-    .modern-card { background: var(--card-dark); border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 10px 30px rgba(0,0,0,0.4); margin-bottom: 20px; padding: 20px !important; }
-    .SkanerOkno { background: #000; border-radius: 16px; overflow: hidden; width: 100%; margin: 0 auto; display: none; aspect-ratio: 4/3; border: 2px solid rgba(255,255,255,0.15); margin-bottom: 28px; position: relative; }
+    .modern-card { background: var(--card-dark); border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 10px 30px rgba(0,0,0,0.4); margin-bottom: 15px; padding: 16px !important; }
+    .SkanerOkno { background: #000; border-radius: 16px; overflow: hidden; width: 100%; margin: 0 auto; display: none; aspect-ratio: 4/3; border: 2px solid rgba(255,255,255,0.15); margin-bottom: 20px; position: relative; }
     .SkanerOkno video { width: 100%; height: 100%; object-fit: cover; }
     
-    .wielki-input { font-size: 1.1rem; padding: 16px; background-color: #0f172a !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.18); border-radius: 12px; }
+    .wielki-input { font-size: 1.1rem; padding: 14px; background-color: #0f172a !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.18); border-radius: 12px; }
     .wielki-input:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.35); outline: none; }
     .skan-aktywny { border: 2px solid var(--accent-danger) !important; box-shadow: 0 0 20px rgba(239, 68, 68, 0.5) !important; outline: none; }
     
     .btn-modern { border-radius: 14px; padding: 16px; font-weight: 700; transition: all 0.2s; letter-spacing: 0.5px; }
     
-    .menu-grid-container { display: grid; grid-template-columns: 1fr; gap: 12px; width: 100%; }
+    .menu-grid-container { display: grid; grid-template-columns: 1fr; gap: 10px; width: 100%; }
     @media (min-width: 576px) { .menu-grid-container { grid-template-columns: repeat(2, 1fr); } }
     @media (min-width: 992px) { .menu-grid-container { grid-template-columns: repeat(3, 1fr); } }
     
@@ -46,11 +46,11 @@
     
     .kafelek-menu { 
       display: flex; align-items: center; justify-content: center; 
-      padding: 16px 12px; font-size: 0.85rem; font-weight: 800; 
+      padding: 14px 10px; font-size: 0.85rem; font-weight: 800; 
       color: #94a3b8; background-color: #0f172a; 
-      border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; 
+      border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; 
       cursor: pointer; transition: all 0.2s ease; text-transform: uppercase; 
-      text-align: center; line-height: 1.3; width: 100%;
+      text-align: center; line-height: 1.2; width: 100%;
     }
     
     .btn-check:checked + .kafelek-menu { 
@@ -58,43 +58,24 @@
       color: #0b0f19; box-shadow: 0 4px 16px rgba(56, 189, 248, 0.4); 
     }
 
-    .form-group-custom { margin-bottom: 26px; }
-    .label-custom { font-size: 0.92rem; letter-spacing: 0.5px; margin-bottom: 12px; display: block; }
+    .form-group-custom { margin-bottom: 18px; }
+    .label-custom { font-size: 0.92rem; letter-spacing: 0.5px; margin-bottom: 8px; display: block; }
     #login-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg-dark); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-    .login-scanner-box { background: #000; border-radius: 12px; overflow: hidden; width: 100%; max-width: 280px; display: none; aspect-ratio: 1/1; margin-bottom: 28px; border: 2px solid var(--accent-blue); position: relative; }
+    .login-scanner-box { background: #000; border-radius: 12px; overflow: hidden; width: 100%; max-width: 280px; display: none; aspect-ratio: 1/1; margin-bottom: 20px; border: 2px solid var(--accent-blue); position: relative; }
     .login-scanner-box video { width: 100%; height: 100%; object-fit: cover; }
     
-    .naglowek-operatora { display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; width: 100%; padding-bottom: 15px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
-    .karta-lokalizacji { background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 14px 18px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+    .naglowek-operatora { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; width: 100%; padding-bottom: 10px; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .karta-lokalizacji { background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px 16px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
 
     /* DASHBOARD STYLES */
-    .dash-kpi-row {
-      display: flex !important; flex-direction: row !important;
-      gap: 15px !important; width: 100% !important; margin-bottom: 20px !important;
-    }
-    .kpi-card-dash { 
-      flex: 1 1 0px !important; background: #1e293b; 
-      border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; 
-      padding: 16px 20px; min-width: 0; transition: all 0.3s;
-    }
-    .kpi-card-alert {
-      border: 1px solid var(--accent-danger) !important;
-      box-shadow: 0 0 15px rgba(239, 68, 68, 0.35) !important;
-      background: rgba(239, 68, 68, 0.05) !important;
-    }
+    .dash-kpi-row { display: flex !important; flex-direction: row !important; gap: 15px !important; width: 100% !important; margin-bottom: 20px !important; }
+    .kpi-card-dash { flex: 1 1 0px !important; background: #1e293b; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px 20px; min-width: 0; transition: all 0.3s; }
+    .kpi-card-alert { border: 1px solid var(--accent-danger) !important; box-shadow: 0 0 15px rgba(239, 68, 68, 0.35) !important; background: rgba(239, 68, 68, 0.05) !important; }
     .kpi-title-dash { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.5px; }
     .kpi-val-dash { font-size: 1.8rem; font-weight: 800; margin-top: 2px; line-height: 1.2; }
 
-    .dash-main-grid {
-      display: grid; grid-template-columns: 1fr 1fr;
-      gap: 20px; width: 100%; align-items: start;
-    }
-
-    @media (max-width: 991px) {
-      .dash-kpi-row { flex-wrap: wrap !important; }
-      .kpi-card-dash { flex: 1 1 45% !important; }
-      .dash-main-grid { grid-template-columns: 1fr !important; }
-    }
+    .dash-main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; align-items: start; }
+    @media (max-width: 991px) { .dash-kpi-row { flex-wrap: wrap !important; } .kpi-card-dash { flex: 1 1 45% !important; } .dash-main-grid { grid-template-columns: 1fr !important; } }
 
     .bar-row { margin-bottom: 12px; }
     .bar-meta { display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 4px; }
@@ -116,7 +97,6 @@
     .mode-mobile { max-width: 680px; }
     .mode-desktop { max-width: 1400px; }
 
-    /* STYL SUFIKSU JEDNOSTKI BEZPOŚREDNIO ZA POLEM */
     .input-group-text-jm {
       background-color: #0f172a;
       border: 1px solid rgba(255,255,255,0.18);
@@ -128,6 +108,23 @@
       padding-right: 18px;
       border-top-right-radius: 12px;
       border-bottom-right-radius: 12px;
+    }
+
+    /* KOMPAKTOWY PRZYCISK MENU ZWIJANEGO */
+    .btn-toggle-nav {
+      background: #0f172a;
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      color: var(--accent-blue);
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-weight: 800;
+      font-size: 0.85rem;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      cursor: pointer;
     }
   </style>
 </head>
@@ -162,9 +159,9 @@
   </div>
 </div>
 
-<div class="container-fluid py-3 px-2 px-md-4 app-viewport mode-mobile" id="main-wrapper">
+<div class="container-fluid py-2 px-2 px-md-4 app-viewport mode-mobile" id="main-wrapper">
   <div class="naglowek-operatora">
-    <h4 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.9rem;">v5.50</span></h4>
+    <h5 class="fw-bold m-0">LUBAS WMS <span class="text-info fw-bold" style="font-size:0.8rem;">v5.52</span></h5>
     <div class="d-flex align-items-center gap-2">
       <span class="small text-secondary fw-bold">Operator:</span>
       <span id="user-badge" class="badge bg-success p-2" style="font-size: 0.75rem;">---</span>
@@ -172,52 +169,62 @@
     </div>
   </div>
 
-  <!-- NAWIGACJA KAFELKOWA -->
-  <div class="modern-card p-3 mb-4">
-    <div class="menu-grid-container">
-      <div>
-        <input type="radio" class="btn-check" name="main-nav" id="tab-wydanie-osoba" checked onclick="przelaczGlownyModul('Wydanie Osoba')">
-        <label class="kafelek-menu" for="tab-wydanie-osoba">🔴 WYDANIE (OSOBA)</label>
-      </div>
-      <div>
-        <input type="radio" class="btn-check" name="main-nav" id="tab-wydanie-regal" onclick="przelaczGlownyModul('Wydanie Regał')">
-        <label class="kafelek-menu" for="tab-wydanie-regal">📦 WYDANIE (REGAŁ)</label>
-      </div>
-      <div>
-        <input type="radio" class="btn-check" name="main-nav" id="tab-przyjecie" onclick="przelaczGlownyModul('Przyjęcie')">
-        <label class="kafelek-menu" for="tab-przyjecie">🟢 PRZYJĘCIE</label>
-      </div>
-      <div>
-        <input type="radio" class="btn-check" name="main-nav" id="tab-przesuniecie" onclick="przelaczGlownyModul('Przesunięcie')">
-        <label class="kafelek-menu" for="tab-przesuniecie">🟡 PRZESUNIĘCIE</label>
-      </div>
-      <div>
-        <input type="radio" class="btn-check" name="main-nav" id="tab-szukaj" onclick="przelaczGlownyModul('Szukaj')">
-        <label class="kafelek-menu text-warning" for="tab-szukaj" style="border-color: rgba(245, 158, 11, 0.3);">🔍 SPRAWDŹ LOKALIZACJE</label>
-      </div>
-      <div>
-        <input type="radio" class="btn-check" name="main-nav" id="tab-wydruki" onclick="przelaczGlownyModul('Wydruki')">
-        <label class="kafelek-menu" for="tab-wydruki">🖨️ PANEL WYDRUKÓW</label>
-      </div>
-      <div style="grid-column: 1 / -1;">
-        <input type="radio" class="btn-check" name="main-nav" id="tab-raporty" onclick="przelaczGlownyModul('Raporty')">
-        <label class="kafelek-menu text-info fw-bold" for="tab-raporty" style="border-color: rgba(56, 189, 248, 0.4); background: rgba(56, 189, 248, 0.08);">📊 RAPORTY & ANALITYKA (DESKTOP)</label>
+  <!-- ZWIJANA SEKCJA NAWIGACJI (DOMYŚLNIE ZAMKNIĘTA) -->
+  <div class="mb-3">
+    <button class="btn-toggle-nav" type="button" onclick="przelaczWidokMenu()">
+      <span id="label-aktywny-tryb">🔴 TRYB: WYDANIE (OSOBA)</span>
+      <span id="strzalka-menu">⚙️ Zmień moduł ▾</span>
+    </button>
+    
+    <!-- Domyślnie schowane menu: display: none -->
+    <div class="mt-2" id="box-menu-kafelki" style="display: none;">
+      <div class="modern-card p-2 mb-0">
+        <div class="menu-grid-container">
+          <div>
+            <input type="radio" class="btn-check" name="main-nav" id="tab-wydanie-osoba" checked onclick="przelaczGlownyModul('Wydanie Osoba', '🔴 TRYB: WYDANIE (OSOBA)')">
+            <label class="kafelek-menu" for="tab-wydanie-osoba">🔴 WYDANIE (OSOBA)</label>
+          </div>
+          <div>
+            <input type="radio" class="btn-check" name="main-nav" id="tab-wydanie-regal" onclick="przelaczGlownyModul('Wydanie Regał', '📦 TRYB: WYDANIE (REGAŁ)')">
+            <label class="kafelek-menu" for="tab-wydanie-regal">📦 WYDANIE (REGAŁ)</label>
+          </div>
+          <div>
+            <input type="radio" class="btn-check" name="main-nav" id="tab-przyjecie" onclick="przelaczGlownyModul('Przyjęcie', '🟢 TRYB: PRZYJĘCIE')">
+            <label class="kafelek-menu" for="tab-przyjecie">🟢 PRZYJĘCIE</label>
+          </div>
+          <div>
+            <input type="radio" class="btn-check" name="main-nav" id="tab-przesuniecie" onclick="przelaczGlownyModul('Przesunięcie', '🟡 TRYB: PRZESUNIĘCIE')">
+            <label class="kafelek-menu" for="tab-przesuniecie">🟡 PRZESUNIĘCIE</label>
+          </div>
+          <div>
+            <input type="radio" class="btn-check" name="main-nav" id="tab-szukaj" onclick="przelaczGlownyModul('Szukaj', '🔍 SPRAWDŹ LOKALIZACJE')">
+            <label class="kafelek-menu text-warning" for="tab-szukaj" style="border-color: rgba(245, 158, 11, 0.3);">🔍 SPRAWDŹ LOKALIZACJE</label>
+          </div>
+          <div>
+            <input type="radio" class="btn-check" name="main-nav" id="tab-wydruki" onclick="przelaczGlownyModul('Wydruki', '🖨️ PANEL WYDRUKÓW')">
+            <label class="kafelek-menu" for="tab-wydruki">🖨️ PANEL WYDRUKÓW</label>
+          </div>
+          <div style="grid-column: 1 / -1;">
+            <input type="radio" class="btn-check" name="main-nav" id="tab-raporty" onclick="przelaczGlownyModul('Raporty', '📊 RAPORTY & ANALITYKA')">
+            <label class="kafelek-menu text-info fw-bold" for="tab-raporty" style="border-color: rgba(56, 189, 248, 0.4); background: rgba(56, 189, 248, 0.08);">📊 RAPORTY & ANALITYKA (DESKTOP)</label>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
-  <div id="instrukcja-skanu" class="alert alert-warning text-center fw-bold small d-none" style="border-radius:12px;">Skieruj aparat na kod QR...</div>
-  <button id="btn-torch" type="button" onclick="przelaczLatarke()" class="btn btn-warning w-100 mb-3 fw-bold d-none" style="border-radius: 12px; padding: 12px;">🔦 Włącz latarkę</button>
+  <div id="instrukcja-skanu" class="alert alert-warning text-center fw-bold small d-none" style="border-radius:12px; margin-bottom:12px;">Skieruj aparat na kod QR...</div>
+  <button id="btn-torch" type="button" onclick="przelaczLatarke()" class="btn btn-warning w-100 mb-2 fw-bold d-none" style="border-radius: 12px; padding: 10px;">🔦 Włącz latarkę</button>
   <div id="reader" class="SkanerOkno"></div>
 
-  <!-- SEKCJA OPERACJI SKANOWANIA -->
+  <!-- SEKCJA OPERACJI SKANOWANIA (OD RAZU NA SAMYM GÓRZE) -->
   <div id="sekcja-operacji" class="card modern-card p-3 shadow-sm border-0">
     <form id="wmsForm" onsubmit="wyslijDane(event)">
       <input type="hidden" id="operacja" value="Wydanie Osoba">
       <input type="hidden" id="aktywne-pole" value="">
 
       <div class="form-group-custom">
-        <label class="form-label fw-bold small text-secondary mb-2">1. KOD TOWARU:</label>
+        <label class="form-label fw-bold small text-secondary mb-1">1. KOD TOWARU:</label>
         <div class="input-group">
           <input type="text" id="kod-towaru" class="form-control wielki-input text-uppercase" placeholder="Format: litera + 5 cyfr (np. A12345)" onclick="aktywujSkanowanie('kod-towaru')" required>
           <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('kod-towaru')">❌</button>
@@ -225,7 +232,7 @@
       </div>
 
       <div class="form-group-custom" id="sekcja-polka-z">
-        <label id="label-polka-z" class="form-label fw-bold small text-secondary mb-2">2. ADRES PÓŁKI (ŹRÓDŁOWA):</label>
+        <label id="label-polka-z" class="form-label fw-bold small text-secondary mb-1">2. ADRES PÓŁKI (ŹRÓDŁOWA):</label>
         <div class="input-group">
           <input type="text" id="polka" class="form-control wielki-input text-uppercase" placeholder="Format: 00-00-00-A-00" onclick="aktywujSkanowanie('polka')" required>
           <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('polka')">❌</button>
@@ -233,7 +240,7 @@
       </div>
 
       <div class="form-group-custom" id="sekcja-polka-do" style="display: none;">
-        <label id="label-polka-do" class="form-label fw-bold small text-secondary mb-2">2b. PÓŁKA DOCELOWA:</label>
+        <label id="label-polka-do" class="form-label fw-bold small text-secondary mb-1">2b. PÓŁKA DOCELOWA:</label>
         <div class="input-group">
           <input type="text" id="polka-do" class="form-control wielki-input text-uppercase" placeholder="Format: 00-00-00-A-00" onclick="aktywujSkanowanie('polka-do')">
           <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('polka-do')">❌</button>
@@ -241,7 +248,7 @@
       </div>
 
       <div class="form-group-custom" id="sekcja-lista-stref" style="display: none;">
-        <label class="form-label fw-bold small text-secondary mb-2">2b. WYBIERZ REGAŁ DOCELOWY:</label>
+        <label class="form-label fw-bold small text-secondary mb-1">2b. WYBIERZ REGAŁ DOCELOWY:</label>
         <select id="strefa-select" class="form-select wielki-input text-white" onchange="schowajAparat()">
           <option value="" disabled selected>-- Wybierz regał / dział --</option>
           <option value="Odlewnia ogólna">Odlewnia ogólna</option>
@@ -256,23 +263,22 @@
       </div>
 
       <div class="form-group-custom" id="sekcja-pracownik">
-        <label class="form-label fw-bold small text-secondary mb-2">3. PRACOWNIK (Imię i Nazwisko):</label>
+        <label class="form-label fw-bold small text-secondary mb-1">3. PRACOWNIK (Imię i Nazwisko):</label>
         <div class="input-group">
           <input type="text" id="pracownik" class="form-control wielki-input" placeholder="Wpisz lub skanuj pełne Imię i Nazwisko" onclick="aktywujSkanowanie('pracownik')">
           <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('pracownik')">❌</button>
         </div>
       </div>
 
-      <!-- 💡 JEDNOSTKA WYŚWIETLANA DOKŁADNIE ZA POLEM ILOŚĆ -->
       <div class="form-group-custom">
-        <label class="form-label fw-bold small text-secondary mb-2">4. ILOŚĆ:</label>
+        <label class="form-label fw-bold small text-secondary mb-1">4. ILOŚĆ:</label>
         <div class="input-group">
           <input type="number" id="ilosc" class="form-control wielki-input" value="1" min="0.01" step="any" placeholder="Wpisz ilość" style="border-top-right-radius:0; border-bottom-right-radius:0;" required onfocus="schowajAparat()">
           <span class="input-group-text input-group-text-jm" id="badge-jednostka-miary">szt.</span>
         </div>
       </div>
 
-      <button type="submit" id="btn-submit" class="btn btn-primary w-100 py-3 fw-bold fs-5 btn-modern mt-3">ZAPISZ OPERACJĘ (Enter)</button>
+      <button type="submit" id="btn-submit" class="btn btn-primary w-100 py-3 fw-bold fs-5 btn-modern mt-2">ZAPISZ OPERACJĘ (Enter)</button>
     </form>
     <div id="status" class="alert alert-success mt-3 d-none text-center fw-bold" style="border-radius:12px;"></div>
   </div>
@@ -342,10 +348,8 @@
     </div>
   </div>
 
-  <!-- 💡 PEŁNY DASHBOARD DWUKOLUMNOWY -->
+  <!-- PEŁNY DASHBOARD DWUKOLUMNOWY -->
   <div id="sekcja-raporty" style="display: none;">
-    
-    <!-- HEADER -->
     <div class="modern-card p-3 mb-3" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);">
       <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
         <div>
@@ -356,7 +360,6 @@
       </div>
     </div>
 
-    <!-- 4 KARTY KPI -->
     <div class="dash-kpi-row">
       <div class="kpi-card-dash">
         <div class="kpi-title-dash">Wartość Magazynu (PLN)</div>
@@ -380,122 +383,61 @@
       </div>
     </div>
 
-    <!-- PEŁNA SIATKA DWUKOLUMNOWA -->
     <div class="dash-main-grid">
-      
-      <!-- LEWA STRONA -->
       <div>
         <div class="modern-card p-3 mb-4">
           <h5 class="fw-bold text-white mb-3" style="font-size: 0.95rem;">💎 TOP 5 Najcenniejszych Pozycji na Stanie (PLN)</h5>
-          <div id="container-top-bars">
-            <div class="text-center text-muted py-3">Ładowanie danych...</div>
-          </div>
+          <div id="container-top-bars"><div class="text-center text-muted py-3">Ładowanie danych...</div></div>
         </div>
-
         <div class="modern-card p-3 mb-4">
           <h5 class="fw-bold text-white mb-3" style="font-size: 0.95rem;">📦 Struktura Rotacji ABCD (Udział Wartościowy)</h5>
           <div class="table-responsive">
             <table class="table-dash">
-              <thead>
-                <tr>
-                  <th>SEKTOR</th>
-                  <th>KATEGORIA</th>
-                  <th>LICZBA POZYCJI</th>
-                  <th>WARTOŚĆ (PLN)</th>
-                  <th>UDZIAŁ %</th>
-                </tr>
-              </thead>
-              <tbody id="tbody-sektory">
-                <tr><td colspan="5" class="text-center text-muted py-3">Ładowanie danych...</td></tr>
-              </tbody>
+              <thead><tr><th>SEKTOR</th><th>KATEGORIA</th><th>LICZBA POZYCJI</th><th>WARTOŚĆ (PLN)</th><th>UDZIAŁ %</th></tr></thead>
+              <tbody id="tbody-sektory"><tr><td colspan="5" class="text-center text-muted py-3">Ładowanie danych...</td></tr></tbody>
             </table>
           </div>
         </div>
-
         <div class="modern-card p-3 mb-0">
           <h5 class="fw-bold text-info mb-3" style="font-size: 0.95rem;">🏢 Pobrania i Zużycie wg Obszarów / Działów</h5>
           <div class="table-responsive">
             <table class="table-dash">
-              <thead>
-                <tr>
-                  <th>OBSZAR / DZIAŁ</th>
-                  <th>ILOŚĆ</th>
-                  <th>WYDAŃ</th>
-                  <th>WARTOŚĆ (PLN)</th>
-                </tr>
-              </thead>
-              <tbody id="tbody-obszary">
-                <tr><td colspan="4" class="text-center text-muted py-3">Ładowanie danych...</td></tr>
-              </tbody>
+              <thead><tr><th>OBSZAR / DZIAŁ</th><th>ILOŚĆ</th><th>WYDAŃ</th><th>WARTOŚĆ (PLN)</th></tr></thead>
+              <tbody id="tbody-obszary"><tr><td colspan="4" class="text-center text-muted py-3">Ładowanie danych...</td></tr></tbody>
             </table>
           </div>
         </div>
       </div>
-
-      <!-- PRAWA STRONA -->
       <div>
         <div class="modern-card p-3 mb-4">
           <h5 class="fw-bold text-danger mb-3" style="font-size: 0.95rem;">⚠️ Pilne Braki Magazynowe (Sugestie Zakupowe)</h5>
           <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
             <table class="table-dash">
-              <thead>
-                <tr>
-                  <th>KOD</th>
-                  <th>NAZWA TOWARU</th>
-                  <th>STAN</th>
-                  <th>MIN / MAX</th>
-                  <th>BRAK</th>
-                  <th>KOSZT (PLN)</th>
-                </tr>
-              </thead>
-              <tbody id="tbody-braki-ogolny">
-                <tr><td colspan="6" class="text-center text-muted py-4">Ładowanie danych...</td></tr>
-              </tbody>
+              <thead><tr><th>KOD</th><th>NAZWA TOWARU</th><th>STAN</th><th>MIN / MAX</th><th>BRAK</th><th>KOSZT (PLN)</th></tr></thead>
+              <tbody id="tbody-braki-ogolny"><tr><td colspan="6" class="text-center text-muted py-4">Ładowanie danych...</td></tr></tbody>
             </table>
           </div>
         </div>
-
         <div class="modern-card p-3 mb-4">
           <h5 class="fw-bold text-amber mb-3" style="font-size: 0.95rem;">🔥 Top Najbardziej Rotujące Towary</h5>
           <div class="table-responsive" style="max-height: 260px; overflow-y: auto;">
             <table class="table-dash">
-              <thead>
-                <tr>
-                  <th>TOWAR</th>
-                  <th>POBRAŃ</th>
-                  <th>ILOŚĆ</th>
-                  <th>WARTOŚĆ (PLN)</th>
-                </tr>
-              </thead>
-              <tbody id="tbody-rotacja">
-                <tr><td colspan="4" class="text-center text-muted py-4">Ładowanie danych...</td></tr>
-              </tbody>
+              <thead><tr><th>TOWAR</th><th>POBRAŃ</th><th>ILOŚĆ</th><th>WARTOŚĆ (PLN)</th></tr></thead>
+              <tbody id="tbody-rotacja"><tr><td colspan="4" class="text-center text-muted py-4">Ładowanie danych...</td></tr></tbody>
             </table>
           </div>
         </div>
-
         <div class="modern-card p-3 mb-0">
           <h5 class="fw-bold text-success mb-3" style="font-size: 0.95rem;">👷 Top Pracownicy Pobierający Materiały</h5>
           <div class="table-responsive">
             <table class="table-dash">
-              <thead>
-                <tr>
-                  <th>PRACOWNIK</th>
-                  <th>ILOŚĆ</th>
-                  <th>OPERACJI</th>
-                  <th>WARTOŚĆ (PLN)</th>
-                </tr>
-              </thead>
-              <tbody id="tbody-pracownicy">
-                <tr><td colspan="4" class="text-center text-muted py-3">Ładowanie danych...</td></tr>
-              </tbody>
+              <thead><tr><th>PRACOWNIK</th><th>ILOŚĆ</th><th>OPERACJI</th><th>WARTOŚĆ (PLN)</th></tr></thead>
+              <tbody id="tbody-pracownicy"><tr><td colspan="4" class="text-center text-muted py-3">Ładowanie danych...</td></tr></tbody>
             </table>
           </div>
         </div>
       </div>
-
     </div>
-
   </div>
 
 </div>
@@ -532,7 +474,6 @@
       zapiszStanAgenta(stanAgenta);
     }
 
-    // NASŁUCHIWACZ WPISYWANIA I OPUSZCZENIA POLA KOD TOWARU (NA BIEŻĄCO DOCIĄGA JEDNOSTKĘ)
     const inputKod = document.getElementById('kod-towaru');
     if (inputKod) {
       inputKod.addEventListener('input', function() {
@@ -550,7 +491,19 @@
     }
   };
 
-  // POBIERANIE JEDNOSTKI I USTAWIANIE BADGE'A PO PRAWEJ STRONIE INPUTU
+  // FUNKCJA POKAZUJĄCA I CHOWAJĄCA KAFELKI Z MENU
+  function przelaczWidokMenu() {
+    const menuBox = document.getElementById('box-menu-kafelki');
+    const strzalka = document.getElementById('strzalka-menu');
+    if (menuBox.style.display === 'none' || menuBox.style.display === '') {
+      menuBox.style.display = 'block';
+      strzalka.innerText = "⚙️ Zmień moduł ▴";
+    } else {
+      menuBox.style.display = 'none';
+      strzalka.innerText = "⚙️ Zmień moduł ▾";
+    }
+  }
+
   function sprawdzJednostkeTowaru(kod) {
     if (!kod || kod.length < 3) return;
     
@@ -571,7 +524,7 @@
     .catch(e => console.warn("Błąd pobierania JM:", e));
   }
 
-  function przelaczGlownyModul(modul) {
+  function przelaczGlownyModul(modul, nazwaEtykiety) {
     schowajAparat();
     const sekcjaOperacji = document.getElementById('sekcja-operacji');
     const sekcjaDruku = document.getElementById('sekcja-druku');
@@ -581,27 +534,35 @@
     const btnTorch = document.getElementById('btn-torch');
     const instrukcjaSkanu = document.getElementById('instrukcja-skanu');
     
+    // Zwijamy menu po wyborze modułu
+    document.getElementById('box-menu-kafelki').style.display = 'none';
+    document.getElementById('strzalka-menu').innerText = "⚙️ Zmień moduł ▾";
+
+    if (nazwaEtykiety) {
+      document.getElementById('label-aktywny-tryb').innerText = nazwaEtykiety;
+    }
+
     sekcjaOperacji.style.display = 'none';
     sekcjaDruku.style.display = 'none';
     sekcjaSzukaj.style.display = 'none';
     sekcjaRaporty.style.display = 'none';
 
     if (modul === 'Wydruki') {
-      mainWrapper.className = "container-fluid py-3 px-2 px-md-4 app-viewport mode-mobile";
+      mainWrapper.className = "container-fluid py-2 px-2 px-md-4 app-viewport mode-mobile";
       sekcjaDruku.style.display = 'block';
     } else if (modul === 'Szukaj') {
-      mainWrapper.className = "container-fluid py-3 px-2 px-md-4 app-viewport mode-mobile";
+      mainWrapper.className = "container-fluid py-2 px-2 px-md-4 app-viewport mode-mobile";
       sekcjaSzukaj.style.display = 'block';
       setTimeout(() => { aktywujSkanowanie('search-towar-kod'); }, 100);
     } else if (modul === 'Raporty') {
       if(btnTorch) btnTorch.classList.add('d-none');
       if(instrukcjaSkanu) instrukcjaSkanu.classList.add('d-none');
       
-      mainWrapper.className = "container-fluid py-3 px-2 px-md-4 app-viewport mode-desktop";
+      mainWrapper.className = "container-fluid py-2 px-2 px-md-4 app-viewport mode-desktop";
       sekcjaRaporty.style.display = 'block';
       zaladujDaneDashboardu();
     } else {
-      mainWrapper.className = "container-fluid py-3 px-2 px-md-4 app-viewport mode-mobile";
+      mainWrapper.className = "container-fluid py-2 px-2 px-md-4 app-viewport mode-mobile";
       sekcjaOperacji.style.display = 'block';
       ustawTryb(modul);
     }
@@ -654,7 +615,6 @@
     document.getElementById('kpi-wartosc').innerText = sumaWartosci.toLocaleString('pl-PL', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + " zł";
     document.getElementById('kpi-sztuki').innerText = sumaSztuk.toLocaleString('pl-PL');
 
-    // TOP 5 PROGRESS BARS
     let containerTop = document.getElementById('container-top-bars');
     containerTop.innerHTML = "";
     
@@ -680,7 +640,6 @@
       containerTop.innerHTML += htmlRow;
     });
 
-    // OBSZARY TABLE
     let tbodyObszary = document.getElementById('tbody-obszary');
     tbodyObszary.innerHTML = "";
     if (obszary && obszary.length > 0) {
@@ -700,7 +659,6 @@
       tbodyObszary.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-3">Brak zarejestrowanych wydań na obszary.</td></tr>`;
     }
 
-    // TOP ROTACJA TABLE
     let tbodyRotacja = document.getElementById('tbody-rotacja');
     tbodyRotacja.innerHTML = "";
     if (rotacja && rotacja.length > 0) {
@@ -719,7 +677,6 @@
       tbodyRotacja.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-3">Brak danych o rotacji.</td></tr>`;
     }
 
-    // PRACOWNICI TABLE
     let tbodyPracownicy = document.getElementById('tbody-pracownicy');
     tbodyPracownicy.innerHTML = "";
     if (pracownicy && pracownicy.length > 0) {
@@ -738,7 +695,6 @@
       tbodyPracownicy.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-3">Brak danych pracowników.</td></tr>`;
     }
 
-    // SEKTORY ABCD TABLE
     let tbodySektory = document.getElementById('tbody-sektory');
     tbodySektory.innerHTML = "";
 
@@ -759,7 +715,6 @@
       tbodySektory.appendChild(tr);
     });
 
-    // BRAKI MAGAZYNOWE TABLE
     let sumaBrakiKoszt = 0;
     let tbodyBraki = document.getElementById('tbody-braki-ogolny');
     tbodyBraki.innerHTML = "";
@@ -1408,7 +1363,6 @@
         document.getElementById('strefa-select').value = "";
         document.getElementById('ilosc').value = '1';
         
-        // Reset nazwy jednostki na domyślną
         const badgeJm = document.getElementById('badge-jednostka-miary');
         if (badgeJm) badgeJm.innerText = "szt.";
 
