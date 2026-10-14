@@ -32,7 +32,7 @@
     .SkanerOkno video { width: 100%; height: 100%; object-fit: cover; }
     
     .wielki-input { font-size: 1.1rem; padding: 14px; background-color: #0f172a !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.18); border-radius: 12px; }
-    .input-email-fix { font-size: 0.95rem !important; padding: 12px !important; }
+    .input-email-fix { font-size: 0.95rem !important; padding: 12px !important; border-top-right-radius: 0 !important; border-bottom-right-radius: 0 !important; }
     .wielki-input:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.35); outline: none; }
     .skan-aktywny { border: 2px solid var(--accent-danger) !important; box-shadow: 0 0 20px rgba(239, 68, 68, 0.5) !important; outline: none; }
     
@@ -134,8 +134,9 @@
 </head>
 <body>
 
+<!-- KOREKTA UI LOGOWANIA: POSZERZONE KONTENERY I NEUTRALNY PLACEHOLDER -->
 <div id="login-overlay">
-  <div class="text-center p-4 modern-card" style="max-width: 440px; width: 100%;">
+  <div class="text-center p-4 modern-card" style="max-width: 520px; width: 100%;">
     <h3 class="fw-bold mb-2">LUBAS <span class="text-primary">WMS</span></h3>
     <p class="text-muted small mb-4">Zaloguj się swoimi danymi z bazy</p>
     
@@ -143,11 +144,11 @@
 
     <div class="text-start">
       <div class="form-group-custom">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <label class="label-custom text-secondary fw-bold m-0">Email:</label>
-          <button id="btn-toggle-login-scan" onclick="odpalSkanerLogowania()" class="btn btn-sm btn-outline-info py-1 px-2" style="font-size:0.75rem;">📷 Skanuj kartę</button>
+        <label class="label-custom text-secondary fw-bold mb-2">Email:</label>
+        <div class="input-group">
+          <input type="email" id="auth-email" class="form-control wielki-input input-email-fix text-lowercase" placeholder="imie.nazwisko@lubas.com">
+          <button id="btn-toggle-login-scan" onclick="odpalSkanerLogowania()" class="btn btn-outline-info px-3 fw-bold" style="border-top-right-radius: 12px; border-bottom-right-radius: 12px;">📷 Skanuj kartę</button>
         </div>
-        <input type="email" id="auth-email" class="form-control wielki-input input-email-fix text-lowercase" placeholder="np. arkadiusz.krajewski@lubas.com">
       </div>
       
       <div class="form-group-custom">
@@ -292,20 +293,22 @@
     <div id="status" class="alert alert-success mt-3 d-none text-center fw-bold" style="border-radius:12px;"></div>
   </div>
 
+  <!-- SEKCJA FOTODOKUMENTACJI MWG Z WALIDACJĄ FORMATU ZO NA ŻYWO -->
   <div id="sekcja-mwg-foto" class="card modern-card p-3 shadow-sm border-0" style="display: none;">
     <h5 class="fw-bold text-info mb-3">📸 Rejestracja Wysyłki Paletowej</h5>
     
     <div class="form-group-custom">
-      <label class="form-label fw-bold small text-secondary mb-1">1. NUMER ZAMÓWIENIA (np. ZO/012/1/01/26):</label>
+      <label class="form-label fw-bold small text-secondary mb-1">1. NUMER ZAMÓWIENIA (Wzorzec: ZO/012/1/01/26):</label>
       <div class="input-group">
-        <input type="text" id="mwg-nr-zamowienia" class="form-control wielki-input text-uppercase input-form-field" placeholder="Wpisz lub skanuj ZO" onclick="aktywujSkanowanie('mwg-nr-zamowienia')">
+        <input type="text" id="mwg-nr-zamowienia" class="form-control wielki-input text-uppercase input-form-field" placeholder="ZO/000/0/00/00" onclick="aktywujSkanowanie('mwg-nr-zamowienia')" oninput="sprawdzFormatZO(this)">
         <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('mwg-nr-zamowienia')">❌</button>
       </div>
+      <small id="mwg-zo-validation-hint" class="text-warning fw-bold mt-1 d-block" style="font-size: 0.78rem;">Wymagany format: ZO/XXX/X/XX/XX (np. ZO/012/1/01/26)</small>
     </div>
 
     <div class="form-group-custom">
       <label class="form-label fw-bold small text-secondary mb-1">2. ZDJĘCIA PALET (1 DO 5 ZDJĘĆ):</label>
-      <input type="file" id="mwg-input-foto" accept="image/*" multiple capture="environment" style="display: none;" onchange="obsluzWyborZdjec(event)">
+      <input type="file" id="mwg-input-foto" accept="image/*" multiple capture="environment" style="display: none;" onchange="obsluzWyborZdjecKompresja(event)">
       
       <button type="button" class="btn btn-outline-info w-100 py-3 fw-bold btn-modern mb-2" onclick="document.getElementById('mwg-input-foto').click()">
         📷 Zrób / Wybierz Zdjęcia Palet
@@ -1294,6 +1297,7 @@
       if(inputTarget) {
         inputTarget.value = decodedText;
         inputTarget.classList.remove('skan-aktywny');
+        if (celInput === 'mwg-nr-zamowienia') sprawdzFormatZO(inputTarget);
       }
 
       if (celInput === 'kod-towaru') {
@@ -1498,8 +1502,28 @@
     });
   }
 
-  // CZYSTY TRANSFER DANYCH DLA FOTODOKUMENTACJI MWG
-  function obsluzWyborZdjec(event) {
+  // WALIDACJA WZORCA REGEX DLA ZO: ZO/XXX/X/XX/XX
+  const REGEX_ZO = /^ZO\/\d{3}\/\d{1}\/\d{2}\/\d{2}$/i;
+
+  function sprawdzFormatZO(inputEl) {
+    const val = inputEl.value.trim().toUpperCase();
+    const hint = document.getElementById('mwg-zo-validation-hint');
+    
+    if (REGEX_ZO.test(val)) {
+      hint.innerText = "✅ Format prawidłowy";
+      hint.className = "text-success fw-bold mt-1 d-block";
+      inputEl.style.borderColor = "var(--accent-success)";
+      return true;
+    } else {
+      hint.innerText = "⚠️ Wymagany format: ZO/000/0/00/00 (np. ZO/012/1/01/26)";
+      hint.className = "text-warning fw-bold mt-1 d-block";
+      inputEl.style.borderColor = "var(--accent-amber)";
+      return false;
+    }
+  }
+
+  // KOMPRESJA ZDJĘĆ NA TELEFONIE PRZED WYSYŁKĄ (CANVAS 1920px JPG 75%)
+  function obsluzWyborZdjecKompresja(event) {
     const pliki = event.target.files;
     if (!pliki || pliki.length === 0) return;
 
@@ -1509,13 +1533,43 @@
     }
 
     Array.from(pliki).forEach(plik => {
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        zgromadzoneZdjeciaBase64.push(e.target.result);
+      kompresujZdjecie(plik, 1920, 0.75, function(compressedBase64) {
+        zgromadzoneZdjeciaBase64.push(compressedBase64);
         odswiezPodgladMiniatur();
-      };
-      reader.readAsDataURL(plik);
+      });
     });
+  }
+
+  function kompresujZdjecie(file, maxDimension, quality, callback) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = new Image();
+      img.onload = function() {
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxDimension || height > maxDimension) {
+          if (width > height) {
+            height = Math.round((height * maxDimension) / width);
+            width = maxDimension;
+          } else {
+            width = Math.round((width * maxDimension) / height);
+            height = maxDimension;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        callback(dataUrl);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
   }
 
   function odswiezPodgladMiniatur() {
@@ -1545,16 +1599,22 @@
   }
 
   function wyslijDokumentacjeMWG() {
-    const nrZamowienia = document.getElementById('mwg-nr-zamowienia').value.trim();
+    const inputZo = document.getElementById('mwg-nr-zamowienia');
+    const nrZamowienia = inputZo.value.trim().toUpperCase();
     const btn = document.getElementById('btn-wyslij-mwg');
 
-    if (!nrZamowienia) { alert("Wpisz numer zamówienia!"); return; }
-    if (zgromadzoneZdjeciaBase64.length === 0) { alert("Dodaj przynajmniej 1 zdjęcie!"); return; }
+    if (!sprawdzFormatZO(inputZo)) {
+      alert("❌ Błędny format numeru zamówienia!\nWymagany wzorzec: ZO/000/0/00/00 (np. ZO/012/1/01/26)");
+      return;
+    }
+
+    if (zgromadzoneZdjeciaBase64.length === 0) { 
+      alert("Dodaj przynajmniej 1 zdjęcie!"); 
+      return; 
+    }
 
     btn.disabled = true;
-    btn.innerText = "Wysyłanie zdjęć na Dysk Google...";
-
-    console.log("📸 [FOTO MWG] Wysyłanie ZO:", nrZamowienia, "| Zdjecia:", zgromadzoneZdjeciaBase64.length);
+    btn.innerText = "Wysyłanie zoptymalizowanych zdjęć...";
 
     const payload = {
       akcja: "zapisz_foto_wysylke",
@@ -1575,11 +1635,10 @@
       btn.disabled = false;
       btn.innerText = "ZAPISZ I WYŚLIJ FOTODOKUMENTACJĘ";
 
-      console.log("📸 [FOTO MWG] Odpowiedź:", data);
-
       if (data && data.status === "SUCCESS") {
         alert("✅ Dokumentacja zapisana pomyślnie!\nZapisano zdjęć: " + data.ilosc);
         document.getElementById('mwg-nr-zamowienia').value = '';
+        sprawdzFormatZO(document.getElementById('mwg-nr-zamowienia'));
         zgromadzoneZdjeciaBase64 = [];
         odswiezPodgladMiniatur();
       } else {
@@ -1589,7 +1648,6 @@
     .catch(err => {
       btn.disabled = false;
       btn.innerText = "ZAPISZ I WYŚLIJ FOTODOKUMENTACJĘ";
-      console.error("❌ Błąd połączenia:", err);
       alert("Błąd połączenia z serwerem: " + err.toString());
     });
   }
