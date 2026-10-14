@@ -11,6 +11,25 @@ var BQ_TABLE_ID          = 'wms_dataset';
 var SPREADSHEET_USERS_ID = '1XO7B4t49hlOyg3yMews6rV9bkFQRUcCCHsJUIpysT2QU';
 var SHARED_DRIVE_FOTO_ID = '1ICEK6b9DkNdzJvoomDIrgNl2efdMXMdI';
 
+function pobierzPrefiksMagazynu(magazyn) {
+  var nazwa = String(magazyn || '').trim().toLowerCase();
+  if (!nazwa) return null;
+  if (nazwa.indexOf('wyrobow gotowych') !== -1 || nazwa.indexOf('wyrobów gotowych') !== -1 || nazwa.indexOf('mwg') !== -1) return '01';
+  if (nazwa.indexOf('marketing') !== -1) return '02';
+  if (nazwa.indexOf('pozostałe') !== -1 || nazwa.indexOf('pozostale') !== -1) return '08';
+  return null;
+}
+
+function dodajFiltrMagazynuDoZapytania(sql, magazyn, kolumnaLokalizacji) {
+  var prefix = pobierzPrefiksMagazynu(magazyn);
+  if (!prefix || !kolumnaLokalizacji) return sql;
+  var filtr = " REGEXP_EXTRACT(CAST(" + kolumnaLokalizacji + " AS STRING), r'^(\\d{2})') = '" + prefix + "' ";
+  if (sql.toUpperCase().indexOf('WHERE') !== -1) {
+    return sql.replace(/WHERE/i, 'WHERE ' + filtr + ' AND ');
+  }
+  return sql + ' WHERE ' + filtr;
+}
+
 function doGet(e) {
   try {
     if (e.parameter && e.parameter.akcja === "pobierz_stan") {
@@ -117,16 +136,26 @@ function doPost(e) {
         pracownicy: [],
         rotacja: []
       };
+      var magazyn = String(data.magazyn || '').trim();
+      var prefiks = pobierzPrefiksMagazynu(magazyn);
 
       try {
         try {
-          var sqlStan = `SELECT * FROM \`lubas-prod-erp-enovoapi-0.Lubas_WMS_2.v_pelny_stan_magazynu\` LIMIT 2000`;
+          var sqlStan = `SELECT * FROM \`lubas-prod-erp-enovoapi-0.Lubas_WMS_2.v_pelny_stan_magazynu\` `;
+          if (prefiks) {
+            sqlStan += ` WHERE REGEXP_EXTRACT(CAST(COALESCE(lokalizacja, z_lokalizacji, do_lokalizacji) AS STRING), r'^(\\d{2})') = '` + prefiks + `' `;
+          }
+          sqlStan += ` LIMIT 2000`;
           var resStan = BigQuery.Jobs.query({ query: sqlStan, useLegacySql: false }, BQ_PROJECT_ID);
           wynikFinalny.stany = parsujWynikiBQ(resStan);
         } catch(eA) { zapiszLogDoArkusza("ERROR", "Błąd pobierania stanów BQ", eA.toString()); }
 
         try {
-          var sqlBraki = `SELECT * FROM \`lubas-prod-erp-enovoapi-0.Lubas_WMS_2.v_aktualne_braki_magazynowe\` LIMIT 1000`;
+          var sqlBraki = `SELECT * FROM \`lubas-prod-erp-enovoapi-0.Lubas_WMS_2.v_aktualne_braki_magazynowe\` `;
+          if (prefiks) {
+            sqlBraki += ` WHERE REGEXP_EXTRACT(CAST(COALESCE(lokalizacja, z_lokalizacji, do_lokalizacji) AS STRING), r'^(\\d{2})') = '` + prefiks + `' `;
+          }
+          sqlBraki += ` LIMIT 1000`;
           var resBraki = BigQuery.Jobs.query({ query: sqlBraki, useLegacySql: false }, BQ_PROJECT_ID);
           wynikFinalny.braki = parsujWynikiBQ(resBraki);
         } catch(eB) { zapiszLogDoArkusza("ERROR", "Błąd pobierania braków BQ", eB.toString()); }
@@ -141,7 +170,12 @@ function doPost(e) {
             FROM \`lubas-prod-erp-enovoapi-0.Lubas_WMS_2.wms_dataset\` w
             LEFT JOIN \`lubas-prod-erp-enovoapi-0.Lubas_WMS_2.v_pelny_stan_magazynu\` s 
               ON UPPER(TRIM(w.towar)) = UPPER(TRIM(s.towar))
-            WHERE UPPER(TRIM(w.typ)) LIKE '%WYDANIE%' OR UPPER(TRIM(w.typ)) LIKE '%REGAŁ%'
+            WHERE (UPPER(TRIM(w.typ)) LIKE '%WYDANIE%' OR UPPER(TRIM(w.typ)) LIKE '%REGAŁ%')
+          `;
+          if (prefiks) {
+            sqlObszary += ` AND (REGEXP_EXTRACT(CAST(w.z_lokalizacji AS STRING), r'^(\\d{2})') = '` + prefiks + `' OR REGEXP_EXTRACT(CAST(w.do_lokalizacji AS STRING), r'^(\\d{2})') = '` + prefiks + `') `;
+          }
+          sqlObszary += `
             GROUP BY obszar
             ORDER BY wartosc_pln DESC
             LIMIT 15
@@ -163,6 +197,11 @@ function doPost(e) {
             WHERE UPPER(TRIM(w.typ)) = 'WYDANIE OSOBA'
               AND w.pracownik IS NOT NULL 
               AND TRIM(w.pracownik) != ''
+          `;
+          if (prefiks) {
+            sqlPracownicy += ` AND (REGEXP_EXTRACT(CAST(w.z_lokalizacji AS STRING), r'^(\\d{2})') = '` + prefiks + `' OR REGEXP_EXTRACT(CAST(w.do_lokalizacji AS STRING), r'^(\\d{2})') = '` + prefiks + `') `;
+          }
+          sqlPracownicy += `
             GROUP BY pracownik
             ORDER BY wartosc_pln DESC
             LIMIT 15
@@ -182,7 +221,12 @@ function doPost(e) {
             FROM \`lubas-prod-erp-enovoapi-0.Lubas_WMS_2.wms_dataset\` w
             LEFT JOIN \`lubas-prod-erp-enovoapi-0.Lubas_WMS_2.v_pelny_stan_magazynu\` s 
               ON UPPER(TRIM(w.towar)) = UPPER(TRIM(s.towar))
-            WHERE UPPER(TRIM(w.typ)) LIKE '%WYDANIE%' OR UPPER(TRIM(w.typ)) LIKE '%REGAŁ%'
+            WHERE (UPPER(TRIM(w.typ)) LIKE '%WYDANIE%' OR UPPER(TRIM(w.typ)) LIKE '%REGAŁ%')
+          `;
+          if (prefiks) {
+            sqlRotacja += ` AND (REGEXP_EXTRACT(CAST(w.z_lokalizacji AS STRING), r'^(\\d{2})') = '` + prefiks + `' OR REGEXP_EXTRACT(CAST(w.do_lokalizacji AS STRING), r'^(\\d{2})') = '` + prefiks + `') `;
+          }
+          sqlRotacja += `
             GROUP BY kod, nazwa
             ORDER BY suma_sztuk DESC
             LIMIT 15
