@@ -537,7 +537,73 @@
       pole.addEventListener('click', schowajMenu);
       pole.addEventListener('focus', schowajMenu);
     });
+
+    const inputPolka = document.getElementById('polka');
+    if (inputPolka) {
+      inputPolka.addEventListener('blur', function() {
+        if (this.value.trim()) {
+          const wynik = sprawdzDopuszczalnoscLokalizacji(this.value, localStorage.getItem('wms_default_warehouse') || 'Magazyn pozostałe');
+          if (!wynik.ok) alert(wynik.message);
+        }
+      });
+    }
+
+    const inputPolkaDo = document.getElementById('polka-do');
+    if (inputPolkaDo) {
+      inputPolkaDo.addEventListener('blur', function() {
+        if (this.value.trim()) {
+          const wynik = sprawdzDopuszczalnoscLokalizacji(this.value, localStorage.getItem('wms_default_warehouse') || 'Magazyn pozostałe');
+          if (!wynik.ok) alert(wynik.message);
+        }
+      });
+    }
   };
+
+  function pobierzPrefiksMagazynu(magazyn) {
+    const nazwa = String(magazyn || "").trim().toLowerCase();
+    if (!nazwa) return null;
+    if (nazwa.includes("wyrobów gotowych") || nazwa.includes("wyrobow gotowych") || nazwa.includes("mwg")) return "01";
+    if (nazwa.includes("marketing")) return "02";
+    if (nazwa.includes("pozostałe") || nazwa.includes("pozostale")) return "08";
+    return null;
+  }
+
+  function sprawdzDopuszczalnoscLokalizacji(lokalizacja, magazyn) {
+    const loc = String(lokalizacja || "").trim().toUpperCase();
+    const prefix = pobierzPrefiksMagazynu(magazyn);
+    if (!loc || !prefix) return { ok: true };
+
+    const segment = loc.split("-")[0];
+    if (segment !== prefix) {
+      return {
+        ok: false,
+        message: `❌ Magazyn "${magazyn}" może operować tylko na lokalizacjach z prefiksem ${prefix}. Aktualna lokalizacja: ${loc}`
+      };
+    }
+
+    return { ok: true };
+  }
+
+  function sprawdzZgodnoscLokalizacjiMagazynu() {
+    const magazyn = localStorage.getItem('wms_default_warehouse') || "Magazyn pozostałe";
+    const prefix = pobierzPrefiksMagazynu(magazyn);
+    if (!prefix) return true;
+
+    const lokalizacjeDoSprawdzenia = [
+      document.getElementById('polka')?.value.trim(),
+      document.getElementById('polka-do')?.value.trim()
+    ].filter(Boolean);
+
+    for (const lokalizacja of lokalizacjeDoSprawdzenia) {
+      const wynik = sprawdzDopuszczalnoscLokalizacji(lokalizacja, magazyn);
+      if (!wynik.ok) {
+        alert(wynik.message);
+        return false;
+      }
+    }
+
+    return true;
+  }
 
   function odswiezSektorMagazynow(dostepneMagazyny, domyslnyMagazyn) {
     const selectMag = document.getElementById('select-magazyn-operatora');
@@ -545,8 +611,22 @@
     
     selectMag.innerHTML = "";
     
-    let lista = String(dostepneMagazyny || "Magazyn pozostałe").split(",").map(m => m.trim());
+    const magazynyDomyslne = ["Magazyn pozostałe", "Magazyn marketing", "Magazyn wyrobów gotowych"];
+    let lista = String(dostepneMagazyny || "Magazyn pozostałe,Magazyn marketing,Magazyn wyrobów gotowych")
+      .split(",")
+      .map(m => m.trim())
+      .filter(Boolean);
+
+    magazynyDomyslne.forEach(magazyn => {
+      if (!lista.some(item => item.toLowerCase() === magazyn.toLowerCase())) {
+        lista.push(magazyn);
+      }
+    });
+
     let aktywny = localStorage.getItem('wms_default_warehouse') || domyslnyMagazyn || lista[0];
+    if (!lista.some(item => item.toLowerCase() === String(aktywny || "").toLowerCase())) {
+      aktywny = lista[0];
+    }
 
     lista.forEach(m => {
       let opt = document.createElement('option');
@@ -568,7 +648,7 @@
     const magLower = String(magazyn || "").toLowerCase();
     const boxKafelekMWG = document.getElementById('box-kafelek-mwg');
     
-    if (magLower.includes("wyrobów gotowych") || magLower.includes("mwg")) {
+    if (magLower.includes("wyrobów gotowych") || magLower.includes("wyrobow gotowych") || magLower.includes("mwg")) {
       if (boxKafelekMWG) boxKafelekMWG.style.display = 'block';
       document.getElementById('tab-mwg-foto').checked = true;
       przelaczGlownyModul('MWG Foto', '📸 FOTODOKUMENTACJA (MWG)');
@@ -665,10 +745,12 @@
   }
 
   function zaladujDaneDashboardu() {
+    const aktywnyMagazyn = localStorage.getItem('wms_default_warehouse') || document.getElementById('select-magazyn-operatora')?.value || 'Magazyn pozostałe';
+
     fetch(GOOGLE_SCRIPT_URL, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ akcja: "pobierz_dane_dashboardu" }).toString()
+      body: new URLSearchParams({ akcja: "pobierz_dane_dashboardu", magazyn: aktywnyMagazyn }).toString()
     })
     .then(res => res.json())
     .then(data => {
@@ -1204,7 +1286,7 @@
       if (data && data.status === "SUCCESS" && data.message === "DOZWOLONY") {
         const nazwaPracownika = data.nazwa || email;
         const rolaPracownika = data.rola || "operator";
-        const magazyny = data.magazyny || "Magazyn pozostałe";
+        const magazyny = data.magazyny || "Magazyn pozostałe,Magazyn marketing,Magazyn wyrobów gotowych";
         const domyslnyMagazyn = data.domyslny_magazyn || "Magazyn pozostałe";
 
         localStorage.setItem('wms_user_email', email);
@@ -1420,6 +1502,12 @@
     const statusBox = document.getElementById('status');
     btn.disabled = true;
     btn.innerText = "Zapisywanie w chmurze...";
+
+    if (!sprawdzZgodnoscLokalizacjiMagazynu()) {
+      btn.disabled = false;
+      btn.innerText = "ZAPISZ OPERACJĘ (Enter)";
+      return;
+    }
 
     let tryb = document.getElementById('operacja').value;
     let polkaValue = document.getElementById('polka').value.trim();
