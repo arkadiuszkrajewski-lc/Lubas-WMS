@@ -300,7 +300,8 @@
     <div class="form-group-custom">
       <label class="form-label fw-bold small text-secondary mb-1">1. NUMER ZAMÓWIENIA (Wzorzec: ZO/012/1/01/26):</label>
       <div class="input-group">
-        <input type="text" id="mwg-nr-zamowienia" class="form-control wielki-input text-uppercase input-form-field" placeholder="ZO/000/0/00/00" onclick="aktywujSkanowanie('mwg-nr-zamowienia')" oninput="sprawdzFormatZO(this)">
+        <input type="text" id="mwg-nr-zamowienia" class="form-control wielki-input text-uppercase input-form-field" placeholder="ZO/000/0/00/00" onfocus="document.getElementById('aktywne-pole').value = 'mwg-nr-zamowienia';" oninput="sprawdzFormatZO(this)">
+        <button class="btn btn-outline-info" type="button" onclick="aktywujSkanowanie('mwg-nr-zamowienia')" title="Zeskanuj numer zamówienia">📷</button>
         <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('mwg-nr-zamowienia')">❌</button>
       </div>
       <small id="mwg-zo-validation-hint" class="text-warning fw-bold mt-1 d-block" style="font-size: 0.78rem;">Wymagany format: ZO/XXX/X/XX/XX (np. ZO/012/1/01/26)</small>
