@@ -60,7 +60,7 @@
 
     .form-group-custom { margin-bottom: 18px; }
     .label-custom { font-size: 0.92rem; letter-spacing: 0.5px; margin-bottom: 8px; display: block; }
-    #login-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg-dark); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+    #login-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg-dark); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 18px 16px 20px; overflow-y: auto; }
     .login-scanner-box { background: #000; border-radius: 12px; overflow: hidden; width: 100%; max-width: 280px; display: none; aspect-ratio: 1/1; margin-bottom: 20px; border: 2px solid var(--accent-blue); position: relative; }
     .login-scanner-box video { width: 100%; height: 100%; object-fit: cover; }
     
@@ -136,9 +136,9 @@
 
 <!-- KOREKTA UI LOGOWANIA: POSZERZONE KONTENERY I NEUTRALNY PLACEHOLDER -->
 <div id="login-overlay">
-  <div class="text-center p-4 modern-card" style="max-width: 520px; width: 100%;">
-    <h3 class="fw-bold mb-2">LUBAS <span class="text-primary">WMS</span></h3>
-    <p class="text-muted small mb-4">Zaloguj się swoimi danymi z bazy</p>
+<div class="text-center p-3 modern-card" style="max-width: 520px; width: 100%; margin-top: 8px;">
+    <h3 class="fw-bold mb-1" style="font-size: clamp(1.4rem, 4vw, 2.2rem);">LUBAS <span class="text-primary">WMS</span></h3>
+    <p class="text-muted small mb-3">Zaloguj się swoimi danymi z bazy</p>
     
     <div id="login-reader" class="login-scanner-box mx-auto"></div>
 
@@ -611,17 +611,14 @@
     
     selectMag.innerHTML = "";
     
-    const magazynyDomyslne = ["Magazyn pozostałe", "Magazyn marketing", "Magazyn wyrobów gotowych"];
-    let lista = String(dostepneMagazyny || "Magazyn pozostałe,Magazyn marketing,Magazyn wyrobów gotowych")
+    let lista = String(dostepneMagazyny || "Magazyn pozostałe")
       .split(",")
       .map(m => m.trim())
       .filter(Boolean);
 
-    magazynyDomyslne.forEach(magazyn => {
-      if (!lista.some(item => item.toLowerCase() === magazyn.toLowerCase())) {
-        lista.push(magazyn);
-      }
-    });
+    if (lista.length === 0) {
+      lista = ["Magazyn pozostałe"];
+    }
 
     let aktywny = localStorage.getItem('wms_default_warehouse') || domyslnyMagazyn || lista[0];
     if (!lista.some(item => item.toLowerCase() === String(aktywny || "").toLowerCase())) {
@@ -631,7 +628,7 @@
     lista.forEach(m => {
       let opt = document.createElement('option');
       opt.value = m;
-      opt.innerText = "Magazyn: " + m;
+      opt.innerText = m;
       if (m === aktywny) opt.selected = true;
       selectMag.appendChild(opt);
     });
@@ -1286,7 +1283,7 @@
       if (data && data.status === "SUCCESS" && data.message === "DOZWOLONY") {
         const nazwaPracownika = data.nazwa || email;
         const rolaPracownika = data.rola || "operator";
-        const magazyny = data.magazyny || "Magazyn pozostałe,Magazyn marketing,Magazyn wyrobów gotowych";
+        const magazyny = data.magazyny || "Magazyn pozostałe";
         const domyslnyMagazyn = data.domyslny_magazyn || "Magazyn pozostałe";
 
         localStorage.setItem('wms_user_email', email);
