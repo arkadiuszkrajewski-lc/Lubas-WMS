@@ -89,6 +89,10 @@ function doPost(e) {
             var dostepneMagazyny = String(row[4].v || "Magazyn pozostałe").trim();
             var domyslnyMagazyn = String(row[5].v || "Magazyn pozostałe").trim();
 
+            if (!dostepneMagazyny || dostepneMagazyny.length === 0) {
+              dostepneMagazyny = "Magazyn pozostałe";
+            }
+
             return ContentService.createTextOutput(JSON.stringify({
               status: "SUCCESS",
               message: "DOZWOLONY",
