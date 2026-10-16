@@ -306,18 +306,18 @@
     <div id="status" class="alert alert-success mt-3 d-none text-center fw-bold" style="border-radius:12px;"></div>
   </div>
 
-  <!-- SEKCJA FOTODOKUMENTACJI MWG Z WALIDACJĄ FORMATU ZO NA ŻYWO -->
+  <!-- SEKCJA FOTODOKUMENTACJI MWG Z WALIDACJĄ NUMERU WYSYŁKI NA ŻYWO -->
   <div id="sekcja-mwg-foto" class="card modern-card p-3 shadow-sm border-0" style="display: none;">
     <h5 class="fw-bold text-info mb-3">📸 Rejestracja Wysyłki Paletowej</h5>
     
     <div class="form-group-custom">
-      <label class="form-label fw-bold small text-secondary mb-1">1. NUMER ZAMÓWIENIA (Wzorzec: ZO/012/1/01/26):</label>
+      <label class="form-label fw-bold small text-secondary mb-1">1. NUMER WYSYŁKI:</label>
       <div class="input-group">
-        <input type="text" id="mwg-nr-zamowienia" class="form-control wielki-input text-uppercase input-form-field" placeholder="ZO/000/0/00/00" onfocus="document.getElementById('aktywne-pole').value = 'mwg-nr-zamowienia';" oninput="sprawdzFormatZO(this)">
-        <button class="btn btn-outline-info" type="button" onclick="aktywujSkanowanie('mwg-nr-zamowienia')" title="Zeskanuj numer zamówienia">📷</button>
+        <input type="text" id="mwg-nr-zamowienia" class="form-control wielki-input text-uppercase input-form-field" placeholder="WYSYLKA/2026/09/000425" onfocus="document.getElementById('aktywne-pole').value = 'mwg-nr-zamowienia';" oninput="sprawdzFormatWysylki(this)">
+        <button class="btn btn-outline-info" type="button" onclick="aktywujSkanowanie('mwg-nr-zamowienia')" title="Zeskanuj numer wysyłki">📷</button>
         <button class="btn btn-outline-danger" type="button" onclick="wyczyscPole('mwg-nr-zamowienia')">❌</button>
       </div>
-      <small id="mwg-zo-validation-hint" class="text-warning fw-bold mt-1 d-block" style="font-size: 0.78rem;">Wymagany format: ZO/XXX/X/XX/XX (np. ZO/012/1/01/26)</small>
+      <small id="mwg-wysylka-validation-hint" class="text-warning fw-bold mt-1 d-block" style="font-size: 0.78rem;">Wymagany format: WYSYLKA/RRRR/MM/NNNNNN (np. WYSYLKA/2026/09/000425)</small>
     </div>
 
     <div class="form-group-custom">
@@ -1363,7 +1363,7 @@
       document.getElementById('instrukcja-skanu').innerText = "📷 KROK 1: Zeskanuj kod QR PRODUKTU";
       document.getElementById('instrukcja-skanu').className = "alert alert-warning text-center fw-bold small text-dark";
     } else if(poleId === 'mwg-nr-zamowienia') {
-      document.getElementById('instrukcja-skanu').innerText = "📦 Zeskanuj numer Zamówienia (ZO)";
+      document.getElementById('instrukcja-skanu').innerText = "📦 Zeskanuj numer wysyłki";
       document.getElementById('instrukcja-skanu').className = "alert alert-info text-center fw-bold small text-dark";
     } else if(poleId === 'polka') {
       document.getElementById('instrukcja-skanu').innerText = "📍 KROK 2: Zeskanuj kod QR PÓŁKI (ŹRÓDŁOWA)";
@@ -1390,7 +1390,7 @@
       if(inputTarget) {
         inputTarget.value = decodedText;
         inputTarget.classList.remove('skan-aktywny');
-        if (celInput === 'mwg-nr-zamowienia') sprawdzFormatZO(inputTarget);
+        if (celInput === 'mwg-nr-zamowienia') sprawdzFormatWysylki(inputTarget);
       }
 
       if (celInput === 'kod-towaru') {
@@ -1601,20 +1601,19 @@
     });
   }
 
-  // WALIDACJA WZORCA REGEX DLA ZO: ZO/XXX/X/XX/XX
-  const REGEX_ZO = /^ZO\/\d{3}\/\d{1}\/\d{2}\/\d{2}$/i;
+  const REGEX_WYSYLKA = /^WYSYLKA\/\d{4}\/(0[1-9]|1[0-2])\/\d{6}$/i;
 
-  function sprawdzFormatZO(inputEl) {
+  function sprawdzFormatWysylki(inputEl) {
     const val = inputEl.value.trim().toUpperCase();
-    const hint = document.getElementById('mwg-zo-validation-hint');
+    const hint = document.getElementById('mwg-wysylka-validation-hint');
     
-    if (REGEX_ZO.test(val)) {
+    if (REGEX_WYSYLKA.test(val)) {
       hint.innerText = "✅ Format prawidłowy";
       hint.className = "text-success fw-bold mt-1 d-block";
       inputEl.style.borderColor = "var(--accent-success)";
       return true;
     } else {
-      hint.innerText = "⚠️ Wymagany format: ZO/000/0/00/00 (np. ZO/012/1/01/26)";
+      hint.innerText = "⚠️ Wymagany format: WYSYLKA/RRRR/MM/NNNNNN (np. WYSYLKA/2026/09/000425)";
       hint.className = "text-warning fw-bold mt-1 d-block";
       inputEl.style.borderColor = "var(--accent-amber)";
       return false;
@@ -1702,8 +1701,8 @@
     const nrZamowienia = inputZo.value.trim().toUpperCase();
     const btn = document.getElementById('btn-wyslij-mwg');
 
-    if (!sprawdzFormatZO(inputZo)) {
-      alert("❌ Błędny format numeru zamówienia!\nWymagany wzorzec: ZO/000/0/00/00 (np. ZO/012/1/01/26)");
+    if (!sprawdzFormatWysylki(inputZo)) {
+      alert("❌ Błędny format numeru wysyłki!\nWymagany format: WYSYLKA/RRRR/MM/NNNNNN (np. WYSYLKA/2026/09/000425)");
       return;
     }
 
@@ -1737,7 +1736,7 @@
       if (data && data.status === "SUCCESS") {
         alert("✅ Dokumentacja zapisana pomyślnie!\nZapisano zdjęć: " + data.ilosc);
         document.getElementById('mwg-nr-zamowienia').value = '';
-        sprawdzFormatZO(document.getElementById('mwg-nr-zamowienia'));
+        sprawdzFormatWysylki(document.getElementById('mwg-nr-zamowienia'));
         zgromadzoneZdjeciaBase64 = [];
         odswiezPodgladMiniatur();
       } else {
