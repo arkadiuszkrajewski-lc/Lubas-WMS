@@ -453,17 +453,19 @@ function doPost(e) {
 }
 
 // =========================================================================
-// STRUKTURA FOLDERÓW: ROK / MIESIĄC / NUMER_ZAMÓWIENIA + DATA W NAZWIE PLIKU
+// STRUKTURA FOLDERÓW: ROK / MIESIĄC / NUMER_WYSYŁKI + DATA W NAZWIE PLIKU
 // =========================================================================
 function zapiszFotoWysylke(data) {
   var logDetails = [];
   try {
     logDetails.push("Rozpoczęto zapis foto-wysyłki dla magazynu: " + (data.magazyn || "MWG"));
     
-    var nrZamowienia = String(data.numer_zamowienia || "").trim();
-    if (!nrZamowienia) throw new Error("Brak numeru zamówienia.");
+    var nrZamowienia = String(data.numer_zamowienia || "").trim().toUpperCase();
+    if (!/^WYSYLKA\/\d{4}\/(0[1-9]|1[0-2])\/\d{6}$/.test(nrZamowienia)) {
+      throw new Error("Nieprawidłowy numer wysyłki. Wymagany format: WYSYLKA/RRRR/MM/NNNNNN.");
+    }
     
-    logDetails.push("Zamówienie: " + nrZamowienia);
+    logDetails.push("Numer wysyłki: " + nrZamowienia);
 
     var plikiFoto = [];
     if (typeof data.zdjecia === "string") {
@@ -481,23 +483,15 @@ function zapiszFotoWysylke(data) {
 
     if (!plikiFoto || plikiFoto.length === 0) throw new Error("Tablica zdjęć jest pusta.");
 
-    // Parsowanie ROK/MIESIĄC z formatu ZO/012/1/01/26
-    var rokFolder = "2026";
-    var miesiacFolder = "01";
+    // Parsowanie ROK/MIESIĄC z formatu WYSYLKA/RRRR/MM/NNNNNN
     var czesciZam = nrZamowienia.split("/");
-    if (czesciZam.length >= 5) {
-      miesiacFolder = czesciZam[3];
-      rokFolder = "20" + czesciZam[4];
-    } else {
-      var terazD = new Date();
-      rokFolder = String(terazD.getFullYear());
-      miesiacFolder = ("0" + (terazD.getMonth() + 1)).slice(-2);
-    }
+    var rokFolder = czesciZam[1];
+    var miesiacFolder = czesciZam[2];
 
     var zamCzyste = nrZamowienia.replace(/[\/\\?%*:|"<>]/g, "-");
     logDetails.push("Struktura docelowa: " + rokFolder + " / " + miesiacFolder + " / " + zamCzyste);
 
-    // Tworzenie hierarchii folderów: Główny -> Rok -> Miesiąc -> Podfolder Zamówienia
+    // Tworzenie hierarchii folderów: Główny -> Rok -> Miesiąc -> Podfolder wysyłki
     var mainFolder = DriveApp.getFolderById(SHARED_DRIVE_FOTO_ID);
     var folderRok = pobierzLUBStworzFolder(mainFolder, rokFolder);
     var folderMiesiac = pobierzLUBStworzFolder(folderRok, miesiacFolder);
